@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: index.pl,v 1.1 1998-12-06 06:52:09 steve Exp $
+# $Id: index.pl,v 1.2 2005-01-01 18:49:58 steve Exp $
 # index [options] infile... 
 #	Perform indexing operations on filksong files
 
@@ -188,18 +188,22 @@ if ($outfmt eq "dsc") {		# .htaccess description lines
     }
 } elsif ($outfmt eq "html" && $tables) {	# HTML table
     print "<table >\n";
-    print "<tr><th align=left> file <th> time";
-    if ($ps) { print "<th>.ps "; }
+    print "<tr><th>ogg</th><th>pdf</th><th align=left>file</th>"
+	. "<th>time</th>";
+    if ($ps) { print "<th>.ps</th>"; }
     print "<th align=left> Title </tr>\n ";
     for ($j = 0; $j < $i; $j++) {
 	$fn = $fnList[$j];
+	my $audio = (-f "$fn.ogg")? "<a href='$fn.ogg'>ogg</a>" : "";
 	print "<tr> ";
-	print "  <td> <tt>$fn</tt>\n";
-	print "  <td> $times{$fn}	";
+	print "  <td valign='top'> $audio </td>";
+	print "  <td valign='top'> <a href='$fn.pdf'>pdf</a>	\n";
+	print "  <td valign='top'> <tt>$fn</tt></td>\n";
+	print "  <td valign='top'> $times{$fn}	</td>";
 	if ($ps) { print "  <td> <a href='$fn.ps'>[ps]</a>	\n"; }
-	print "  <th align=left> <a href='$fn.html'>", $titles{$fn};
-	if ($subtitles{$fn}) {print " ($subtitles{$fn})"; }
-	print "</a> </tr>\n";
+	print "  <td valign='top'> <a href='$fn.html'>", $titles{$fn};
+	if ($subtitles{$fn}) {print " <small>($subtitles{$fn})</small>"; }
+	print "</a> </td> </tr>\n";
     }
     print "</table>\n";
 
@@ -209,9 +213,13 @@ if ($outfmt eq "dsc") {		# .htaccess description lines
 	$fn = $fnList[$j];
 	print "  <li> ";
 	if ($ps) { print "<a href='$fn.ps'>[ps]</a>	"; }
+	print "<a href='$fn.pdf'>[pdf]</a>	"; 
 	print "<a href='$fn.html'>", $titles{$fn};
 	if ($subtitles{$fn}) {print " ($subtitles{$fn})"; }
-	print "</a> $times{$fn}\n";
+	print "</a> $times{$fn}";
+	my $audio = (-f "$fn.ogg")
+	    ?  " <a href='$fn.ogg'>ogg</a>" : "";
+	print "$audio\n";
     }
     print "</ol>\n";
 
@@ -464,7 +472,13 @@ sub deTeX {
 	    while (! $txt =~ /\}/) { $txt .= <STDIN>; }
 	    $txt =~ s/\}/$_BF/;
 	}
+	if ($txt =~ /\{\\small[ \t\n]/) { 
+	    $txt =~ s/\{\\small[ \t\n]/$BF/; 
+	    while (! $txt =~ /\}/) { $txt .= <STDIN>; }
+	    $txt =~ s/\}/$_BF/;
+	}
     }
+    $txt =~ s/\\small//;
     $txt =~ s/\\&/$AMP/g;
     $txt =~ s/\\;/$SP/g;
     $txt =~ s/\\ /$SP/g;
