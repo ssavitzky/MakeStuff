@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: flktran.pl,v 1.5 2004-05-25 04:54:37 steve Exp $
+# $Id: flktran.pl,v 1.6 2005-01-05 19:43:35 steve Exp $
 # flktran [options] infile outfile
 #	Perform format translation on filksong files.    
 
@@ -67,6 +67,9 @@ $key = "";
 $timing = "";
 $created = "";
 $cvsid = "";
+$music = "";
+$lyrics = "";
+$arranger = "";
 
 ### Handle options:
 
@@ -114,10 +117,16 @@ if ($html) {
     $_UL = "</u>";
     $SPOKEN  = "(spoken)";
     $_SPOKEN = "";
-    $NL  = "<br>\n";
+    $NL  = "<br />\n";
+    $NP  = "<hr />\n";
     $SP  = "&nbsp;";
     $AMP = "&amp;";
     $FLKTRAN = "<a href='../TeX/flktran.html'><code>flktran</code></a>";
+    # Creative Commons copyright notice
+    $CCnotice = "<a href=\"http://creativecommons.org/licenses/by-nc-sa/2.0/\"
+><img  alt=\"Creative Commons License\" border=\"0\" 
+       src=\"http://creativecommons.org/images/public/somerights.gif\" 
+     /><small>Some rights reserved.</small></a>";
 } else {
     $EM  = "_";
     $_EM = "_";
@@ -130,9 +139,11 @@ if ($html) {
     $SPOKEN  = "(spoken)";
     $_SPOKEN = "";
     $NL  = "\n";
+    $NP  = "\f";
     $SP  = " ";
     $AMP = "&";
     $FLKTRAN = "flktran";
+    $CCnotice = "Some Rights Reserved:  CC by-nc-sa/2.0/";
 }
 
 ### === Dispatch on input format:
@@ -155,6 +166,9 @@ while (<STDIN>) {
     elsif (/\\created/)  	{ $created = getContent($_); }
     elsif (/\\notice/)  	{ $notice = getContent($_); }
     elsif (/\\cvsid/)		{ $cvsid = getContent($_); }
+    elsif (/\\music/)		{ $music = getContent($_); }
+    elsif (/\\lyrics/)		{ $lyrics = getContent($_); }
+    elsif (/\\arranger/)	{ $arranger = getContent($_); }
 
     # Environments: 
 
@@ -339,6 +353,8 @@ sub hcenter {
     $text =~ s/^[ \t]*//;
     $text =~ s/\\copyright/\&copy;/;
     $text =~ s/\n/\<br\>/g;
+    $text =~ s/\\ttto\{([^\}]+)\}/To the tune of: $1/gs;
+    $text =~ s/[Ss]ome rights reserved\.?/$CCnotice/gs;
     $text = "<h$h align=center>$text</h$h>";
     print "$text\n";
 }
@@ -510,6 +526,7 @@ sub deTeX {
     $txt =~ s/\\ /$SP/g;
     $txt =~ s/\\ldots/.../g;
     $txt =~ s/\\\\/$NL/g;
+    $txt =~ s/\\newpage/$NP/g;
 
     return $txt
 }
