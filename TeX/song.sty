@@ -1,6 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% SONG.STY %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%
 %%% Author: Stephen Savitzky
+%%%	    $Id: song.sty,v 1.2 1994-03-04 05:50:58 steve Exp $
 %%%
 %%% Song environment:
 %%%	\begin{song}{title}			% starts on a new page
@@ -38,19 +39,27 @@
 %%%	\chord{set as chord but not raised}
 %%%	  Chords are set in math mode (to get superscripts and special chars.)
 %%%	  The following chord elements are defined:
-%%%	    \flat \sharp \dim \aug \maj \sus 
+%%%	    \flat 	modified b
+%%%	    \sharp	modified #
+%%%	    \dim 	subscript circle
+%%%	    \aug	superscript plus
+%%%	    \maj	{\rm maj}
+%%%	    \sus4	{\rm sus}4	(also 2) 
+%%%		sometimes changed to superscript to save horizontal space
 %%%	    \min	prints as m
 %%%	    \add	prints as &
 %%%	    \up		prints as double uparrow, e.g. F(D\up3)
-%%%	    \capo	used in, e.g.  \key{F\; (D\capo3)}
+%%%		used to indicate barre chords and the like.
+%%%	    *		indicates chords with B or E string raised
+%%%	    \capo	{\it capo} used in, e.g.  \key{F\; (D\capo3)}
 %%%	    \;		em space
 %%%
-%%
+%%%
 %%%  \file{songfile}	input a song file; set \theFile to the filename
 %%%
 %%%  Page styles: 
 %%%	  broadside	songs on un-numbered single sheets
-%%%	  songbook	set up for two-sided printing
+%%%	  songbook	numbered pages set up for two-sided printing
 %%%	  boxed		plain boxed headers/footers: use markXY and tagXY
 %%%	  ruled		plain ruled headers/footers: use markXY and tagXY
 %%%	  shadowed	plain shadow-boxed headers/footers
@@ -117,7 +126,13 @@
  \parindent 0pt
  \let\\=\verse
  \obeylines\catcode`\[=13}
-\def\endsong{\endgroup}
+\def\endsong{%
+\addcontentsline{toc}{Song}{\hbox{{\tt \hbox to 7em{\theFile\hss}}\hbox to 2em{\hss\theTiming}\;\hbox{\theSong\hss}}}
+\endgroup}
+
+\def\theSong{}
+\global\def\theCategory{}\global\def\theTiming{}
+\global\def\theCrDate{}\global\def\theKey{}
 
 \def\refrain{\list{}{\listparindent 1em
  \itemindent\listparindent
@@ -140,19 +155,33 @@
 \def\vfiller#1{\vbox to #1\baselineskip{}}
 
 %%%
-%%% \file{filename} Input a file containing a song; 
-%%%	make sure to start it on a new page.
-%%%	We force a pagebreak here to ensure that the previous song's
-%%%	information appears in its header and footer.
+%%% Table of contents is supposed to look like a song
 %%%
-%%% \ignore{stuff}
-%%%
+\def\l@Song#1#2{#1\par}
+\def\tableofcontents{\begin{song}{LIST OF SONGS}
+ \@starttoc{toc}\end{song}}
 
-\def\file#1{\newpage
+%%%
+%%% \file{filename} Input a file containing a song. 
+%%%	We force a pagebreak here to ensure that the previous song
+%%%	doesn't pick up the new filename in its header and footer.
+%%%
+%%%	Turn off \documentstyle and \begin{document}...\end{document}
+%%%	so that the song can be typeset separately if desired.
+
+\def\file#1{\newpage\begingroup
 \def\theFile{#1}
+\renewenvironment{document}{}{}
+\def\documentstyle[##1]##2{}
 \input{#1}
-}
+\endgroup}
 \def\theFile{}
+
+%%%
+%%% \ignore{stuff}	Ignore some stuff.
+%%%	A crude form of extended, nestable comment
+%%%	frequently useful for cancelling out lists of songs.
+%%%
 
 \long\def\ignore#1{}
 
@@ -169,7 +198,7 @@
 \def\maj{\mbox{maj}}
 \def\min{\mbox{m}}
 \def\sus{\mbox{sus}}
-\def\capo{\mbox{\ \rm capo\ }}
+\def\capo{\mbox{\ \it capo\ }}
 \def\up{\Uparrow}
 \def\add{\&}
 
@@ -177,8 +206,14 @@
 \def[#1]{\@chord{#1}}
 \catcode`\[=12
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%
-%%% Page Styles --- these probably belong in another file.
+%%% Page Styles --- these really belong in another file.
+%%%
+%%%	We define left, right, and center marks and ``tags''
+%%%	for two-line headers and footers.  The tags in both 
+%%%	headers and footers are placed on the line closest to 
+%%%	the text.
 %%%
 
 %% Marks
@@ -197,7 +232,7 @@
 \def\tagLR#1{\global\def\LRtag{#1}}	\def\LRtag{}
 %% boxes
 \def\HFBox#1{\vbox{%		Ruled box
-	\HFTrule\hbox to\textwidth{\HFLrule\hfil#1\hfil\HFRrule}\HFBrule}}
+	\vskip 2pt\HFTrule\hbox to\textwidth{\HFLrule\hfil#1\hfil\HFRrule}\HFBrule}}
 \def\HFFilling#1#2#3{%		3-part Box filling
 	\normalsize\strut\ \makebox[0pt][l]{#1}%
 	\hfill#2\hfill\makebox[0pt][r]{#3}\ }
@@ -212,11 +247,11 @@
  \HFBox{\HFFilling\URmark\UCmark\ULmark} \vskip 1pt
  \hbox to\textwidth{\HFFilling\URtag\UCtag\ULtag} }}%
 \def\@oddfoot{\vbox{%
- \HFBox{\HFFilling\LLmark\LCmark\LRmark} \vskip 1pt
- \hbox to \textwidth{\HFFilling\LLtag\LCtag\LRtag} }}%
+ \hbox to \textwidth{\HFFilling\LLtag\LCtag\LRtag} \vskip 1pt
+ \HFBox{\HFFilling\LLmark\LCmark\LRmark} }}%
 \def\@evenfoot{\vbox{%
- \HFBox{\HFFilling\LRmark\LCmark\LLmark} \vskip 1pt
- \hbox to \textwidth{\HFFilling\LRtag\LCtag\LLtag} }}%
+ \hbox to \textwidth{\HFFilling\LRtag\LCtag\LLtag} \vskip 1pt
+ \HFBox{\HFFilling\LRmark\LCmark\LLmark} }}%
 }
 %%
 %% Rules
@@ -226,13 +261,21 @@
  \def\HFLrule{\vrule}\def\HFRrule{\vrule}
 }
 \def\DefineShadowHFrules{%	Define rules for shadow boxes
- \def\HFTrule{\hrule}\def\HFBrule{\hrule height .75pt}
- \def\HFLrule{\vrule}\def\HFRrule{\vrule width .75pt}
+ \def\HFTrule{\hrule}\def\HFBrule{\hrule height 1pt}
+ \def\HFLrule{\vrule}\def\HFRrule{\vrule width 1pt}
 }
 \def\DefineOpenHFrules{%	Define rules for simple rules
  \def\HFTrule{}\def\HFBrule{\hrule height .75pt}
  \def\HFLrule{}\def\HFRrule{}
 }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% Song-specific page styles
+%%
+%%	Broadside:	one song on a single sheet
+%%	Songbook:	numbered pages
+%%
 
 %%
 %% Marks and tags
@@ -249,7 +292,7 @@
 \markUL{\sc\leftmark}\markUC{\sl\rightmark}\markUR{\sl\thepage}%
 }
 %%
-%% Finally we get to the real page styles
+%% Page styles
 %%
 \def\ps@broadside{%
 \DefineShadowHFrules\DefineHFBoxes\DefineBroadsideMarks%
@@ -265,9 +308,9 @@
 %%%
 %%% Page Margins
 %%%
-\headheight 2\baselineskip
+\headheight 2.1\baselineskip
 \headsep \baselineskip
-\footheight 2\baselineskip
+\footheight 2.1\baselineskip
 \footskip \baselineskip
 \topmargin 0in
 \textheight 9in
@@ -286,3 +329,10 @@
  \textwidth 6.5in
 }
 
+\iffalse
+% $Log: song.sty,v $
+% Revision 1.2  1994-03-04 05:50:58  steve
+% Added RCS information
+%
+
+\fi
