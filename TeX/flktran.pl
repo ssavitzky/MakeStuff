@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: flktran.pl,v 1.2 1999-02-20 23:13:12 steve Exp $
+# $Id: flktran.pl,v 1.3 2002-08-06 06:39:45 steve Exp $
 # flktran [options] infile outfile
 #	Perform format translation on filksong files.    
 
@@ -35,6 +35,12 @@ $verbose = 0;
 $TABSTOP = 4;			# tabstop for indented constructs
 $WIDTH   = 72;			# line width for centering
 $AUTHOR  = "Stephen R. Savitzky"; # Author
+
+### Variables set from environment:
+
+$WEBSITE = $ENV{'WEBSITE'};
+$WEBDIR  = $ENV{'WEBDIR'};
+$WEBDIR  =~ s|/$||;
 
 ### State variables:
 
@@ -81,6 +87,10 @@ if ($html) { $outfmt = "html"; }
 if ($outfile =~ /\.html$/) { $outfmt = "html"; $html = 1; }
 if ($outfile && $outfile !~ /\./ && $outfmt) { $outfile .= ".$outfmt"; }
 $html = $outfmt eq "html";
+
+$outfile =~ m|^([^/]+)\.[^.]+$|;
+$filebase = $1;
+$htmlfile = "$filebase.html";
 
 if ($verbose) {
     print STDERR "  infile = $infile; outfile = $outfile; format = $outfmt.\n";
@@ -200,6 +210,10 @@ sub begSong {
 	print "<html><head>";
 	print "<title>$title</title>\n";
 	print "</head><body>\n";
+	#print "<h3><a href='./'>$WEBDIR</a> / $htmlfile</h3>\n";
+	print "<h3>" . expandPath("$WEBDIR/$htmlfile") . "</h3>\n";
+    } else {
+	print "Online: $WEBSITE$WEBDIR/$htmlfile\n\n";
     }
 }
 
@@ -207,11 +221,17 @@ sub begSong {
 ###	End the file.
 sub endSong {
     if ($html) {
-	print "<h5>Automatically generated with $FLKTRAN";
-	print " from <code>$infile</code>.</h5>\n";
-	if ($cvsid) { print "<h6><i>$cvsid</i></h6>\n"; }
+	print "<hr>";
+	print "<p><small><code><a href='./'>$WEBSITE$WEBDIR/</a>$htmlfile";
+	print "</code><br>\n";
+	print "   <i>Automatically generated with $FLKTRAN";
+	print " from <code>$infile</code>.<i><br>\n";
+	if ($cvsid) { print "   <i>$cvsid</i>\n"; }
+	print "</small></p>\n";
 	print "</body></html>\n" ;
     } else {
+	print "\n\nOnline:\n";
+	print "    $WEBSITE$WEBDIR/$htmlfile\n\n";
 	print "Automatically generated with $FLKTRAN from $infile.\n";
     }
 }
@@ -464,6 +484,7 @@ sub deTeX {
 	    while ($txt !~ /\\link\{[^\}]*\}\{[^\}]*\}/) { $txt .= <STDIN>; }
 	    if ($html) {
 		$txt =~ s/\\link\{([^\}]*)\}\{([^\}]*)\}/<a href="$1">$2<\/a>/;
+		$txt =~ s/\\_/_/; #fix escaped _'s etc in url
 	    } else {
 		$txt =~ s/\\link\{([^\}]*)\}\{([^\}]*)\}/$2/;
 	    }
@@ -493,3 +514,25 @@ sub getContent {
     return $line;
 }
 
+### expandPath($urlpath)
+#	convert a URL path into a sequence of links to the various path
+#	components, separated by slashes.  The result, in other words, 
+#	looks just like the path except that you can navigate with it.
+#
+#	The last component is not linked, so it need not be the same as
+#	the actual filename.  Rooted links are used rather than relative,
+#	so you can use this in contexts other than the directory the path
+#	ends in.  (This makes the resulting HTML bulkier, but who cares?)
+#
+sub expandPath {
+    my ($path) = (@_);
+    my $result = '';
+    my $pfx = '';
+
+    while ($path =~ s|^(/+)([^/]+)/(.)|/$3| ) {
+	$result .= $1;
+	$result .= "<a href='$pfx$1$2/'>$2</a>";
+	$pfx .= $1 . $2;
+    }
+    return $result . $path;
+}
