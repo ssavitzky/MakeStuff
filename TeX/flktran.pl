@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: flktran.pl,v 1.1 1998-12-06 06:52:09 steve Exp $
+# $Id: flktran.pl,v 1.2 1999-02-20 23:13:12 steve Exp $
 # flktran [options] infile outfile
 #	Perform format translation on filksong files.    
 
@@ -440,6 +440,7 @@ sub deTeX {
 	$txt =~ s/\%.*$//;
 	$txt .= <STDIN>;
      }
+    # here's where we need to handle superscripts.
     while ($txt =~ /\{\\em[ \t\n]/
 	   || $txt =~ /\{\\tt[ \t\n]/
 	   || $txt =~ /\{\\bf[ \t\n]/
