@@ -1,5 +1,5 @@
 # Makefile for filksongs
-#	$Id: Makefile,v 1.2 1998-12-06 06:52:09 steve Exp $
+#	$Id: Makefile,v 1.3 2003-12-03 05:05:40 steve Exp $
 #
 # Targets:  
 #	all:		*.flk -> *.lj  (or all PR=.ps for postscript)
@@ -92,6 +92,9 @@ publish: published
 $(PUBDIR):
 	mkdir $(PUBDIR)
 
+put: published 
+	cd $(PUBDIR); make put
+
 # Debugging:
 excluded: 
 	@echo $(EXCLUDE)
@@ -103,11 +106,11 @@ included:
 #	since we might have done a clean since then.
 published: $(PUBDIR) $(PUBFILES)
 	@for f in $? ; do ( 						\
-	    { [ -f $(PUBDIR)/$$f ] && cmp -s $$f $(PUBDIR)/$$f }	\
+	    { [ -f $(PUBDIR)/$$f ] && cmp -s $$f $(PUBDIR)/$$f; }	\
 	    || ( cp $$f $(PUBDIR); echo "  published $$f" );		\
 	    grep -qs $$f $(PUBDIR)/.cvsignore || 			\
 	         echo $$f >> $(PUBDIR)/.cvsignore 			\
-	); done
+	) done
 	date > published
 
 1song.dvi: song.sty $(SONGS)
