@@ -13,8 +13,8 @@
 \*********************************************************************/
 
 #include <stdio.h>
-#include "scanner.h"
-#include "dates.h"
+/* #include "scanner.h" */
+/* #include "dates.h" */
 
 #define global
 #define local	static
@@ -29,7 +29,7 @@ typedef unsigned long ulong;
 #define ENDCHR ';'
 #define BCHORD '['
 #define ECHORD ']'
-
+#define MACRO '\\'			/* TeX macro introducer */
 
 /*********************************************************************\
 **
@@ -37,10 +37,10 @@ typedef unsigned long ulong;
 **	
 \*********************************************************************/
 
-FILE *f;			/* -F option file 			*/
+FILE *f;		/* -F option file 		*/
 char buf[512];		/* general-purpose buffer	*/
-int tabstop = 8;	/* default tabstop			*/
-int indent = 8;		/* default indentation		*/
+int tabstop = 8;	/* default tabstop		*/
+int indent = 0;		/* default indentation		*/
 
 
 /*********************************************************************\
@@ -58,107 +58,125 @@ int indent = 8;		/* default indentation		*/
 \*********************************************************************/
 
 int copy(dst, src, flag)
-	char *dst, *src;
-	int flag;
+    char *dst, *src;
+    int flag;
 {
-	int scol, dcol, state;
-	char *p = dst;
+    int scol, dcol, inchord, inmacro;
+    char *p = dst;
 
-	state = 0;
-	for (scol = dcol = 0; *src && *src != '\n'; ++src) {
-		switch (*src) {
-		 case BCHORD:
-		 	++state;
-			break;
-		 case ECHORD:
-		 	--state;
-			break;
-		 case '\t':
-		 	if (state == 0) {
-				do {++scol;} while (scol % tabstop);
-		 	} else if (state == flag) {
-				do {
-					*p++ = ' ';
-					++dcol;
-				} while (dcol % tabstop);
-			}
-		 	break;
-		 default:
-			if (state == flag) {
-				while (dcol < scol) {
-					*p++ = ' ';
-					++dcol;
-				}
-				*p++ = *src;
-				++dcol;
-			}
-		 	if (state == 0) {
-				++scol;
-		 	}
+    inchord = 0; inmacro = 0;
+    for (scol = dcol = 0; *src && *src != '\n'; ++src) {
+	switch (*src) {
+	  case BCHORD:
+	    ++inchord;
+	    break;
+	  case ECHORD:
+	    --inchord;
+	    break;
+	  case '\t':
+	    if (inchord == 0) {
+		do {++scol;} while (scol % tabstop);
+	    } else if (inchord == flag) {
+		do {
+		    *p++ = ' ';
+		    ++dcol;
+		} while (dcol % tabstop);
+	    }
+	    break;
+	  case MACRO:
+	    ++inmacro;
+	    break;
+	  default:
+	    if (inmacro == 1 && !inchord) {
+		if (inchord == flag) {
+		    while (dcol < scol) {
+			*p++ = ' ';
+			++dcol;
+		    }
+		    *p++ = '/';
+		    ++dcol;
 		}
+		++scol;
+	    }
+	    inmacro = 0;
+	    if (inchord == flag) {
+		while (dcol < scol) {
+		    *p++ = ' ';
+		    ++dcol;
+		}
+		*p++ = *src;
+		++dcol;
+	    }
+	    if (inchord == 0) {
+		++scol;
+	    }
 	}
-	if (dcol) *p++ = '\n';
-	*p = 0;
-	return(p - dst);
+    }
+    if (dcol) *p++ = '\n';
+    *p = 0;
+    return(p - dst);
 }
 
 
 /*********************************************************************\
-**
-**	M A I N   P R O G R A M
-**	
-\*********************************************************************/
+ **
+ **	M A I N   P R O G R A M
+ **	
+ \*********************************************************************/
 
 main(argc, argv)
-int    argc;
-char **argv;
+    int    argc;
+    char **argv;
 {
-	char c;
-	char obuf[256];
+    char c;
+    char obuf[256];
+    char *p;
+    char **a = argv + 1;
+    int n;
 
-	scnCmd(argc, argv, (char *)NULL);
-	for (scnSkp(); scnPtr; scnSkp()) {
-		switch (c = scnOpt()) {
-			case 'I': case 'i':					/* -I n indent */
-				indent = scnNum(10);
-				break;
-			case 'O': case 'o':					/* -O f	output file */
-				scnOpS(buf, sizeof(buf));
-				if (!freopen(buf, "w", stdout)) {
-					fprintf(stderr, 
-							"%s: output file '%s' not found\n", argv[0], buf); 
-					exit(-1); 
-				}
-				break;
-			case 'Z': case 'z':					/* -Z	debug			*/
-				debugf = 1;
-				break;
-			case 0: 							/* not a flagged option */
-				scnOpS(buf, sizeof(buf));
-DEBUG printf("input filename = '%s'\n", buf); DEBEND
-				if (!freopen(buf, "r", stdin)) {
-					fprintf(stderr, 
-							"%s: input file '%s' not found\n", argv[0], buf); 
-					exit(-1); 
-				}
-				break;
-
-			default:
-				fprintf(stderr, 
-						"%s: unknown option: '%c%s'\n", argv[0], c, scnPtr);
-				scnWrd((char *)NULL, 0);
-				break;
+    for ( n = argc; --n; ++a) {
+	p = *a;
+	if (*p == '-') {
+	    switch (c = *p) {	
+	      case 'I': case 'i':	/* -I n indent */
+		indent = atoi(*++a);
+		--n;
+		break;
+	      case 'O': case 'o':	/* -O f	output file */
+		--n;
+		++p;
+		if (!freopen(p, "w", stdout)) {
+		    fprintf(stderr, 
+			    "%s: can't open output file '%s'\n", argv[0], p); 
+		    exit(-1); 
+		}
+		break;
+	      case 'Z': case 'z':	/* -Z	debug			*/
+		debugf = 1;
+		break;
+	      default:
+		fprintf(stderr, 
+			"%s: unknown option: '%s'\n", argv[0], p);
+		exit(-1);
+		break;
+	    }
+	} else {
+	    DEBUG printf("input filename = '%s'\n", p); DEBEND
+		if (!freopen(p, "r", stdin)) {
+		    fprintf(stderr, 
+			    "%s: input file '%s' not found\n", argv[0], p); 
+		    exit(-1); 
 		}
 	}
-
-	while (!feof(stdin)) {
-		buf[0] = ENDCHR;
-		gets(buf);
-		if (buf[0] == ENDCHR) break;
-		if (copy(obuf, buf, 1)) printf("%*s%s", indent, "", obuf);
-		if (copy(obuf, buf, 0)) printf("%*s%s", indent, "", obuf);
-		else					putchar('\n');
-	}
-	putchar('\f');
-	exit(0);
+    }
+    while (!feof(stdin)) {
+	buf[0] = ENDCHR;
+	gets(buf);
+	if (buf[0] == ENDCHR) break;
+	if (copy(obuf, buf, 1)) printf("%*s%s", indent, "", obuf);
+	if (copy(obuf, buf, 0)) printf("%*s%s", indent, "", obuf);
+	else					putchar('\n');
+    }
+    putchar('\f');
+    exit(0);
 }
