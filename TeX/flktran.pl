@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: flktran.pl,v 1.4 2002-10-15 15:58:49 steve Exp $
+# $Id: flktran.pl,v 1.5 2004-05-25 04:54:37 steve Exp $
 # flktran [options] infile outfile
 #	Perform format translation on filksong files.    
 
@@ -8,6 +8,7 @@ sub usage {
     print "$0 [options] infile[.flk] [outfile].ext\n";
     print "	-t	use tables\n";
     print "	-h	output html\n";
+    print "	-c	output chords\n";
     print "	-v	verbose\n";
     print "	-dtd fn	specify DTD\n";
     print "	-opt xx	specify style options (LaTeX)\n";
@@ -29,6 +30,7 @@ $doctype = "";			# document type (LaTeX or SGML)
 $options = "";			# LaTeX style options
 $tables  = 0;			# use tables for HTML?
 $verbose = 0;
+$chords	 = 0;
 
 ### Adjustable parameters:
 
@@ -73,8 +75,10 @@ while ($ARGV[0] =~ /^\-/) {
     if ($ARGV[0] eq "-dtd") { shift; $dtd = shift; }
     elsif ($ARGV[0] eq "-opt") { shift; $opt = shift; }
     elsif ($ARGV[0] eq "-h" || $ARGV[0] eq "-html") { shift; $html = 1; }
-    elsif ($ARGV[0] eq "-t"|| $ARGV[0] eq "-tables") { shift; $tables = 1; }
+    elsif ($ARGV[0] eq "-t"|| $ARGV[0] eq "-tables") { 
+	shift; $tables = 1; $chords=1; }
     elsif ($ARGV[0] eq "-v"|| $ARGV[0] eq "-verbose") { shift; $verbose = 1; }
+    elsif ($ARGV[0] eq "-c"|| $ARGV[0] eq "-chords") { shift; $chords = 1; }
     else { usage; die "unrecognized option $1\n"; }
 }
 
@@ -440,7 +444,7 @@ sub chordLine {
     }
 
     # The result has a newline appended to it.
-    return (($cline eq "")? $dline : $cline . "\n" . $dline);
+    return (($cline && $chords)? $cline . "\n" . $dline : $dline);
 }
 
 ### Convert a line to a table
