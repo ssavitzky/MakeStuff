@@ -1,7 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% SONG.STY %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%
 %%% Author: Stephen Savitzky
-%%%	    $Id: song.sty,v 1.5 2004-12-29 00:58:36 steve Exp $
+%%%	    $Id: song.sty,v 1.6 2004-12-29 01:45:16 steve Exp $
 %%%
 %%% Song environment:
 %%%	\begin{song}{title}			% starts on a new page
@@ -17,6 +17,7 @@
 %%%	  \cvsid{$Id ...}			% defines \theCVSid
 %%%	  \lyrics{lyricist}			% specifies theLyricist
 %%%	  \music{composer}			% specifies theComposer
+%%%	  \arranger{arranger}			% specifies theArranger
 %%%
 %%%	  \begin{note}
 %%%		left-justified, paragraphed text set in smaller type
@@ -113,6 +114,7 @@
 \def\cvsid#1{\global\def\theCVSid{#1}}\def\theCVSid{}
 \def\lyrics#1{\global\def\theLyricist{#1}}\def\theLyricist{}
 \def\music#1{\global\def\theComposer{#1}}\def\theComposer{}
+\def\arranger#1{\global\def\theArranger{#1}}\def\theArranger{}
 
 %%%
 %%% note, headnote, tailnote
@@ -342,7 +344,10 @@
 
 \iffalse
 % $Log: song.sty,v $
-% Revision 1.5  2004-12-29 00:58:36  steve
+% Revision 1.6  2004-12-29 01:45:16  steve
+% add \arranger
+%
+% Revision 1.5  2004/12/29 00:58:36  steve
 % add \lyrics, \music
 %
 % Revision 1.4  1998/12/06 06:52:09  steve
