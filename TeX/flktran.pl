@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: flktran.pl,v 1.3 2002-08-06 06:39:45 steve Exp $
+# $Id: flktran.pl,v 1.4 2002-10-15 15:58:49 steve Exp $
 # flktran [options] infile outfile
 #	Perform format translation on filksong files.    
 
@@ -106,6 +106,8 @@ if ($html) {
     $_BF = "</b>";
     $TT  = "<tt>";
     $_TT = "</tt>";
+    $UL  = "<u>";
+    $_UL = "</u>";
     $SPOKEN  = "(spoken)";
     $_SPOKEN = "";
     $NL  = "<br>\n";
@@ -119,6 +121,8 @@ if ($html) {
     $_BF = "*";
     $TT  = "";
     $_TT = "";
+    $UL  = "";
+    $_UL = "";
     $SPOKEN  = "(spoken)";
     $_SPOKEN = "";
     $NL  = "\n";
@@ -464,7 +468,9 @@ sub deTeX {
     while ($txt =~ /\{\\em[ \t\n]/
 	   || $txt =~ /\{\\tt[ \t\n]/
 	   || $txt =~ /\{\\bf[ \t\n]/
-	   || $txt =~ /\\link/) {
+	   || $txt =~ /\\underline/
+	   || $txt =~ /\\link/
+	   ) {
 	if ($txt =~ /\{\\em[ \t\n]/) {
 	    $txt =~ s/\{\\em[ \t\n]/$EM/; 
 	    while ($txt !~ /\}/) { $txt .= <STDIN>; }
@@ -479,6 +485,11 @@ sub deTeX {
 	    $txt =~ s/\{\\bf[ \t\n]/$BF/; 
 	    while ($txt !~ /\}/) { $txt .= <STDIN>; }
 	    $txt =~ s/\}/$_BF/;
+	}
+	if ($txt =~ /\\underline\{/) { 
+	    $txt =~ s/\\underline\{/$UL/; 
+	    while ($txt !~ /\}/) { $txt .= <STDIN>; }
+	    $txt =~ s/\}/$_UL/;
 	}
 	if ($txt =~ /\\link/) {
 	    while ($txt !~ /\\link\{[^\}]*\}\{[^\}]*\}/) { $txt .= <STDIN>; }
