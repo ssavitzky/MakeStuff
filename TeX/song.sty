@@ -1,0 +1,288 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% SONG.STY %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%
+%%% Author: Stephen Savitzky
+%%%
+%%% Song environment:
+%%%	\begin{song}{title}			% starts on a new page
+%%%						% sets \theSong to title
+%%%	  \subtitle{subtitle, set in smaller type}
+%%%	  \notice{centered copyright notice}
+%%%	  \dedication{centered dedication}
+%%%
+%%%	  \category{keyword}			% defines \theCategory
+%%%	  \key{C\; (A \capo 3)}			% defines \theKey
+%%%	  \timing{mm:ss}			% defines \theTiming
+%%%	  \created{yymmdd}			% defines \theCrDate
+%%%
+%%%	  \begin{note}
+%%%		left-justified, paragraphed text set in smaller type
+%%%	  \end{note}
+%%%
+%%%	  lines of song separated by newline
+%%%	  \; indented single line with no extra space around it.
+%%%	  chords like th[A]is
+%%%	  \verse or \\
+%%%	  between verses
+%%%	  \spoken{spoken parts in slanted type}
+%%%	  \begin{refrain}
+%%%	    indented refrain with verse spacing
+%%%	  \end{refrain}
+%%%	  \inset{1-line instructions in italics, indented 1em}
+%%%	\end{song}
+%%%	\tailnote{Note text at the bottom of the page}
+%%%
+%%%	  \vfiller{n}		insert n lines of filler to balance
+%%%				columns in twocolumns environment
+%%%
+%%%	[chord]			set in a 0-width raised box
+%%%	\chord{set as chord but not raised}
+%%%	  Chords are set in math mode (to get superscripts and special chars.)
+%%%	  The following chord elements are defined:
+%%%	    \flat \sharp \dim \aug \maj \sus 
+%%%	    \min	prints as m
+%%%	    \add	prints as &
+%%%	    \up		prints as double uparrow, e.g. F(D\up3)
+%%%	    \capo	used in, e.g.  \key{F\; (D\capo3)}
+%%%	    \;		em space
+%%%
+%%
+%%%  \file{songfile}	input a song file; set \theFile to the filename
+%%%
+%%%  Page styles: 
+%%%	  broadside	songs on un-numbered single sheets
+%%%	  songbook	set up for two-sided printing
+%%%	  boxed		plain boxed headers/footers: use markXY and tagXY
+%%%	  ruled		plain ruled headers/footers: use markXY and tagXY
+%%%	  shadowed	plain shadow-boxed headers/footers
+%%%
+%%%	  \tallpage	adds an extra inch to the text height
+%%%	  \widepage	adds an extra inch to the text width
+%%%
+%%%  Page formatting elements:
+%%%		additional conditional code can be put in the marks
+%%%		and tags to swap them on odd and even pages.
+%%%
+%%%	\markUL{x}	mark upper left		defines \ULmark
+%%%	\markUC{x}	mark upper center	etc.
+%%%	\markUR{x}	mark upper right
+%%%	\markLL{x}	mark lower left
+%%%	\markLC{x}	mark lower center
+%%%	\markLR{x}	mark lower right
+%%%
+%%%	\tagXY{x}	tag {upper,lower}{left, center,right}
+%%%			  the tags are like the marks except that in the
+%%%			  boxed styles they come underneath the boxes.
+%%%
+%%%		The following rules can be redefined for shadow effects.
+%%%	\HFTrule	header/footer top box rule
+%%%	\HFBrule	header/footer bottom box rule
+%%%	\HFLrule	header/footer left rule
+%%%	\HFRrule	header/footer right rule
+%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%
+%%% Informational Components (notice, etc.)
+%%%
+\def\Centered #1{\begin{center}#1\end{center}}
+\let\notice=\Centered
+\let\subtitle=\Centered
+\let\dedication=\Centered
+
+\def\timing#1{\global\def\theTiming{#1}}\def\theTiming{}
+\def\category#1{\global\def\theCategory{#1}}\def\theCategory{}
+\def\key#1{\global\def\theKey{#1}}\def\theKey{}
+\def\created#1{\global\def\theCrDate{#1}}\def\theCrDate{}
+
+%%%
+%%% note, headnote, tailnote
+%%%
+\def\note{\quotation\footnotesize %
+	\catcode`\^^M=5 % ascii return is end-line
+}
+\let\endnote=\endquotation
+\long\def\headnote#1{\begin{note}#1\end{note}}
+\long\def\tailnote#1{\vfill\begin{note}#1\end{note}}
+
+%%%
+%%% The song and refrain environments
+%%%
+\def\song#1{\newpage
+ \Centered{{\Large\bf#1}}
+ \global\def\theSong{#1}
+ \global\def\theCategory{}\global\def\theTiming{}
+ \global\def\theCrDate{}\global\def\theKey{}
+ \begingroup
+ \parskip 0pt plus 1pt
+ \parindent 0pt
+ \let\\=\verse
+ \obeylines\catcode`\[=13}
+\def\endsong{\endgroup}
+
+\def\refrain{\list{}{\listparindent 1em
+ \itemindent\listparindent
+ \labelwidth 0pt
+ \rightmargin 0pt
+ \obeylines
+ \parsep 0pt plus 1pt}\item[]}
+\let\endrefrain=\endlist
+{\obeylines% We have to do this inside \obeylines to make it work right.
+\global\def\Indented#1{\begin{refrain}
+ #1
+\end{refrain}}}
+
+\def\verse{\par\medskip\par}
+\def\inset#1{{\hskip1em\it #1}}
+\def\;{\hskip 1em}
+
+\def\spoken#1{{\sl #1}}
+
+\def\vfiller#1{\vbox to #1\baselineskip{}}
+
+%%%
+%%% \file{filename} Input a file containing a song; 
+%%%	make sure to start it on a new page.
+%%%	We force a pagebreak here to ensure that the previous song's
+%%%	information appears in its header and footer.
+%%%
+%%% \ignore{stuff}
+%%%
+
+\def\file#1{\newpage
+\def\theFile{#1}
+\input{#1}
+}
+\def\theFile{}
+
+\long\def\ignore#1{}
+
+%%%
+%%% Chords.
+%%%	Note that chords are set in math mode
+%%%
+\def\chordfont{\sf}
+\def\chord #1{{\footnotesize\strut$\chordfont #1$}}
+\def\@chord #1{\makebox[0pt][l]{\raisebox{.9em}{\chord{#1}}}}
+
+\def\dim{_\circ}
+\def\aug{^+}
+\def\maj{\mbox{maj}}
+\def\min{\mbox{m}}
+\def\sus{\mbox{sus}}
+\def\capo{\mbox{\ \rm capo\ }}
+\def\up{\Uparrow}
+\def\add{\&}
+
+\catcode`\[=13
+\def[#1]{\@chord{#1}}
+\catcode`\[=12
+
+%%%
+%%% Page Styles --- these probably belong in another file.
+%%%
+
+%% Marks
+\def\markUL#1{\global\def\ULmark{#1}}	\def\ULmark{}
+\def\markUC#1{\global\def\UCmark{#1}}	\def\UCmark{}
+\def\markUR#1{\global\def\URmark{#1}}	\def\URmark{}
+\def\markLL#1{\global\def\LLmark{#1}}	\def\LLmark{}
+\def\markLC#1{\global\def\LCmark{#1}}	\def\LCmark{}
+\def\markLR#1{\global\def\LRmark{#1}}	\def\LRmark{}
+%% Tags
+\def\tagUL#1{\global\def\ULtag{#1}}	\def\ULtag{}
+\def\tagUC#1{\global\def\UCtag{#1}}	\def\UCtag{}
+\def\tagUR#1{\global\def\URtag{#1}}	\def\URtag{}
+\def\tagLL#1{\global\def\LLtag{#1}}	\def\LLtag{}
+\def\tagLC#1{\global\def\LCtag{#1}}	\def\LCtag{}
+\def\tagLR#1{\global\def\LRtag{#1}}	\def\LRtag{}
+%% boxes
+\def\HFBox#1{\vbox{%		Ruled box
+	\HFTrule\hbox to\textwidth{\HFLrule\hfil#1\hfil\HFRrule}\HFBrule}}
+\def\HFFilling#1#2#3{%		3-part Box filling
+	\normalsize\strut\ \makebox[0pt][l]{#1}%
+	\hfill#2\hfill\makebox[0pt][r]{#3}\ }
+%%
+%% The macro that actually defines the headers and footers
+%%
+\def\DefineHFBoxes{%
+\def\@oddhead{\vbox{%
+ \HFBox{\HFFilling\ULmark\UCmark\URmark} \vskip 1pt
+ \hbox to \textwidth{\HFFilling\ULtag\UCtag\URtag} }}%
+\def\@evenhead{\vbox{%
+ \HFBox{\HFFilling\URmark\UCmark\ULmark} \vskip 1pt
+ \hbox to\textwidth{\HFFilling\URtag\UCtag\ULtag} }}%
+\def\@oddfoot{\vbox{%
+ \HFBox{\HFFilling\LLmark\LCmark\LRmark} \vskip 1pt
+ \hbox to \textwidth{\HFFilling\LLtag\LCtag\LRtag} }}%
+\def\@evenfoot{\vbox{%
+ \HFBox{\HFFilling\LRmark\LCmark\LLmark} \vskip 1pt
+ \hbox to \textwidth{\HFFilling\LRtag\LCtag\LLtag} }}%
+}
+%%
+%% Rules
+%%
+\def\DefineBoxHFrules{%		Define rules for simple boxes
+ \def\HFTrule{\hrule}\def\HFBrule{\hrule}
+ \def\HFLrule{\vrule}\def\HFRrule{\vrule}
+}
+\def\DefineShadowHFrules{%	Define rules for shadow boxes
+ \def\HFTrule{\hrule}\def\HFBrule{\hrule height .75pt}
+ \def\HFLrule{\vrule}\def\HFRrule{\vrule width .75pt}
+}
+\def\DefineOpenHFrules{%	Define rules for simple rules
+ \def\HFTrule{}\def\HFBrule{\hrule height .75pt}
+ \def\HFLrule{}\def\HFRrule{}
+}
+
+%%
+%% Marks and tags
+%%
+\def\DefineSongTags{%
+\tagUL{\sl\theCategory}\tagUR{\chord{\theKey}\makebox[.5in][r]{\sl\theTiming}}
+\tagLL{{\sl\theCrDate}}\tagLR{{\tt\theFile}}
+}
+\def\DefineBroadsideMarks{%
+\DefineSongTags\markUR{\sl\theSong}%
+}
+\def\DefineSongbookMarks{%
+\DefineSongTags%
+\markUL{\sc\leftmark}\markUC{\sl\rightmark}\markUR{\sl\thepage}%
+}
+%%
+%% Finally we get to the real page styles
+%%
+\def\ps@broadside{%
+\DefineShadowHFrules\DefineHFBoxes\DefineBroadsideMarks%
+\let\@evenhead=\@oddhead\let\@evenfoot=\@oddfoot% even and odd pages same.
+\def\chaptermark##1{\markboth{##1}}\def\sectionmark##1{\markright{##1}}%
+\def\subsectionmark##1{}}
+
+\def\ps@songbook{%
+\DefineSimpleHFrules\DefineHFBoxes\DefineSongbookMarks%
+\def\chaptermark##1{\markboth{##1}{}}\def\sectionmark##1{\markright{##1}}%
+\def\subsectionmark##1{}}
+
+%%%
+%%% Page Margins
+%%%
+\headheight 2\baselineskip
+\headsep \baselineskip
+\footheight 2\baselineskip
+\footskip \baselineskip
+\topmargin 0in
+\textheight 9in
+\advance\textheight -1\headheight\advance\textheight -1\headsep
+\advance\textheight -1\footheight\advance\textheight -1\footskip
+
+\def\tallpage{
+ \topmargin -.5in
+ \textheight 10in
+ \advance\textheight -1\headheight\advance\textheight -1\headsep
+ \advance\textheight -1\footheight\advance\textheight -1\footskip
+}
+\def\widepage{
+ \oddsidemargin 0in
+ \evensidemargin 0in
+ \textwidth 6.5in
+}
+
