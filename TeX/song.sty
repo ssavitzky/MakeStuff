@@ -1,7 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% SONG.STY %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%
 %%% Author: Stephen Savitzky
-%%%	    $Id: song.sty,v 1.2 1994-03-04 05:50:58 steve Exp $
+%%%	    $Id: song.sty,v 1.3 1998-04-06 07:29:12 steve Exp $
 %%%
 %%% Song environment:
 %%%	\begin{song}{title}			% starts on a new page
@@ -95,8 +95,10 @@
 %%%
 \def\Centered #1{\begin{center}#1\end{center}}
 \let\notice=\Centered
-\let\subtitle=\Centered
+\def\subtitle #1{\begin{center}\bf #1\end{center}}
+\def\license #1{\begin{center}\small #1\end{center}}
 \let\dedication=\Centered
+\def\ttto #1{{\sc ttto:} {\em #1\/}}
 
 \def\timing#1{\global\def\theTiming{#1}}\def\theTiming{}
 \def\category#1{\global\def\theCategory{#1}}\def\theCategory{}
@@ -331,7 +333,10 @@
 
 \iffalse
 % $Log: song.sty,v $
-% Revision 1.2  1994-03-04 05:50:58  steve
+% Revision 1.3  1998-04-06 07:29:12  steve
+% Added ttto and license; boldface subtitle.
+%
+% Revision 1.2  1994/03/04 05:50:58  steve
 % Added RCS information
 %
 
