@@ -1,7 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% SONG.STY %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%
 %%% Author: Stephen Savitzky
-%%%	    $Id: song.sty,v 1.4 1998-12-06 06:52:09 steve Exp $
+%%%	    $Id: song.sty,v 1.5 2004-12-29 00:58:36 steve Exp $
 %%%
 %%% Song environment:
 %%%	\begin{song}{title}			% starts on a new page
@@ -14,7 +14,9 @@
 %%%	  \key{C\; (A \capo 3)}			% defines \theKey
 %%%	  \timing{mm:ss}			% defines \theTiming
 %%%	  \created{yymmdd}			% defines \theCrDate
-%%%	  \cvsid{$Id: song.sty,v 1.4 1998-12-06 06:52:09 steve Exp $}			% defines \theCVSid
+%%%	  \cvsid{$Id ...}			% defines \theCVSid
+%%%	  \lyrics{lyricist}			% specifies theLyricist
+%%%	  \music{composer}			% specifies theComposer
 %%%
 %%%	  \begin{note}
 %%%		left-justified, paragraphed text set in smaller type
@@ -109,6 +111,8 @@
 \def\key#1{\global\def\theKey{#1}}\def\theKey{}
 \def\created#1{\global\def\theCrDate{#1}}\def\theCrDate{}
 \def\cvsid#1{\global\def\theCVSid{#1}}\def\theCVSid{}
+\def\lyrics#1{\global\def\theLyricist{#1}}\def\theLyricist{}
+\def\music#1{\global\def\theComposer{#1}}\def\theComposer{}
 
 %%%
 %%% note, headnote, tailnote
@@ -338,7 +342,10 @@
 
 \iffalse
 % $Log: song.sty,v $
-% Revision 1.4  1998-12-06 06:52:09  steve
+% Revision 1.5  2004-12-29 00:58:36  steve
+% add \lyrics, \music
+%
+% Revision 1.4  1998/12/06 06:52:09  steve
 % Added publishing stuff, flktran.pl, and index.pl
 %
 % Revision 1.3  1998/04/06 07:29:12  steve
