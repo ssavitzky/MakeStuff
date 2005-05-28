@@ -1,7 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% SONG.STY %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%
 %%% Author: Stephen Savitzky
-%%%	    $Id: song.sty,v 1.6 2004-12-29 01:45:16 steve Exp $
+%%%	    $Id: song.sty,v 1.7 2005-05-28 20:56:45 steve Exp $
 %%%
 %%% Song environment:
 %%%	\begin{song}{title}			% starts on a new page
@@ -9,7 +9,9 @@
 %%%	  \subtitle{subtitle, set in smaller type}
 %%%	  \notice{centered copyright notice}
 %%%	  \dedication{centered dedication}
-%%%
+%%%	  \description{description}		% defines \theDescription
+%%%		(The description is used only for liner notes, etc.; it
+%%%		 does not appear in typeset lyrics)
 %%%	  \category{keyword}			% defines \theCategory
 %%%	  \key{C\; (A \capo 3)}			% defines \theKey
 %%%	  \timing{mm:ss}			% defines \theTiming
@@ -109,6 +111,7 @@
 
 \def\timing#1{\global\def\theTiming{#1}}\def\theTiming{}
 \def\category#1{\global\def\theCategory{#1}}\def\theCategory{}
+\def\description#1{\global\def\theDescription{#1}}\def\theDescription{}
 \def\key#1{\global\def\theKey{#1}}\def\theKey{}
 \def\created#1{\global\def\theCrDate{#1}}\def\theCrDate{}
 \def\cvsid#1{\global\def\theCVSid{#1}}\def\theCVSid{}
@@ -344,7 +347,10 @@
 
 \iffalse
 % $Log: song.sty,v $
-% Revision 1.6  2004-12-29 01:45:16  steve
+% Revision 1.7  2005-05-28 20:56:45  steve
+% add \description for brief descriptions, as in setlists and liner notes.
+%
+% Revision 1.6  2004/12/29 01:45:16  steve
 % add \arranger
 %
 % Revision 1.5  2004/12/29 00:58:36  steve
