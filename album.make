@@ -1,5 +1,5 @@
 ### Makefile template for albums
-#	$Id: album.make,v 1.1 2006-03-03 00:05:16 steve Exp $
+#	$Id: album.make,v 1.2 2006-03-03 00:11:59 steve Exp $
 #
 #  This template is meant to be included in the Makefile of an "album" 
 #	directory.  The usual directory tree looks like:
@@ -17,7 +17,7 @@
 ### Usage:
 #
 #   Variables:
-#	MFDIR		the directory containing this file
+#	TOOLDIR		the directory containing this file
 #	SHORTNAME	the shortname (directory name) of the album
 #	LONGNAME	the name of the album's collection directory:
 #			(title with words capitalized and separated by _)
@@ -34,8 +34,8 @@
 
 ## Directories:
 
-SONGDIR		= $(MFDIR)/../Songs
-TRACKDIR	= $(MFDIR)/../Tracks
+SONGDIR		= $(TOOLDIR)/../Songs
+TRACKDIR	= $(TOOLDIR)/../Tracks
 
 ## Programs:
 
@@ -48,6 +48,10 @@ DEVICE		= ATA:1,1,0
 
 
 ### From here on it's constant ###
+
+## Programs
+
+LIST_TRACKS = $(TOOLDIR)/list-tracks
 
 ###### Rules ##########################################################
 
@@ -110,7 +114,7 @@ lstracks: list-tracks
 
 .PHONY: list-tracks
 list-tracks: $(NAME).tracks
-	@list-tracks $(SONGS)
+	@$(LIST_TRACKS) $(SONGS)
 
 .PHONY: list-text
 list-text: $(NAME).tracks
