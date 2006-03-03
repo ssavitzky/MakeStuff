@@ -1,13 +1,14 @@
 ### Makefile template for albums
-#	$Id: album.make,v 1.2 2006-03-03 00:11:59 steve Exp $
+#	$Id: album.make,v 1.3 2006-03-03 21:00:10 steve Exp $
 #
 #  This template is meant to be included in the Makefile of an "album" 
 #	directory.  The usual directory tree looks like:
 #
 #  top/
 #	Songs		song information (.flk files)
-#	tracks		recorded tracks; a subdirectory per song
-#	albums		a subdirectory for each album
+#	Tracks		recorded tracks; a subdirectory per song
+#	Albums		a subdirectory for each album
+#	Tools		(this directory) scripts and makefile templates
 #
 #  The album directory contains a file called [name].tracks with
 #  the shortnames of the album's tracks.  The most recent .wav file
@@ -33,25 +34,25 @@
 ### Site-dependent variables:
 
 ## Directories:
+#	CAUTION: the really critical one here is SONGDIR; if it doesn't
+#		 have the .flk files in it, you're hosed.
 
-SONGDIR		= $(TOOLDIR)/../Songs
-TRACKDIR	= $(TOOLDIR)/../Tracks
+BASEDIR		= $(subst /Tools/..,/,$(TOOLDIR)/..)
+#BASEDIR		= ../..
+SONGDIR 	= $(BASEDIR)/Songs
+TRACKDIR	= $(BASEDIR)/Tracks
 
 ## Programs:
 
 SONGINFO = $(SONGDIR)/SongInfo.pl
+LIST_TRACKS = $(TOOLDIR)/list-tracks
 
 ## Devices (for burning):
 #	For a 2.4 kernel with one IDE-SCSI device, use DEVICE=0,0,0
-
+#	For a 2.6 kernel with the burner on /dev/hdd, use ATA:1,1,0
 DEVICE		= ATA:1,1,0
 
-
 ### From here on it's constant ###
-
-## Programs
-
-LIST_TRACKS = $(TOOLDIR)/list-tracks
 
 ###### Rules ##########################################################
 
