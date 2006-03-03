@@ -1,0 +1,30 @@
+#!/bin/bash
+#	List number of .aup and .wav files in track directories
+#	Now lists the last line in */notes that starts with a nonblank in
+#	column 1; this should normally be something about the most recent
+#	semi-useable take.
+#
+# flags:
+#	-  empty directory
+#	n  "*/notes" present
+#	!  "*/OK" present
+
+([ -d test ] && [ "`ls test | grep .aup `" = "" ]) || cd $HOME/Tracks
+
+if [ "$1" = "" ]; then tracks="*"; else tracks="$*"; fi
+for d in $tracks; do
+    if [ -d $d ] && [ "`ls $d`" = "" ]; then
+	echo "  0  0 - 	$d"
+    elif [ $d = "test" ]; then
+	# Skip test/ even though it may have tracks in it.
+	true
+    elif [ -d $d ]; then
+	echo -n " " `(cd $d; ls | grep .aup$ | wc -l)` 
+	echo -n "  `(cd $d; ls | grep .wav$ | wc -l)` " 
+	if [ -e $d/notes ]; then echo -n "n"; else echo -n " "; fi
+	if [ -e $d/OK ]; then echo  -n "!`cat $d/OK`"; else echo  -n " "; fi
+	echo -n "	$d	" 
+	if [ -e $d/notes ]; then grep '^\w' $d/notes | tail -1;
+	else echo; fi
+    fi
+done
