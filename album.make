@@ -1,5 +1,5 @@
 ### Makefile template for albums
-#	$Id: album.make,v 1.3 2006-03-03 21:00:10 steve Exp $
+#	$Id: album.make,v 1.4 2006-05-09 19:02:32 steve Exp $
 #
 #  This template is meant to be included in the Makefile of an "album" 
 #	directory.  The usual directory tree looks like:
@@ -44,7 +44,7 @@ TRACKDIR	= $(BASEDIR)/Tracks
 
 ## Programs:
 
-SONGINFO = $(SONGDIR)/SongInfo.pl
+SONGINFO = $(TOOLDIR)/SongInfo.pl
 LIST_TRACKS = $(TOOLDIR)/list-tracks
 
 ## Devices (for burning):
