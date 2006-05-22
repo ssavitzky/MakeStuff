@@ -1,13 +1,8 @@
 			to.do for Steve_Savitzky/Tools
-		$Id: to.do,v 1.1 2006-05-20 21:30:52 steve Exp $
+	       $Id: to.do,v 1.2 2006-05-22 02:16:31 steve Exp $
 
 
 =========================================================================
-
-o Move TeX in from ~steve; 
-  o adjust Makefile in Songs
-  o there's some stuff in Doc/TeX that we need to save:  web Makefile and
-    HEADER.html in particular.
 
 o move index.pl into Tools from TeX; adjust paths.
 
@@ -19,12 +14,26 @@ o Songs needs songlist files
   o instead of passing the whole list on the command line to, e.g., index.pl
     this would allow using the same tools in Songs and the albums.
 
-  o if Songs gets moved, the way ogg files get built will have to be
-    rethought; currently they use ../Tracks.  
-    Best would be to use "make published" in the record/Tracks/* directory.
+  o when Songs gets moved, the way ogg files get built will have to change
+    - Best would be to use "make published" in record/Tracks/*,
+      and publish them into Steve_Savitzky/Tracks/* as well.
+    - Expedient way is to make a link to the _real_ track directory.
 
-o Setlist.cgi needs to be installed (via symlink) in mirror's cgi-bin.
+o Should have a track.make template for track directories
+  o use Makefile in Tracks to cons them up.
+
+o pubdir.make to split out the web and publish-to-web functionality (?)
+
+o Setlist.cgi ought to be installed (via symlink) in mirror's cgi-bin.
 o Eventually setlists and tracklists need to be built using javascript.
   preload the data on the server, then PUT back.
 
 =========================================================================
+Done:
+
+* 20060521 Move TeX in from ~steve; 
+  * copy TeX and its CVS repo; leave the old one in place for now
+  * fix the Makefile in TeX; grab HEADER.html from Doc/TeX
+  * remove old Doc/TeX; replace with redirect
+  * adjust Makefile, links in Songs
+

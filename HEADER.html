@@ -9,13 +9,31 @@
     control over a programming project, I make its directory tree look like a
     website -- you will <em>always</em> find a HEADER.html file like this one,
     in every subdirectory.  The <a href="http://httpd.apache.org/docs-2.0/"
-    >Apache</a> webserver puts a HEADER or HEADER.html file, if you have one,
-    at the top of a directory listing.  (It puts README or README.html at the
-    bottom, after the file list.)
+    >Apache</a> webserver puts a HEADER.html file, if you have one,
+    at the top of a directory listing.  (It puts README.html at the
+    bottom, after the file list.)  With a little tweaking you can get similar
+    behavior with plain-text HEADER and README, but you can't always count on
+    having enough control over a hosted website's configuration.
+</p>
+<p> This particular directory contains tools for working on website- and
+    music-related projects: the tools used on <em>this website</em> and the
+    projects you find here.  (Source code for other, unrelated open-source
+    projects can be found in <a href="../Src/" >../Src/</a>.)
 </p>
 
-
 <h2>Annotated Contents</h2>
+
+<h3>Directories</h3>
+<dl>
+  <dt> <a href="TeX/" >TeX/</a> </dt>
+  <dd> LaTeX styles for formatting FilkTeX ("<code>.flk</code>") files, plus
+       the tools for translating them into HTML (<code>flktran.pl</code>) and
+       generating index pages (<code>index.pl</code>).  These are all showing
+       their age, and need to be given an honorable retirement.  In particular
+       the LaTeX styles need to be updated for LaTeX 5e, and indexing needs to
+       be done using <code>SongInfo.pl</code>.
+  </dd>
+</dl>
 
 <h3>Makefile templates</h3>
 <dl>
@@ -47,5 +65,5 @@
 
 <hr />
 <b>Copyright &copy; 2005 HyperSpace Express</b><br />
-<b>$Id: HEADER.html,v 1.2 2006-03-03 20:59:52 steve Exp $</b>
+<b>$Id: HEADER.html,v 1.3 2006-05-22 02:16:30 steve Exp $</b>
 <a name="files"><hr></a>
