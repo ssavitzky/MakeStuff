@@ -1,8 +1,8 @@
 # *Sample* Makefile for filksongs
-#	$Id: Makefile.txt,v 1.1 2006-05-21 03:23:02 steve Exp $
+#	$Id: Makefile.txt,v 1.2 2006-05-22 01:17:03 steve Exp $
 #
 # Targets:  
-#	all:		*.flk -> *.lj  (or all PR=.ps for postscript)
+#	all:		*.flk -> *.ps  (or all PR=.lj for laserjet)
 #	1song:		older way to print a song or group
 #
 PR = .ps
