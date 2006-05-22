@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: flktran.pl,v 1.6 2005-01-05 19:43:35 steve Exp $
+# $Id: flktran.pl,v 1.7 2006-05-22 01:15:00 steve Exp $
 # flktran [options] infile outfile
 #	Perform format translation on filksong files.    
 
@@ -169,6 +169,7 @@ while (<STDIN>) {
     elsif (/\\music/)		{ $music = getContent($_); }
     elsif (/\\lyrics/)		{ $lyrics = getContent($_); }
     elsif (/\\arranger/)	{ $arranger = getContent($_); }
+    elsif (/\\description/)	{ $description = getContent($_); }
 
     # Environments: 
 
