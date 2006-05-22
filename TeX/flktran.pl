@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: flktran.pl,v 1.7 2006-05-22 01:15:00 steve Exp $
+# $Id: flktran.pl,v 1.8 2006-05-22 13:29:26 steve Exp $
 # flktran [options] infile outfile
 #	Perform format translation on filksong files.    
 
@@ -121,7 +121,7 @@ if ($html) {
     $NP  = "<hr />\n";
     $SP  = "&nbsp;";
     $AMP = "&amp;";
-    $FLKTRAN = "<a href='../TeX/flktran.html'><code>flktran</code></a>";
+    $FLKTRAN = "<a href='../Tools/TeX/flktran.html'><code>flktran</code></a>";
     # Creative Commons copyright notice
     $CCnotice = "<a href=\"http://creativecommons.org/licenses/by-nc-sa/2.0/\"
 ><img  alt=\"Creative Commons License\" border=\"0\" 
