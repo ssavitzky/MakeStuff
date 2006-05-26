@@ -1,8 +1,12 @@
 			to.do for Steve_Savitzky/Tools
-	       $Id: to.do,v 1.2 2006-05-22 02:16:31 steve Exp $
+	       $Id: to.do,v 1.3 2006-05-26 01:40:45 steve Exp $
 
 
 =========================================================================
+
+o webdir.make should go to projects/WURM
+  o make sure it's all coming out of the same CVS tree
+  o use .put, .put.log, .mkdir.log for sanity's sake
 
 o move index.pl into Tools from TeX; adjust paths.
 
