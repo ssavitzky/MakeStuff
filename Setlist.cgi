@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: Setlist.cgi,v 1.1 2006-05-09 19:48:11 steve Exp $
+# $Id: Setlist.cgi,v 1.2 2006-05-26 01:40:07 steve Exp $
 # Setlist.cgi [options] infile...	make the title index
 # .../Setlist.cgi from web.		make a setlist
 #	<title>make a setlist</title>
@@ -177,7 +177,8 @@ if ($op eq "add") {
 	print OUT "    <title>Set list: $pageTitle</title>\n";
 	print OUT "  </head>\n";
 	print OUT "  <body>\n";
-	print OUT "    <h2>Set list: $pageTitle</h2>\n";
+	print OUT "    <h2><a href='$publicSongs/Sets/'>Set list</a>:";
+	print OUT " $pageTitle</h2>\n";
 	print OUT "    <p>\n" . songLinks() . "\n</p>\n";
 	print OUT "    <hr />\n";
 	print OUT "    <b>list:</b> <small>$list</small>\n";
@@ -230,7 +231,8 @@ $content .= ("    <title>Set list " .
 	     ($pageTitle? $pageTitle : "Maker") . "</title>\n");
 $content .= "  </head>\n";
 $content .= "  <body>\n";
-$content .= "<h2>Set list " . ($pageTitle? $pageTitle : "Maker") . "</h2>\n";
+$content .= "<h2><a href='$songDir/Sets/'>Set list</a>: "
+    . ($pageTitle? $pageTitle : "Maker") . "</h2>\n";
 
 # The form should be at the end if $ro is set
 
@@ -315,7 +317,7 @@ if (!$ro) {
 	}
 	$c = ($c + 1) % $cols if $cols;
 	$content .= "</tr>\n" if $c == 0;
-	$content .= "    <td>\&nbsp; | \&nbsp;</td>\n" if $c;
+	$content .= "    <td>|</td>\n" if $c;
     }
     $content .= "</tr>\n" if $c > 0;
     $content .= "</table>\n";
@@ -371,15 +373,16 @@ exit 0;
 
 sub songLinks {
     my $content = '';
-
+    my $i = 1;
     for my $f (@list) {
 	my $ttl = $titleMap{$f};
 	if (-f "$songDir/$f.html") {
-	    $content .= "   <a href='$songURL$f.html'>$ttl</a>";
+	    $content .= "  $i. <a href='$songURL$f.html'>$ttl</a>";
 	} else {
-	    $content .= $ttl;
+	    $content .= "  $i. $ttl";
 	}
 	$content .= "<br />\n";
+	++$i;
     }
     $content;
 }
