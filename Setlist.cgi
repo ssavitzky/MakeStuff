@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: Setlist.cgi,v 1.2 2006-05-26 01:40:07 steve Exp $
+# $Id: Setlist.cgi,v 1.3 2006-05-26 02:08:07 steve Exp $
 # Setlist.cgi [options] infile...	make the title index
 # .../Setlist.cgi from web.		make a setlist
 #	<title>make a setlist</title>
@@ -171,13 +171,13 @@ if ($op eq "add") {
 } elsif ($op eq "save" && -d "$songDir/Sets" && -w "$songDir/Sets") {
     # should do name washing, error checking...
     umask 2;
-    if (open(OUT, ">$songDir/Sets/$pageTitle.html")) {
+    if (open(OUT, ">${songDir}Sets/$pageTitle.html")) {
 	print OUT "<html>\n";
 	print OUT "  <head>\n";
 	print OUT "    <title>Set list: $pageTitle</title>\n";
 	print OUT "  </head>\n";
 	print OUT "  <body>\n";
-	print OUT "    <h2><a href='$publicSongs/Sets/'>Set list</a>:";
+	print OUT "    <h2><a href='${publicSongs}Sets/'>Set list</a>:";
 	print OUT " $pageTitle</h2>\n";
 	print OUT "    <p>\n" . songLinks() . "\n</p>\n";
 	print OUT "    <hr />\n";
@@ -223,7 +223,10 @@ $ttime = sprintf("%d:%02d", $totalTime/60, $totalTime%60);
 ### Build the page
 #
 # We're doing this *very* crudely with links, because it's too stupidly
-# hard to do the right thing in the form with buttons. 
+# hard to do the right thing in the form with buttons.  Note, however, that
+# this means that you have to keep robots away from the page, otherwise 
+# you get a combinatorial explosion that will blow your site's bandwidth 
+# to smithereens.  Be warned.
 
 $content = "<html>\n";
 $content .= "  <head>\n";
@@ -231,7 +234,7 @@ $content .= ("    <title>Set list " .
 	     ($pageTitle? $pageTitle : "Maker") . "</title>\n");
 $content .= "  </head>\n";
 $content .= "  <body>\n";
-$content .= "<h2><a href='$songDir/Sets/'>Set list</a>: "
+$content .= "<h2><a href='${songDir}Sets/'>Set list</a>: "
     . ($pageTitle? $pageTitle : "Maker") . "</h2>\n";
 
 # The form should be at the end if $ro is set
@@ -345,6 +348,7 @@ $content .= "<hr>\n";
 
 $content .= "<h4>Setlist links:</h4>\n";
 $content .= "<pre>\n" 
+    . entityEncode("<a href='${publicSongs}Sets/'>Set list</a>: \n")
     . entityEncode("<blockquote>\n" . songLinks() . "</blockquote>\n")
     . "</pre>\n";
 
