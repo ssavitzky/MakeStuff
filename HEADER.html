@@ -50,6 +50,21 @@
 
 <h3>Scripts</h3>
 <dl>
+  <dt> <a href="Setlist.cgi"><code>Setlist.cgi</code></a>
+  </dt>
+  <dd> This is the CGI script I use to make HTML setlists and tracklists.  It
+       only works inside the firewall -- if you let a search engine spider it,
+       you end up with a combinatorial explosion that blows your site's
+       bandwidth to smithereens.  I've been there, and you've been warned.  At
+       some point I'll do a drag&amp;drop version in Javascript, which will be
+       both faster for users and safer for search engines.
+  </dd>
+  <dt> <a href="SongInfo.pl"><code>SongInfo.pl</code></a>
+  </dt>
+  <dd> Extract song information from a <code>.flk</code> file (basically LaTeX
+       with a lot of custom macros) and print it on STDOUT in any of several
+       useful formats.  Used extensively in <code>album.make</code>
+  </dd>
   <dt> <a href="list-tracks"><code>list-tracks</code></a>
   </dt>
   <dd> List either all known tracks, or a specific set of tracks (e.g. the
@@ -65,5 +80,5 @@
 
 <hr />
 <b>Copyright &copy; 2005 HyperSpace Express</b><br />
-<b>$Id: HEADER.html,v 1.3 2006-05-22 02:16:30 steve Exp $</b>
+<b>$Id: HEADER.html,v 1.4 2006-05-26 02:27:59 steve Exp $</b>
 <a name="files"><hr></a>
