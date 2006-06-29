@@ -7,6 +7,7 @@
 # flags:
 #	-  empty directory
 #	n  "*/notes" present
+#	N  "*/notes" has key: field (one hopes also style:, tempo:, meter:)
 #	!  "*/OK" present
 
 ([ -d test ] && [ "`ls test | grep .aup `" = "" ]) || cd $HOME/Tracks
@@ -21,7 +22,11 @@ for d in $tracks; do
     elif [ -d $d ]; then
 	echo -n " " `(cd $d; ls | grep .aup$ | wc -l)` 
 	echo -n "  `(cd $d; ls | grep .wav$ | wc -l)` " 
-	if [ -e $d/notes ]; then echo -n "n"; else echo -n " "; fi
+	if [ -e $d/notes ]; then 
+	    if grep -q '^key:' $d/notes; then echo -n "N"; else echo -n "n"; fi
+	else
+	    echo -n " "; 
+	fi
 	if [ -e $d/OK ]; then echo  -n "!`cat $d/OK`"; else echo  -n " "; fi
 	echo -n "	$d	" 
 	if [ -e $d/notes ]; then grep '^\w' $d/notes | tail -1;
