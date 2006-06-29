@@ -35,8 +35,8 @@ for d in $tracks; do
 	if [ -e $d/notes ]; then 
 	    if grep -q '^key:' $d/notes; then echo -n "N"; else echo -n "n"; fi
 	    info=`grep '^key:' $d/notes`
-	    info="  $info	"`grep '^style:' $d/notes`
 	    info="  $info	"`grep '^meter:' $d/notes`
+	    info="  $info "`grep '^style:' $d/notes`
 	    info="  $info	"`grep '^tempo' $d/notes`
 	else
 	    echo -n " "; 
@@ -46,7 +46,7 @@ for d in $tracks; do
 	    echo -n "!`cat $d/OK`"; else echo  -n " "; fi
 	echo -n "	$d	" 
 	if [ "$i" = '1' ]; then
-	    echo $info
+	    echo "$info"
 	else
 	    if [ -e $d/notes ]; then grep '^\w' $d/notes | tail -1;
 	    else echo; fi
