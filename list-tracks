@@ -4,11 +4,21 @@
 #	column 1; this should normally be something about the most recent
 #	semi-useable take.
 #
+# options:
+#	-i  print key, meter, tempo, style info instead of track note.
+#
 # flags:
 #	-  empty directory
 #	n  "*/notes" present
 #	N  "*/notes" has key: field (one hopes also style:, tempo:, meter:)
 #	!  "*/OK" present
+
+if [ "$1" = "-i" ]; then
+    i=1
+    shift
+else
+    i=''
+fi
 
 ([ -d test ] && [ "`ls test | grep .aup `" = "" ]) || cd $HOME/Tracks
 
@@ -24,12 +34,22 @@ for d in $tracks; do
 	echo -n "  `(cd $d; ls | grep .wav$ | wc -l)` " 
 	if [ -e $d/notes ]; then 
 	    if grep -q '^key:' $d/notes; then echo -n "N"; else echo -n "n"; fi
+	    info=`grep '^key:' $d/notes`
+	    info="  $info	"`grep '^style:' $d/notes`
+	    info="  $info	"`grep '^meter:' $d/notes`
+	    info="  $info	"`grep '^tempo' $d/notes`
 	else
 	    echo -n " "; 
+	    info=''
 	fi
-	if [ -e $d/OK ]; then echo  -n "!`cat $d/OK`"; else echo  -n " "; fi
+	if [ -e $d/OK ]; then 
+	    echo -n "!`cat $d/OK`"; else echo  -n " "; fi
 	echo -n "	$d	" 
-	if [ -e $d/notes ]; then grep '^\w' $d/notes | tail -1;
-	else echo; fi
+	if [ "$i" = '1' ]; then
+	    echo $info
+	else
+	    if [ -e $d/notes ]; then grep '^\w' $d/notes | tail -1;
+	    else echo; fi
+	fi
     fi
 done
