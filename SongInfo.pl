@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: SongInfo.pl,v 1.1 2006-05-09 19:11:42 steve Exp $
+# $Id: SongInfo.pl,v 1.2 2006-06-30 16:07:35 steve Exp $
 # SongInfo [options] infile... 
 #	<title>extract song info</title>
 
@@ -312,10 +312,13 @@ sub printInfo {
         print "    ARRANGER \"$arranger\"\n" if $arranger;
         print "  }\n";
 	print "}\n";
-	# The following used to work; it now causes an error:
-	# START 00:02:00 behind or at track end.
-	#print "PREGAP 0:2:0\n";
-	print "SILENCE 0:2:0\n";
+	# PREGAP used to work; it now causes an error:
+	#     START 00:02:00 behind or at track end.
+	if ($track_number > 1) { 
+	    print "PREGAP 0:2:0\n";
+	}
+	# The one in sarge still works, so copy that to /usr/local/bin.
+	#print "SILENCE 0:2:0\n";
 	#print "START 0:2:0\n";
 	print "FILE \"$track_data\" 0\n";
 
