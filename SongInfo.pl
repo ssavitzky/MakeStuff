@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: SongInfo.pl,v 1.2 2006-06-30 16:07:35 steve Exp $
+# $Id: SongInfo.pl,v 1.3 2006-07-06 05:55:25 steve Exp $
 # SongInfo [options] infile... 
 #	<title>extract song info</title>
 
@@ -34,6 +34,7 @@ if ($0 =~ m|^(.*)/[^/]+$|) {
 }
 
 $songDir = $ENV{SONGDIR};
+$songDir = "./Songs" unless -d $songDir;
 $songDir = "../Songs" unless -d $songDir;
 $songDir = "../../Songs" unless -d $songDir;
 $songDir = "." unless -d $songDir;
