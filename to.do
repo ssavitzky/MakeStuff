@@ -1,5 +1,5 @@
 			to.do for Steve_Savitzky/Tools
-	       $Id: to.do,v 1.3 2006-05-26 01:40:45 steve Exp $
+	       $Id: to.do,v 1.4 2006-07-06 05:54:44 steve Exp $
 
 
 =========================================================================
@@ -12,7 +12,8 @@ o move index.pl into Tools from TeX; adjust paths.
 
 o Need a Perl *module* for extracting song info:
   o basically a SongInfo _class_
-  o iterate through a list of TeX macros to turn into variables.
+  o iterate through a list of TeX macros to turn into variables, rather 
+    than the ad-hoc if statements used now.
 
 o Songs needs songlist files
   o instead of passing the whole list on the command line to, e.g., index.pl
@@ -27,6 +28,10 @@ o Should have a track.make template for track directories
   o use Makefile in Tracks to cons them up.
 
 o pubdir.make to split out the web and publish-to-web functionality (?)
+
+o SongInfo.pl needs an option that produces a setlist with proper links.
+  (Alternative would be to run Setlist.cgi from the shell, but that's 
+  not as versatile.  Maybe a --links option.)
 
 o Setlist.cgi ought to be installed (via symlink) in mirror's cgi-bin.
 o Eventually setlists and tracklists need to be built using javascript.
