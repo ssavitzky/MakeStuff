@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: Setlist.cgi,v 1.3 2006-05-26 02:08:07 steve Exp $
+# $Id: Setlist.cgi,v 1.4 2006-07-07 06:01:39 steve Exp $
 # Setlist.cgi [options] infile...	make the title index
 # .../Setlist.cgi from web.		make a setlist
 #	<title>make a setlist</title>
@@ -31,6 +31,7 @@ $cginame= $2;
 
 $publicSongs = "/Steve_Savitzky/Songs/";
 $publicSite  = "http://theStarport.com";
+$publicURL   = "${publicSite}${publicSongs}Sets/";
 
 ### Get CGI parameters
 $songs = $q->param("songs");			# URL path to songs
@@ -348,7 +349,9 @@ $content .= "<hr>\n";
 
 $content .= "<h4>Setlist links:</h4>\n";
 $content .= "<pre>\n" 
-    . entityEncode("<a href='${publicSongs}Sets/'>Set list</a>: \n")
+    . entityEncode("<a href='${publicURL}'>Set list</a>:\n".
+		   "  <a href='${publicURL}$pageTitle.html'>$pageTitle</a>" .
+		   "\n")
     . entityEncode("<blockquote>\n" . songLinks() . "</blockquote>\n")
     . "</pre>\n";
 
