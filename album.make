@@ -1,5 +1,5 @@
 ### Makefile template for albums
-#	$Id: album.make,v 1.5 2006-06-29 16:02:35 steve Exp $
+#	$Id: album.make,v 1.6 2006-07-08 21:40:02 steve Exp $
 #
 #  This template is meant to be included in the Makefile of an "album" 
 #	directory.  The usual directory tree looks like:
@@ -118,7 +118,7 @@ list-tracks: $(NAME).tracks
 	@$(LIST_TRACKS) $(SONGS)
 
 .PHONY: lsti
-lstracks: list-track-info
+lsti: list-track-info
 
 .PHONY: list-track-info
 list-track-info: $(NAME).tracks
@@ -126,19 +126,19 @@ list-track-info: $(NAME).tracks
 
 .PHONY: list-text
 list-text: $(NAME).tracks
-	@$(SONGINFO) format=list.text $(SONGS)
+	@$(SONGINFO) $(SONGLIST_FLAGS) format=list.text $(SONGS)
 
 .PHONY:	list-html
 list-html: $(NAME).tracks
-	@$(SONGINFO) format=list.html $(SONGS)
+	@$(SONGINFO) $(SONGLIST_FLAGS) format=list.html $(SONGS)
 
 ## List tracks to a file:
 
 $(NAME).list: $(NAME).tracks
-	$(SONGINFO) format=list.text $(SONGS) > $@
+	$(SONGINFO) $(SONGLIST_FLAGS) format=list.text $(SONGS) > $@
 
 $(NAME).html: $(NAME).tracks
-	$(SONGINFO) format=list.html $(SONGS) > $@
+	$(SONGINFO) $(SONGLIST_FLAGS) format=list.html $(SONGS) > $@
 
 
 ### Archive the track data: 
