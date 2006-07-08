@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: SongInfo.pl,v 1.3 2006-07-06 05:55:25 steve Exp $
+# $Id: SongInfo.pl,v 1.4 2006-07-08 21:39:44 steve Exp $
 # SongInfo [options] infile... 
 #	<title>extract song info</title>
 
@@ -66,6 +66,8 @@ $format = "";					# output format
 $message = "";					# error message
 $status = 0;					# result status code
 
+$hex = 0;					# number lists in hex
+
 ### Variables set from song macros:
 $title = "";
 $subtitle = "";
@@ -105,6 +107,8 @@ foreach $f (@ARGV) {
 	elsif ($f =~ /--?shell/)  { $format = "shell"; }
      	elsif ($f =~ /--verbose/) { ++$verbose; }
 	elsif ($f =~ /-v/)        { ++$verbose; }
+	elsif ($f =~ /--?hex/)	  { ++$hex; }
+	elsif ($f =~ /-x/)        { ++$hex; }
 	else {
 	    print $usage;
 	    exit 1;
@@ -329,7 +333,24 @@ sub printInfo {
 	}
     } elsif ($format eq "list.text") {
 	# the timing really needs to come off the track_data if present ===
-	print "  " . sprintf("%2d", $track_number) . ": $title ($timing)";
+	if ($hex) {
+	    print "  " . sprintf("%02x", $track_number) . ": $title ($timing)";
+	} else {
+	    print "  " . sprintf("%2d", $track_number) . ": $title ($timing)";
+	}
+    } elsif ($format eq "list.html" && $hex) {
+	print ("  <tr> \n");
+	print ("    <td align='right'> " .
+	       sprintf("%2x", $track_number) .
+	       " </td>\n");
+	print ("    <td> ");
+	if (-f "$songDir/$f.html") {
+	    print "<a href='$songURL$f.html'>$title</a>";
+	} else {
+	    print "$title";
+	}
+	print "    </td>\n";
+	print "  </tr>";
     } elsif ($format eq "list.html") {
 	print ("  <li> ");
 	if (-f "$songDir/$f.html") {
@@ -403,13 +424,17 @@ CD_TEXT {
 }\n\n";
     } elsif ($format eq "tracklist" && $title) {
 	print "Track list for $title\n";
+    } elsif ($format eq "list.html" && $hex) {
+	print "<table class='tracklist'>\n";
     } elsif ($format eq "list.html") {
 	print "<ol>\n";
     }
 }
 
 sub printFooting {
-    if ($format eq "list.html") {
+    if ($format eq "list.html" && $hex) {
+	print "</table>\n";
+    } elsif ($format eq "list.html") {
 	print "</ol>\n";
     }
 }
