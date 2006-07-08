@@ -69,7 +69,13 @@
   </dt>
   <dd> List either all known tracks, or a specific set of tracks (e.g. the
        ones in an album's track list), in a format that makes it easy to keep
-       (cough) <em>track</em> of recording progress.
+       (cough) <em>track</em> of recording progress.  Most of the information
+       comes out of a file called <code>notes</code> in the track directory.
+       With the "<code>-i</code>" option lists key, meter, tempo, and style;
+       these are useful when you're trying not to put excessively-similar
+       tracks together.  Otherwise it appends the last line of
+       <code>notes</code> that starts in column 1; by convention this
+       describes the most recent useable take.
   </dd>
   <dt> <a href=""><code></code></a>
   </dt>
@@ -80,5 +86,5 @@
 
 <hr />
 <b>Copyright &copy; 2005 HyperSpace Express</b><br />
-<b>$Id: HEADER.html,v 1.4 2006-05-26 02:27:59 steve Exp $</b>
+<b>$Id: HEADER.html,v 1.5 2006-07-08 21:39:23 steve Exp $</b>
 <a name="files"><hr></a>
