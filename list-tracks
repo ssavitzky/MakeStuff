@@ -30,21 +30,23 @@ for d in $tracks; do
 	# Skip test/ even though it may have tracks in it.
 	true
     elif [ -d $d ]; then
+	len=`echo -n $d | wc -c`
+	if [ $len -lt 8 ]; then sep="	"; else sep=""; fi
 	echo -n " " `(cd $d; ls | grep .aup$ | wc -l)` 
 	echo -n "  `(cd $d; ls | grep .wav$ | wc -l)` " 
 	if [ -e $d/notes ]; then 
 	    if grep -q '^key:' $d/notes; then echo -n "N"; else echo -n "n"; fi
-	    info=`grep '^key:' $d/notes`
-	    info="  $info	"`grep '^meter:' $d/notes`
-	    info="  $info "`grep '^style:' $d/notes`
-	    info="  $info	"`grep '^tempo' $d/notes`
+	    info=`grep '^key:' $d/notes | sed 's/key: //'`" "
+	    info="$info	"`grep '^meter:' $d/notes`
+	    info="$info "`grep '^style:' $d/notes`
+	    info="$info	"`grep '^tempo' $d/notes`
 	else
 	    echo -n " "; 
 	    info=''
 	fi
 	if [ -e $d/OK ]; then 
 	    echo -n "!`cat $d/OK`"; else echo  -n " "; fi
-	echo -n "	$d	" 
+	echo -n "	$d$sep " 
 	if [ "$i" = '1' ]; then
 	    echo "$info"
 	else
