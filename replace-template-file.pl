@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-#	$Id: replace-template-file.pl,v 1.1 2006-10-23 01:04:55 steve Exp $
+#	$Id: replace-template-file.pl,v 1.2 2006-10-26 16:37:54 steve Exp $
 #
 #<title>replace-template-file</title>
 #	This script is used to replace part of a file -- usually HTML --
@@ -48,7 +48,7 @@ close IN;
 if (! @ARGV) {
     print "No target files specified; just analyzing the template:\n";
     print $template_first;
-    print "...\n"
+    print "...\n";
     print $template_last;
     exit 0;
 }
@@ -56,7 +56,7 @@ if (! @ARGV) {
 ### Loop through the input files.
 
 my $n_replaced = 0;
-my $n_inserted = 0;
+my $n_failed = 0;
 
 while (@ARGV) {
     my $infile = $ARGV[0]; shift @ARGV;
