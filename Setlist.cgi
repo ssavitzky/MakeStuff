@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: Setlist.cgi,v 1.4 2006-07-07 06:01:39 steve Exp $
+# $Id: Setlist.cgi,v 1.5 2006-11-05 04:31:23 steve Exp $
 # Setlist.cgi [options] infile...	make the title index
 # .../Setlist.cgi from web.		make a setlist
 #	<title>make a setlist</title>
@@ -302,17 +302,18 @@ if (!$ro) {
     my $total = 0;
     my $notime= 0;
     $content .= "<hr>\n";
-    $content .= "<table>\n";
+    $content .= "<table>\n" if $cols > 0;
+    my ($td, $etd) = (($cols > 0? "<td>": ""), ($cols > 0? "</td>": ""));
     my $c = 0;
     for my $f (@songlist) {
 	my $t   = $timeMap{$f}; $t = "" unless $t;
 	my $ttl = $titleMap{$f};
 	$total++;
 	$notime++ unless $t;
-	$content .= "<tr>\n" if $c == 0; 
-	$content .= "    <td>" . opLink($f, "add", $f) . "</td>\n";
-	$content .= "    <td>$t</td>\n";
-	if ($cols > 2) {
+	$content .= "<tr>\n" if $c == 0 && $cols > 0; 
+	$content .= "    $td" . opLink($f, "add", $f) . "$etd\n";
+	$content .= "    <td>$t</td>\n" if $cols > 0;
+	if ($cols > 2 || $cols == 0) {
 	    # no title.  Otherwise it links to the song lyrics.
 	} elsif (-f "$songDir/$f.html") {
 	    $content .= "    <td><a href='$songURL$f.html'>$ttl</a></td>\n";
@@ -320,11 +321,11 @@ if (!$ro) {
 	    $content .= "    <td>$ttl</td>\n";
 	}
 	$c = ($c + 1) % $cols if $cols;
-	$content .= "</tr>\n" if $c == 0;
-	$content .= "    <td>|</td>\n" if $c;
+	$content .= "</tr>\n" if $c == 0 && $cols;
+	$content .= "    <td>|</td>\n" if $c && $cols;
     }
-    $content .= "</tr>\n" if $c > 0;
-    $content .= "</table>\n";
+    $content .= "</tr>\n" if $c > 0 && $cols;
+    $content .= "</table>\n" if $cols;
     $content .= "<p>$total songs total; \&nbsp; $notime without times.";
     $content .= " \&nbsp; Click a filename to add a song to the setlist.";
     $content .= " \&nbsp; Titles link to the songs' lyric pages, ";
@@ -334,10 +335,11 @@ if (!$ro) {
     $content .= "</p>\n";
 
     $content .= "<p><small><code>\n";
-    $content .= "lpr";
+    $content .= "for f in";
     for my $f (@list) {
-	$content .= " $f.ps";
+	$content .= " $f";
     }
+    $content .= "; do psselect -p1 \$f.ps | lpr; done";
     $content .= "</code></small></p>\n";
 }
 
