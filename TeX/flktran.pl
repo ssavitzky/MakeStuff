@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: flktran.pl,v 1.8 2006-05-22 13:29:26 steve Exp $
+# $Id: flktran.pl,v 1.9 2006-11-23 03:19:22 steve Exp $
 # flktran [options] infile outfile
 #	Perform format translation on filksong files.    
 
@@ -526,6 +526,8 @@ sub deTeX {
     $txt =~ s/\\;/$SP/g;
     $txt =~ s/\\ /$SP/g;
     $txt =~ s/\\ldots/.../g;
+    $txt =~ s/\\\_/\_/g;
+    $txt =~ s/\\\$/\$/g;
     $txt =~ s/\\\\/$NL/g;
     $txt =~ s/\\newpage/$NP/g;
 
