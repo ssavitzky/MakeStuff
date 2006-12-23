@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: index.pl,v 1.2 2005-01-01 18:49:58 steve Exp $
+# $Id: index.pl,v 1.3 2006-12-23 05:09:01 steve Exp $
 # index [options] infile... 
 #	Perform indexing operations on filksong files
 
@@ -187,7 +187,7 @@ if ($outfmt eq "dsc") {		# .htaccess description lines
 	print "\" $fn.html\n";
     }
 } elsif ($outfmt eq "html" && $tables) {	# HTML table
-    print "<table >\n";
+    print "<table class='songlist'>\n";
     print "<tr><th>ogg</th><th>pdf</th><th align=left>file</th>"
 	. "<th>time</th>";
     if ($ps) { print "<th>.ps</th>"; }
@@ -208,7 +208,7 @@ if ($outfmt eq "dsc") {		# .htaccess description lines
     print "</table>\n";
 
 } elsif ($outfmt eq "html") {	# HTML
-    print "<ol>\n";
+    print "<ol class='songlist'>\n";
     for ($j = 0; $j < $i; $j++) {
 	$fn = $fnList[$j];
 	print "  <li> ";
