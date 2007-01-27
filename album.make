@@ -1,5 +1,5 @@
-### Makefile template for albums
-#	$Id: album.make,v 1.6 2006-07-08 21:40:02 steve Exp $
+### Makefile template for album directories
+#	$Id: album.make,v 1.7 2007-01-27 00:26:25 steve Exp $
 #
 #  This template is meant to be included in the Makefile of an "album" 
 #	directory.  The usual directory tree looks like:
@@ -42,10 +42,18 @@ BASEDIR		= $(subst /Tools/..,/,$(TOOLDIR)/..)
 SONGDIR 	= $(BASEDIR)/Songs
 TRACKDIR	= $(BASEDIR)/Tracks
 
+## Directory to publish to
+
+PUBDIR		= ../PUBDIR/$(MYNAME)
+
 ## Programs:
 
-SONGINFO = $(TOOLDIR)/SongInfo.pl
+TRACKINFO = $(TOOLDIR)/TrackInfo.pl
 LIST_TRACKS = $(TOOLDIR)/list-tracks
+
+# In some cases the old CDRDAO (in /usr/local/bin) works better.
+#CDRDAO = /usr/local/bin/cdrdao
+CDRDAO = /usr/bin/cdrdao
 
 ## Devices (for burning):
 #	For a 2.4 kernel with one IDE-SCSI device, use DEVICE=0,0,0
@@ -56,16 +64,27 @@ DEVICE		= ATA:1,1,0
 
 ###### Rules ##########################################################
 
-# Want to snarf the track data -- could use SongInfo -get-track-data
+# Want to snarf the track data -- could use TrackInfo -get-track-data
 # but there's probably a simple way to do it in pure make.
 
 # Name to use for files.
 NAME=$(SHORTNAME)
 
+# Track file.  
+#   TRACKS= @<file> is the shortcut we use for TrackInfo.pl
+TRACKFILE = $(NAME).tracks
+TRACKS	  = @$(TRACKFILE)
+
 # Get the shortnames of all the songs from $(NAME).tracks
 #	Ignore comment lines.
 #
-SONGS = $(shell grep -v '\#' $(NAME).tracks)
+SONGS = $(shell grep -v '\#' $(TRACKFILE))
+
+FLK_FILES = $(shell for f in $(SONGS); do echo \
+		$(SONGDIR)/$$f.flk; done)
+
+OGGS = $(shell for f in $(SONGS); do echo $$f.ogg; done)
+MP3S = $(shell for f in $(SONGS); do echo $$f.mp3; done)
 
 # Locally-archived track data
 #	Note that we do NOT build this by default:  most of the time
@@ -78,14 +97,17 @@ TRACK_DATA = $(patsubst %, %.wav, $(SONGS))
 	@echo snagging $@ from `ls $?/*.wav | tail -1`
 	rsync `ls $?/*.wav | tail -1` $@
 
+TRACK_FILES = $(shell $(TRACKINFO) format=files $(TRACKS))
+
 ###### Targets ########################################################
 
-### All: doesn't do much, just builds the TOC.
+### All: doesn't do much, just builds the TOC and lists
 
 all::
 	@echo album $(NAME)/ '($(TITLE))'
 
-all::	$(NAME).toc $(NAME).list
+all::	$(NAME).toc $(NAME).list $(NAME).long.list 
+all::	$(NAME).html $(NAME).extras.html
 
 all::	time
 
@@ -96,9 +118,9 @@ all::	time
 toc-file: $(NAME).toc
 
 # Note that the toc-file does NOT depend on $(TRACK_DATA).
-$(NAME).toc: $(NAME).tracks 
-	$(SONGINFO) -cd title='$(TITLE)' $(SONGS) > $@
-	cdrdao show-toc $(NAME).toc | tail -1
+$(NAME).toc: $(NAME).tracks $(TRACK_FILES)
+	$(TRACKINFO) -cd $(TOC_FLAGS) title='$(TITLE)' $(SONGS) > $@
+	$(CDRDAO) show-toc $(NAME).toc | tail -1
 
 ### Utilities:
 
@@ -106,7 +128,7 @@ $(NAME).toc: $(NAME).tracks
 
 .PHONY: time
 time:	$(NAME).toc
-	@cdrdao show-toc $(NAME).toc 2>&1 | tail -1
+	@$(CDRDAO) show-toc $(NAME).toc 2>&1 | tail -1
 
 ## List tracks to STDOUT in various formats:
 
@@ -126,20 +148,54 @@ list-track-info: $(NAME).tracks
 
 .PHONY: list-text
 list-text: $(NAME).tracks
-	@$(SONGINFO) $(SONGLIST_FLAGS) format=list.text $(SONGS)
+	@$(TRACKINFO) $(TRACKLIST_FLAGS) format=list.text $(TRACKS)
 
-.PHONY:	list-html
+.PHONY: list-long-text
+list-long-text: $(NAME).tracks
+	@$(TRACKINFO) $(TRACKLIST_FLAGS) --long format=list.text $(TRACKS)
+
+.PHONY:	list-html 
 list-html: $(NAME).tracks
-	@$(SONGINFO) $(SONGLIST_FLAGS) format=list.html $(SONGS)
+	@$(TRACKINFO) $(TRACKLIST_FLAGS) --long format=list.html $(TRACKS)
+
+.PHONY:	list-html-sound
+list-html-sound: $(NAME).tracks
+	@$(TRACKINFO) $(TRACKLIST_FLAGS) --sound --long format=list.html \
+		$(TRACKS)
+
+.PHONY:	list-files 
+list-files: $(NAME).tracks
+	@$(TRACKINFO) format=files $(TRACKS)
 
 ## List tracks to a file:
 
 $(NAME).list: $(NAME).tracks
-	$(SONGINFO) $(SONGLIST_FLAGS) format=list.text $(SONGS) > $@
+	$(TRACKINFO) $(TRACKLIST_FLAGS) format=list.text $(TRACKS) > $@
 
-$(NAME).html: $(NAME).tracks
-	$(SONGINFO) $(SONGLIST_FLAGS) format=list.html $(SONGS) > $@
+$(NAME).long.list: $(NAME).tracks
+	$(TRACKINFO) $(TRACKLIST_FLAGS) --long format=list.text $(TRACKS) > $@
 
+$(NAME).html: $(NAME).tracks  $(FLK_FILES)
+	$(TRACKINFO) $(TRACKLIST_FLAGS) --long format=list.html $(TRACKS) > $@
+
+# [name].extras.html includes links to the sound files; it's used
+#	most notably to provide "extra features" for people who have
+#	preordered or purchased albums.
+$(NAME).extras.html: $(NAME).tracks  $(FLK_FILES)
+	$(TRACKINFO) $(TRACKLIST_FLAGS) --long --sound format=list.html \
+		 $(TRACKS) > $@
+
+### Make ogg and mp3 files
+#
+%.ogg: $(shell $(TRACKINFO) format=files %)
+	oggenc -Q -o $@ $(shell $(TRACKINFO) --ogg title='$(TITLE)' $*)
+
+%.mp3: $(shell $(TRACKINFO) format=files %)
+	lame -b 64 -S $(shell $(TRACKINFO) --mp3 title='$(TITLE)' $*) $@
+
+.PHONY: oggs mp3s
+oggs:  $(OGGS)
+mp3s:  $(MP3S)
 
 ### Archive the track data: 
 #	Copy all track data to the current directory for archival purposes
