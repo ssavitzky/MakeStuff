@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: TrackInfo.pl,v 1.2 2007-01-27 00:27:08 steve Exp $
+# $Id: TrackInfo.pl,v 1.3 2007-01-28 17:16:54 steve Exp $
 # TrackInfo [options] infile... 
 #	<title>extract track info</title>
 
@@ -555,12 +555,12 @@ CD_TEXT {
   }
 
   LANGUAGE 0 {
-    TITLE \"$title\"
+    TITLE \"$ctitle\"
     PERFORMER \"$default_performer\"
   }
 }\n\n";
     } elsif ($format eq "tracklist" && $ctitle) {
-	print "Track list for $title\n";
+	print "Track list for $ctitle\n";
     } elsif ($format eq "list.html") {
 	print "<table class='tracklist'>\n";
     } elsif ($format eq "ol.html") {
