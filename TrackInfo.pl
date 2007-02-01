@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: TrackInfo.pl,v 1.3 2007-01-28 17:16:54 steve Exp $
+# $Id: TrackInfo.pl,v 1.4 2007-02-01 14:39:42 steve Exp $
 # TrackInfo [options] infile... 
 #	<title>extract track info</title>
 
@@ -402,6 +402,9 @@ sub printInfo {
     } elsif ($format eq "files") {
 	# Just the track file names
 	print "$track_data";
+    } elsif ($format eq "songs") {
+	# Just the corresponding shortnames
+	print "$shortname";
     } elsif ($format eq "list.text") {
 	# the timing really needs to come off the track_data if present ===
 	my $d = ($hex && $dec)? sprintf("(%02d) ", $track_number) : "";
@@ -489,7 +492,7 @@ sub printInfo {
     } elsif ($format eq "ogg") {
 	# Output an oggenc argument list.
 	print "-a '$performer' ";
-	print "-t \"$title\" ";
+	print "-t \"$title\" " if $title;
 	print "-c 'songwriter=$lyrics' ";
 	print "-c 'composer=$music' "	 if $music;
 	print "-c 'arranger=$arranger' " if $arranger;
@@ -499,7 +502,7 @@ sub printInfo {
     } elsif ($format eq "mp3") {
 	# Output a lame argument list.
 	print "--ta '$performer' ";
-	print "--tt \"$title\" ";
+	print "--tt \"$title\" " if $title;
 	#print "-c 'songwriter=$lyrics' ";
 	#print "-c 'composer=$music' "	 if $music;
 	#print "-c 'arranger=$arranger' " if $arranger;
