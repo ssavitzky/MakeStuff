@@ -1,5 +1,5 @@
 ### Makefile template for web publishing
-#	$Id: publish.make,v 1.1 2006-09-18 05:33:45 steve Exp $
+#	$Id: publish.make,v 1.2 2007-02-02 06:13:21 steve Exp $
 #
 #  This template is meant to be included in the Makefile of a working
 #	directory that has a corresponding web directory to publish to.
@@ -47,18 +47,23 @@ TRACKDIR	= $(BASEDIR)/Tracks
 ### publish
 #
 
-.PHONY: publish
+.PHONY: publish published prepublish publishable
 publish: .publish.log
-
-.PHONY: published
 published: .publish.log
 
-.publish.log: $(PUBFILES)
+publishable: 
+	@echo $(PUBFILES)
+
+.publish.log:: prepublish
+.publish.log::  $(PUBFILES)
 	@for f in $? ; do ( \
 	    { [ -f $(PUBDIR)/$$f ] && cmp -s $$f $(PUBDIR)/$$f; }	\
 	    || ( rsync $$f $(PUBDIR); echo "  published $$f" );		\
 	) done
 	date >> .publish.log
+
+# This line may not be needed
+prepublish:
 
 ### put: publish and upload
 #
