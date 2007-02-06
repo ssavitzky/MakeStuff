@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: flktran.pl,v 1.9 2006-11-23 03:19:22 steve Exp $
+# $Id: flktran.pl,v 1.10 2007-02-06 04:11:52 steve Exp $
 # flktran [options] infile outfile
 #	Perform format translation on filksong files.    
 
@@ -230,11 +230,14 @@ sub begSong {
     $line =~ s/^.*song\}//;
     $title = getContent($line);	
     if ($html) {
+	my $alinks = "";
+	$alinks .= " <a href='$filebase.ogg'>[ogg]</a>" if -f "$filebase.ogg";
+	$alinks .= " <a href='$filebase.mp3'>[mp3]</a>" if -f "$filebase.mp3";
 	print "<html><head>";
 	print "<title>$title</title>\n";
 	print "</head><body>\n";
 	#print "<h3><a href='./'>$WEBDIR</a> / $htmlfile</h3>\n";
-	print "<h3>" . expandPath("$WEBDIR/$htmlfile") . "</h3>\n";
+	print "<h3>" . expandPath("$WEBDIR/$htmlfile") . $alinks . "</h3>\n";
     } else {
 	print "Online: $WEBSITE$WEBDIR/$htmlfile\n\n";
     }
