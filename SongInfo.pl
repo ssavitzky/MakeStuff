@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: SongInfo.pl,v 1.4 2006-07-08 21:39:44 steve Exp $
+# $Id: SongInfo.pl,v 1.5 2007-02-19 03:04:50 steve Exp $
 # SongInfo [options] infile... 
 #	<title>extract song info</title>
 
@@ -8,8 +8,8 @@
 #	a set of command-line options for oggenc, or (by default)
 #	a simple property list of name=value assignments.
 
-# ===	Need to look for .wav file in . first, then ../tracks/name
-#	Need to look for .flk file first in ., then in ../songs
+# ===	Need to look for .wav file in . first, then ../Tracks/name
+#	Need to look for .flk file first in ., then in ../Songs
 
 ### Defaults:
 #	Note that the "songwriter" is assumed to be both the lyricist and
@@ -44,6 +44,8 @@ $trackDir = "../Tracks" unless -d $trackDir;
 $trackDir = "../../Tracks" unless -d $trackDir;
 $trackDir = "." unless -d $trackDir;
 
+# === this will have to change eventually ===
+
 if (-f  "$songDir$songlistFile") {
     # everything's cool
 } elsif (-f "$root$publicSongs$songlistFile") {
@@ -67,6 +69,8 @@ $message = "";					# error message
 $status = 0;					# result status code
 
 $hex = 0;					# number lists in hex
+$long = 0;					# include descriptions
+$html = 0;					# output html
 
 ### Variables set from song macros:
 $title = "";
@@ -109,6 +113,8 @@ foreach $f (@ARGV) {
 	elsif ($f =~ /-v/)        { ++$verbose; }
 	elsif ($f =~ /--?hex/)	  { ++$hex; }
 	elsif ($f =~ /-x/)        { ++$hex; }
+	elsif ($f =~ /-l/)	  { ++$long; }
+	elsif ($f =~ /--?long/)	  { ++$long; }
 	else {
 	    print $usage;
 	    exit 1;
@@ -119,6 +125,7 @@ foreach $f (@ARGV) {
 	if ($format eq "text") { $format = "list.text";}
 	if ($format eq "tracklist") { $format = "list.text";}
 	if ($format eq "html") { $format = "list.html";}
+	if ($format =~ /html/) { $html = 1; }
     } elsif ($f =~ /title=(.+)/)  {		# collection title
 	$title = $1; 
     } elsif ($f =~ /track=(.+)/)  { 		# track (.wav file)
@@ -319,10 +326,8 @@ sub printInfo {
 	print "}\n";
 	# PREGAP used to work; it now causes an error:
 	#     START 00:02:00 behind or at track end.
-	if ($track_number > 1) { 
-	    print "PREGAP 0:2:0\n";
-	}
 	# The one in sarge still works, so copy that to /usr/local/bin.
+	print "PREGAP 0:2:0\n";
 	#print "SILENCE 0:2:0\n";
 	#print "START 0:2:0\n";
 	print "FILE \"$track_data\" 0\n";
@@ -338,6 +343,9 @@ sub printInfo {
 	} else {
 	    print "  " . sprintf("%2d", $track_number) . ": $title ($timing)";
 	}
+	if ($long) {
+	    print "\n      $description";
+	}
     } elsif ($format eq "list.html" && $hex) {
 	print ("  <tr> \n");
 	print ("    <td align='right'> " .
@@ -351,6 +359,13 @@ sub printInfo {
 	}
 	print "    </td>\n";
 	print "  </tr>";
+	if ($long) {
+	    print ("  <tr> \n");
+	    print ("    <td> </td>\n");
+	    print ("    <td> $description\n");
+	    print ("    </td>\n");
+	    print ("  </tr>"); 
+	}
     } elsif ($format eq "list.html") {
 	print ("  <li> ");
 	if (-f "$songDir/$f.html") {
@@ -546,7 +561,6 @@ sub doLine {
 	    else { print "\n"; }
 	} 
 	$_ = deTeX($_);
-	if ($html) { s/\~/&nbsp;/g; } else { s/\~/ /g; }
 	s/\\newline/$NL/g;
 	s/\\\///g;
 	indentLine($_, $indent);
@@ -651,6 +665,15 @@ sub deTeX {
 	    $txt =~ s/\}/$_BF/;
 	}
     }
+    if ($html) { $txt =~ s/\~/&nbsp;/g; } else { $txt =~ s/\~/ /g; }
+    while ($txt =~ /\\link\{[^}]+\}\{[^}]+\}/s) {
+	if ($html) {
+	    $txt =~ s/\\link\{([^}]+)\}\{([^}]+)\}/<a href="$1">$2<\/a>/s;
+	} else {
+	    $txt =~ s/\\link\{([^}]+)\}\{([^}]+)\}/$2/s;
+	}
+    }   
+
     $txt =~ s/\\&/$AMP/g;
     $txt =~ s/\\;/$SP/g;
     $txt =~ s/\\ /$SP/g;

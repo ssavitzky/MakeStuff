@@ -1,5 +1,5 @@
 ### Makefile template for concerts
-#	$Id: concert.make,v 1.1 2006-09-17 01:56:16 steve Exp $
+#	$Id: concert.make,v 1.2 2007-02-19 03:04:50 steve Exp $
 #
 #  This template is meant to be included in the Makefile of a "concert" 
 #	directory.  The usual directory tree looks like:
@@ -127,7 +127,7 @@ list-text: tracks
 
 .PHONY:	list-html
 list-html: tracks
-	@$(TRACKINFO) $(SONGLIST_FLAGS) format=list.html $(TRACKS)
+	@$(TRACKINFO) $(SONGLIST_FLAGS) --long format=list.html $(TRACKS)
 
 ## List tracks to a file:
 
@@ -135,7 +135,7 @@ $(MYNAME).list: tracks
 	$(TRACKINFO) $(SONGLIST_FLAGS) format=list.text $(TRACKS) > $@
 
 $(MYNAME).html: tracks
-	$(TRACKINFO) $(SONGLIST_FLAGS) format=list.html $(TRACKS) > $@
+	$(TRACKINFO) $(SONGLIST_FLAGS) --long format=list.html $(TRACKS) > $@
 
 
 ### Archive the track data: 

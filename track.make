@@ -1,5 +1,5 @@
 ### Makefile template for track directories
-#	$Id: track.make,v 1.1 2006-12-20 17:40:55 steve Exp $
+#	$Id: track.make,v 1.2 2007-02-19 03:04:50 steve Exp $
 #
 #  This template is meant to be included in the Makefile of a "track" 
 #	directory.  The usual directory tree looks like:
@@ -12,6 +12,15 @@
 #
 #  A track directory contains Audacity projects with names like "take-N"
 #  (sometimes with a suffix to indicate further editing).
+#  === at some point we may switch to just N.aup; doing an actual rename
+#  === requires using Audacity (or an edit) so as not to lose the connection
+#  === between the project file and the data directory.
+#
+#	It's unfortunate that git doesn't support sub-projects yet;
+#	the best thing would seem to be giving every track directory
+#	its own git repo.
+
+# === need setup targets, including one to set up a git repository.
 
 ### Usage:
 #

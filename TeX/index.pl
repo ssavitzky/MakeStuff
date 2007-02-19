@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: index.pl,v 1.3 2006-12-23 05:09:01 steve Exp $
+# $Id: index.pl,v 1.4 2007-02-19 03:04:50 steve Exp $
 # index [options] infile... 
 #	Perform indexing operations on filksong files
 
@@ -188,15 +188,17 @@ if ($outfmt eq "dsc") {		# .htaccess description lines
     }
 } elsif ($outfmt eq "html" && $tables) {	# HTML table
     print "<table class='songlist'>\n";
-    print "<tr><th>ogg</th><th>pdf</th><th align=left>file</th>"
+    print "<tr><th>ogg</th><th>mp3</th><th>pdf</th><th align=left>file</th>"
 	. "<th>time</th>";
     if ($ps) { print "<th>.ps</th>"; }
     print "<th align=left> Title </tr>\n ";
     for ($j = 0; $j < $i; $j++) {
 	$fn = $fnList[$j];
-	my $audio = (-f "$fn.ogg")? "<a href='$fn.ogg'>ogg</a>" : "";
+	my $audio_o = (-f "$fn.ogg")? "<a href='$fn.ogg'>ogg</a>" : "";
+	my $audio_m = (-f "$fn.mp3")? "<a href='$fn.mp3'>mp3</a>" : "";
 	print "<tr> ";
-	print "  <td valign='top'> $audio </td>";
+	print "  <td valign='top'> $audio_o </td>";
+	print "  <td valign='top'> $audio_m </td>";
 	print "  <td valign='top'> <a href='$fn.pdf'>pdf</a>	\n";
 	print "  <td valign='top'> <tt>$fn</tt></td>\n";
 	print "  <td valign='top'> $times{$fn}	</td>";
@@ -217,9 +219,9 @@ if ($outfmt eq "dsc") {		# .htaccess description lines
 	print "<a href='$fn.html'>", $titles{$fn};
 	if ($subtitles{$fn}) {print " ($subtitles{$fn})"; }
 	print "</a> $times{$fn}";
-	my $audio = (-f "$fn.ogg")
-	    ?  " <a href='$fn.ogg'>ogg</a>" : "";
-	print "$audio\n";
+	my $audio_o = (-f "$fn.ogg")? "<a href='$fn.ogg'>ogg</a>" : "";
+	my $audio_m = (-f "$fn.mp3")? "<a href='$fn.mp3'>mp3</a>" : "";
+	print "$audio_o $audio_m\n";
     }
     print "</ol>\n";
 

@@ -1,5 +1,5 @@
 ### Makefile template for album directories
-#	$Id: album.make,v 1.7 2007-01-27 00:26:25 steve Exp $
+#	$Id: album.make,v 1.8 2007-02-19 03:04:50 steve Exp $
 #
 #  This template is meant to be included in the Makefile of an "album" 
 #	directory.  The usual directory tree looks like:
@@ -76,28 +76,35 @@ TRACKFILE = $(NAME).tracks
 TRACKS	  = @$(TRACKFILE)
 
 # Get the shortnames of all the songs from $(NAME).tracks
-#	Ignore comment lines.
+#	Ignore comment lines.  $(SONGS) has *extended* shortnames
+#	that include the prefixes and suffixes of concert tracks.
 #
 SONGS = $(shell grep -v '\#' $(TRACKFILE))
 
-FLK_FILES = $(shell for f in $(SONGS); do echo \
+# $(SHORTNAMES) is the songfile shortnames that we need to select
+#	the appropriate .flk files in $(SONGDIR) for dependencies.
+SHORTNAMES = $(shell $(TRACKINFO) format=songs $(TRACKS))
+
+FLK_FILES = $(shell for f in $(SHORTNAMES); do echo \
 		$(SONGDIR)/$$f.flk; done)
 
 OGGS = $(shell for f in $(SONGS); do echo $$f.ogg; done)
 MP3S = $(shell for f in $(SONGS); do echo $$f.mp3; done)
 
-# Locally-archived track data
+
+TRACK_FILES = $(shell $(TRACKINFO) format=files $(TRACKS))
+
+# Locally-archived track data === this doesn't work at all anymore.
 #	Note that we do NOT build this by default:  most of the time
 #	we're just testing.  When the time comes to make the gold master,
 #	snarf the track data with "make archive" and rebuild the toc-file.
 #
-TRACK_DATA = $(patsubst %, %.wav, $(SONGS))
 
-%.wav: $(TRACKDIR)/%
-	@echo snagging $@ from `ls $?/*.wav | tail -1`
-	rsync `ls $?/*.wav | tail -1` $@
+#TRACK_DATA = $(patsubst %, %.wav, $(SONGS))
 
-TRACK_FILES = $(shell $(TRACKINFO) format=files $(TRACKS))
+#%.wav: $(TRACKDIR)/%
+#	@echo snagging $@ from `ls $?/*.wav | tail -1`
+#	rsync `ls $?/*.wav | tail -1` $@
 
 ###### Targets ########################################################
 
@@ -163,6 +170,14 @@ list-html-sound: $(NAME).tracks
 	@$(TRACKINFO) $(TRACKLIST_FLAGS) --sound --long format=list.html \
 		$(TRACKS)
 
+.PHONY: list-times
+list-times: 
+	@cd $(TRACKDIR); for d in $(SONGS); do 		\
+		ls -l $$d/notes 			\
+			`ls -tr $$d/*.aup | tail -1; 	\
+			 ls -tr $$d/*.wav | tail -1;` ;	\
+	done
+
 .PHONY:	list-files 
 list-files: $(NAME).tracks
 	@$(TRACKINFO) format=files $(TRACKS)
@@ -185,17 +200,45 @@ $(NAME).extras.html: $(NAME).tracks  $(FLK_FILES)
 	$(TRACKINFO) $(TRACKLIST_FLAGS) --long --sound format=list.html \
 		 $(TRACKS) > $@
 
+$(NAME).files: $(NAME).tracks
+	@$(TRACKINFO) format=files $(TRACKS) > $@
+
 ### Make ogg and mp3 files
 #
-%.ogg: $(shell $(TRACKINFO) format=files %)
-	oggenc -Q -o $@ $(shell $(TRACKINFO) --ogg title='$(TITLE)' $*)
+#	Rules like %.ogg $(shell $(TRACKINFO) format=files %) 
+#	apparently don't allow make to detect the dependency.  Grump.
+#
+#	So instead, we gather them all up into mytracks.make and
+#	run make -f mytracks.make
+#
+mytracks.make: $(TRACK_FILES) $(NAME).tracks
+	echo 'TRACKINFO = $(TRACKINFO)'				 > $@
+	echo 'TITLE	= $(TITLE)'				>> $@
+	echo 'TOOLDIR	= $(TOOLDIR)'				>> $@
+	echo 'SONGS	= $(SONGS)'				>> $@
+	echo 'include $$(TOOLDIR)/track-depends.make'		>> $@
+	echo 'oggs: $$(OGGS)'					>> $@
+	echo 'mp3s: $$(MP3S)'					>> $@
+	for f in $(SONGS); do	\
+		echo $$f.ogg: `$(TRACKINFO) format=files $$f` >> $@;	\
+		echo $$f.mp3: `$(TRACKINFO) format=files $$f` >> $@;	\
+	done
 
-%.mp3: $(shell $(TRACKINFO) format=files %)
+# These become useful if we have no sound files, and can be modified
+# to work if there's a Premaster or Master directory
+
+%.ogg: 
+	oggenc -Q -o $@ $(shell $(TRACKINFO) --ogg title='$(TITLE)' $*)
+%.mp3: 
 	lame -b 64 -S $(shell $(TRACKINFO) --mp3 title='$(TITLE)' $*) $@
 
-.PHONY: oggs mp3s
+
+.PHONY: oggs mp3s mytracks
 oggs:  $(OGGS)
 mp3s:  $(MP3S)
+
+mytracks: mytracks.make
+	$(MAKE) -f mytracks.make oggs mp3s
 
 ### Archive the track data: 
 #	Copy all track data to the current directory for archival purposes
