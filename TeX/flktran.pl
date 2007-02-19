@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: flktran.pl,v 1.11 2007-02-06 04:15:15 steve Exp $
+# $Id: flktran.pl,v 1.12 2007-02-19 06:49:02 steve Exp $
 # flktran [options] infile outfile
 #	Perform format translation on filksong files.    
 
@@ -525,6 +525,8 @@ sub deTeX {
 	    }
 	}
     }
+    $txt =~ s/\\hfill//g;
+    $txt =~ s/---/--/g;
     $txt =~ s/\\&/$AMP/g;
     $txt =~ s/\\;/$SP/g;
     $txt =~ s/\\ /$SP/g;
@@ -562,15 +564,23 @@ sub getContent {
 #	so you can use this in contexts other than the directory the path
 #	ends in.  (This makes the resulting HTML bulkier, but who cares?)
 #
+#	The last directory component is linked to "./", which is something
+#	of a hack, but it works.  All other path components are linked to 
+#	the absolute path, including $WEBSITE, so that they'll work even
+#	if the file ends up on a disk somewhere.
+#
 sub expandPath {
     my ($path) = (@_);
     my $result = '';
     my $pfx = '';
 
-    while ($path =~ s|^(/+)([^/]+)/(.)|/$3| ) {
+    while ($path =~ s|^(/+)([^/]+)/(.+)$|/$3| ) {
 	$result .= $1;
-	$result .= "<a href='$pfx$1$2/'>$2</a>";
 	$pfx .= $1 . $2;
-    }
+	my ($dir, $tail) = ($2, $3);
+	$result .= ($tail =~ m|/|)
+	    ? "<a href='$WEBSITE$pfx/'>$dir</a>"
+	    : "<a href='./'>$dir</a>"
+	}
     return $result . $path;
 }
