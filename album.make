@@ -1,5 +1,5 @@
 ### Makefile template for album directories
-#	$Id: album.make,v 1.8 2007-02-19 03:04:50 steve Exp $
+#	$Id: album.make,v 1.9 2007-03-14 16:06:53 steve Exp $
 #
 #  This template is meant to be included in the Makefile of an "album" 
 #	directory.  The usual directory tree looks like:
@@ -230,7 +230,9 @@ mytracks.make: $(TRACK_FILES) $(NAME).tracks
 %.ogg: 
 	oggenc -Q -o $@ $(shell $(TRACKINFO) --ogg title='$(TITLE)' $*)
 %.mp3: 
-	lame -b 64 -S $(shell $(TRACKINFO) --mp3 title='$(TITLE)' $*) $@
+	sox $(shell $(TRACKINFO) format=files $*) -w -t wav - | \
+	  lame -b 64 -S $(shell $(TRACKINFO) $(SONGLIST_FLAGS)  \
+	   --mp3 title='$(TITLE)' $*) $@
 
 
 .PHONY: oggs mp3s mytracks

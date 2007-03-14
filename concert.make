@@ -1,5 +1,5 @@
 ### Makefile template for concerts
-#	$Id: concert.make,v 1.2 2007-02-19 03:04:50 steve Exp $
+#	$Id: concert.make,v 1.3 2007-03-14 16:07:05 steve Exp $
 #
 #  This template is meant to be included in the Makefile of a "concert" 
 #	directory.  The usual directory tree looks like:
@@ -61,15 +61,24 @@ DEVICE		= ATA:1,1,0
 #	Note that we don't necessarily have corresponding song files
 #	Ignore comment lines.
 #
-TRACKS = $(shell grep -v '\#' tracks)
+ifndef TRACKFILE
+TRACKFILE=tracks
+endif
+
+TRACKS := $(shell grep -v '\#' $(TRACKFILE))
 
 WAVS = $(patsubst %, %.wav, $(TRACKS))
 OGGS = $(patsubst %.wav, %.ogg, $(WAVS))
+MP3S = $(patsubst %.wav, %.mp3, $(WAVS))
 
 .SUFFIXES: .flk .html .ogg .wav
 
 .wav.ogg:
-	oggenc -Q -o $@ $(shell $(TRACKINFO) --ogg $*)
+	oggenc -Q -o $@ $(shell $(TRACKINFO) $(SONGLIST_FLAGS) --ogg $*)
+%.mp3: 
+	sox $(shell $(TRACKINFO) format=files $*) -w -t wav - | \
+	  lame -b 64 -S $(shell $(TRACKINFO) $(SONGLIST_FLAGS)  \
+	   --mp3 title='$(TITLE)' $*) $@
 
 
 ###### Targets ########################################################
@@ -83,8 +92,9 @@ all::	$(MYNAME).toc $(MYNAME).list
 
 all::	time
 
-.PHONY: oggs
+.PHONY: oggs mp3s
 oggs:	$(OGGS)
+mp3s:  $(MP3S)
 
 ### Table of contents for CD-R:
 #	Standard target: toc-file
@@ -125,18 +135,25 @@ list-track-info: tracks
 list-text: tracks
 	@$(TRACKINFO) $(SONGLIST_FLAGS) format=list.text $(TRACKS)
 
+.PHONY: list-long
+list-long: tracks
+	@$(TRACKINFO) $(SONGLIST_FLAGS) --long format=list.text $(TRACKS)
+
 .PHONY:	list-html
 list-html: tracks
 	@$(TRACKINFO) $(SONGLIST_FLAGS) --long format=list.html $(TRACKS)
 
 ## List tracks to a file:
 
-$(MYNAME).list: tracks
+html_fmt = format=list.html
+$(MYNAME).list: tracks $(TRACKINFO)
 	$(TRACKINFO) $(SONGLIST_FLAGS) format=list.text $(TRACKS) > $@
 
-$(MYNAME).html: tracks
-	$(TRACKINFO) $(SONGLIST_FLAGS) --long format=list.html $(TRACKS) > $@
+$(MYNAME).html: tracks $(TRACKINFO)
+	$(TRACKINFO) $(SONGLIST_FLAGS) --long --sound $(html_fmt) $(TRACKS) > $@
 
+tracks.html: tracks $(TRACKINFO)
+	$(TRACKINFO) $(SONGLIST_FLAGS) --long --sound $(html_fmt) $(TRACKS) > $@
 
 ### Archive the track data: 
 #	Copy all track data to the current directory for archival purposes
