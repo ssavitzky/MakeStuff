@@ -1,5 +1,5 @@
 			to.do for Steve_Savitzky/Tools
-	       $Id: to.do,v 1.5 2007-02-19 03:04:50 steve Exp $
+	       $Id: to.do,v 1.6 2007-03-23 18:22:05 steve Exp $
 
 
 =========================================================================
@@ -19,15 +19,12 @@ o makefile templates
     html2ps, probably.
 
 o flktran
-  o \hfill not getting pulled out
-  o --- -> -- in text and html.
   o don't put in excess blank lines in html
 
 o Songs/Makefile
   ->Index headers are wrong; should be /Steve_Savitzky NOT ../.. 
     this loses when exporting.  Could maybe fix with templates.
   o header/footer boilerplate should come from a template file
-  * mp3's
   o make mp3s depend on the oggs to keep them in sync
   o use songlist files instead of passing list on the command line
 
@@ -35,36 +32,51 @@ o index.pl, flktran.pl; Songs/Makefile
   o (?)move index.pl and flktran.pl into Tools from TeX; adjust paths.
   o (?)use TrackInfo instead of index.pl -- it's more recent.
   o add license and URL info to ogg, html, pdf files
-  
-o TrackInfo: like SongInfo, but lists the info needed for an album tracklist
-  o need $EM, etc. from flktran
+
+o album.make
+  o debugging/cleanup for concert and dual-session CDs
+  o have separate ISO files for single- and dual-session disks
+  o ensure "make clean" does not remove .wav's -- they might be rips or links
+  o Need the following for mastering in concerts ripped from DVDs:
+      sox infile -r 44100 -w -c 2 outfile effect?
+	  -c 2 needed if input is mono;  -w = 16-bit words
+	  effect= polyphase or resample -- default may be sufficient
+
+o TrackInfo:
+  o should put songwriter and composer into HTML and text lists, especially
+    if different from the defaults.
+  o need a non-sticky form of performer for the occasional live track.
+    maybe performers=[comma-separated list]
   o LaTeX format (for album covers, etc.)
   o use directory name as $shortname when in track directories
   o read song, track, and local shortname.flk files in that order
     so that the more local info overrides the global.
-  o take a track-data-dir parameter (e.g. for Master or Premaster)
   o give preference to <track>/notes and <album>/<track>.notes
   o get timing from wav files when present.
+  o when making a TOC, allow the occasional 0-length pregap for 
+    run-together tracks like house-c/demon
   o output filename formatting option similar to grip, etc. 
+
+o SongInfo.pl -- not clear this is needed anymore
+  o needs a way to echo a single variable's value -- %variable
+  o needs an option that produces a setlist with proper links.
+    (Alternative would be to run Setlist.cgi from the shell, but that's 
+    not as versatile.  Maybe a --links option.)
+  o use songlist files like trackinfo does  
 
 o concert.make:
   o should be possible to have almost everything in common with album.make
   o especially now that we have concert albums like ABT.
 
-o Tracklist.cgi: like Songlist.cgi but builds album tracklists 
+o Tracklist.cgi: like Setlist.cgi but builds album tracklists 
+  o could probably merge both into TrackInfo using a format and template.
 
 o burning:  
-  ? wodim for burning -- includes cue support, maybe not toc
+  ? wodim for burning (tao for mixed disks) -- has cue support, not toc
   o cuetools for toc->cue file;  toc2cue also doesn't like pregap
   o shntool to manipulate WAV files  shnlen [list-of-files] for length.
     (doesn't give length in frames for files that aren't "CD quality";
      this includes monophonic concert files off the sound board.)
-
-o normalization and other mastering:
-  o probably best to export as *32-bit* (floating-point) .wav files so we
-    don't lose bits in the normalization.  
-  o Probably requires separate export into the album directory.
-  o make would need to check for tracks newer than the current .wav's
 
 o Need a Perl *module* for extracting song/track info:
   o basically a SongInfo _class_
@@ -95,13 +107,6 @@ o Should have a track.make template for track directories
 
 * pubdir.make to split out the web and publish-to-web functionality (?)
   * currently used in Concerts and Concerts/Worldcon-2006
-
-o SongInfo.pl 
-  o needs a way to echo a single variable's value -- %variable
-  o needs an option that produces a setlist with proper links.
-    (Alternative would be to run Setlist.cgi from the shell, but that's 
-    not as versatile.  Maybe a --links option.)
-  o use songlist files like trackinfo does  
 
 o list-tracks
   o make check-times to list .aup files that are newer than newest .wav
@@ -147,7 +152,7 @@ o TrackInfo: like SongInfo, but lists the info needed for an album tracklist
 o 10070121 album.make:
   * use TRACKS = @trackfile instead of SONGS whenever TrackInfo is used.
 
-o TrackInfo: like SongInfo, but lists the info needed for an album tracklist
+o TrackInfo: 
   * html format needs option for whether to include audio links.
   * 20070126 need mp3 format (like ogg only for lame or whatever)
   * 20070127 text format (for album covers, etc.)
@@ -155,7 +160,7 @@ o TrackInfo: like SongInfo, but lists the info needed for an album tracklist
 o list-tracks
   * 20070127 be nice to know whether the .aup file is newer than the .wav
 
-o TrackInfo: like SongInfo, but lists the info needed for an album tracklist
+o TrackInfo: 
   * need format that lists the song shortnames from concert track names
 
 o burning:  
@@ -164,4 +169,31 @@ o burning:
 o flktran
   * 20070205 html pages need links to pdf; audio files if present.
   * <song>.html has to link to pdf, ogg, and mp3 files
+  * \hfill not getting pulled out
+  * --- -> -- in text and html.
 
+o normalization and other mastering: (taken care of in album.make)
+  * separate export into the album directory [Premaster/WAV]
+  * make would need to check for tracks newer than the current .wav's
+  * probably best to export as *32-bit* (floating-point) .wav files so we
+    don't lose bits in the normalization.  
+
+o album.make
+  * (20070320) need to make .m3u playlist files
+  * don't renormalize songs in Premaster/WAV that are older than normalized
+    (not really necessary: normalize-audio checks first.  But useful anyway.)
+  * (20070323) if Premaster/WAV exists, make oggs and mp3s from Master/*.wav
+  * (20070323) handle NO_PREMASTER in update-master -- still need a Master
+    directory in order to make a CD in the presence of 32-bit wav files.
+
+o TrackInfo:
+  * need $EM, etc. from flktran (setupFormattingInfo -- fixes desc. markup)
+  ~ BUG: not getting songwriter and composer credits from .flk files
+    20070319 works if you specify \lyrics and \music explicitly.
+  * 20070319 cd and cd-files format MUST look in ./Master for the data; 
+    format=files and most others MUST NOT
+  * take a track-data-dir parameter (e.g. for Master or Premaster)
+
+o Songs/Makefile
+  * mp3's
+  * mp3s need to use sox to convert possible 32-bit wavs to 16-bit
