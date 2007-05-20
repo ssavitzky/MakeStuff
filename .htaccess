@@ -1,0 +1,3 @@
+Options +ExecCGI
+#AddType application/x-httpd-cgi .cgi
+AddHandler cgi-script .cgi

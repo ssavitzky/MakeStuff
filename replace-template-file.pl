@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-#	$Id: replace-template-file.pl,v 1.2 2006-10-26 16:37:54 steve Exp $
+#	$Id: replace-template-file.pl,v 1.3 2007-05-20 17:44:27 steve Exp $
 #
 #<title>replace-template-file</title>
 #	This script is used to replace part of a file -- usually HTML --
@@ -10,11 +10,10 @@
 #	is an HTML <div> element with a distinctive id or class attribute.
 
 ### Open Source/Free Software license notice:
- # The contents of this file may be used, at your option, under the terms
- # of either the Ricoh Public License Version 1.1 (the RPL), or the GNU
- # Lesser General Public License Version 2 or later (the "LGPL").  The text
- # of these licenses can be found in the Doc directory of this software, or
- # obtained from www.RiSource.org/RPL/ and www.gnu.org/copyleft/lesser.html	
+ # The contents of this file may be used under the terms of the GNU
+ # General Public License Version 2 or later (the "GPL").  The text
+ # of this license can be found on this software's distribution media,
+ # or obtained from  www.gnu.org/copyleft/gpl.html	
 ###						    :end license notice	###
 
 if (! @ARGV) {

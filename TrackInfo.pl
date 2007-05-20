@@ -1,7 +1,14 @@
 #!/usr/bin/perl
-# $Id: TrackInfo.pl,v 1.4 2007-02-01 14:39:42 steve Exp $
+# $Id: TrackInfo.pl,v 1.5 2007-05-20 17:44:27 steve Exp $
 # TrackInfo [options] infile... 
 #	<title>extract track info</title>
+
+### Open Source/Free Software license notice:
+ # The contents of this file may be used under the terms of the GNU
+ # General Public License Version 2 or later (the "GPL").  The text
+ # of this license can be found on this software's distribution media,
+ # or obtained from  www.gnu.org/copyleft/gpl.html	
+###						    :end license notice	###
 
 ### Extracts information about a track from song (.flk) files, track 
 #	notes, or local (album) notes (with a name like trackname.notes)
@@ -75,8 +82,12 @@ $dec = 0;					# number in decimal also
 $long = 0;					# include descriptions
 $html = 0;					# output html
 $multi = 0;					# multisession (CD_ROM_XA)
+$cdrom = 0;					# CDROM 
 $sound_links = 0;				# show sound-file links
 $ctitle = "";					# collection (album) title
+
+$nodefaults = 0;				# don't use default performer
+$want_timing = 0;				# get exact timing from track
 
 ### Variables set from song macros:
 $title = "";
@@ -113,21 +124,28 @@ $morefiles = "";
 
 foreach $f (@ARGV) {
     if ($f =~ /^-/) {
-	if    ($f =~ /--?cd/)     { $format = "cd"; }
-	elsif ($f =~ /--?java/)   { $format = "java"; }
-	elsif ($f =~ /--?ogg/)    { $format = "ogg"; }
-	elsif ($f =~ /--?mp3/)    { $format = "mp3"; }
-	elsif ($f =~ /--?shell/)  { $format = "shell"; }
+	if ($f =~ /-v/)        { ++$verbose; }
      	elsif ($f =~ /--verbose/) { ++$verbose; }
-	elsif ($f =~ /-v/)        { ++$verbose; }
 	elsif ($f =~ /--?hex/)	  { ++$hex; }
 	elsif ($f =~ /--?dec/)	  { ++$dec; }
 	elsif ($f =~ /-x/)        { ++$hex; }
-	elsif ($f =~ /-l/)	  { ++$long; }
-	elsif ($f =~ /--?long/)	  { ++$long; }
-	elsif ($f =~ /--?multi/)  { ++$multi; }
+	elsif ($f =~ /-l/)	  { ++$long; ++$want_timing; }
+	elsif ($f =~ /--?long/)	  { ++$long; ++$want_timing; }
+	elsif ($f =~ /--?multi/)  { ++$multi; $format="cd"; ++$want_timing; }
+	elsif ($f =~ /--?cdrom/)  { ++$cdrom; $format="cd"; ++$want_timing; }
 	elsif ($f =~ /--?sound/)  { ++$sound_links; }
-	else {
+	elsif ($f =~ /--?cd/)     { $format = "cd"; ++$want_timing; }
+	elsif ($f =~ /--?java/)   { $format = "java"; ++$want_timing; }
+	elsif ($f =~ /--?ogg/)    { $format = "ogg"; }
+	elsif ($f =~ /--?mp3/)    { $format = "mp3"; }
+	elsif ($f =~ /--?shell/)  { $format = "shell"; ++$want_timing; }
+	elsif ($f =~ /--?nodefaults/)  { 
+	    ++$nodefaults;
+	    $default_performer = "";
+	    $default_songwriter= "";
+	    $performer = "";
+	    $songwriter= "";
+	} else {
 	    print $usage;
 	    exit 1;
 	}
@@ -147,6 +165,12 @@ foreach $f (@ARGV) {
 	$track = $1; 				#   for next song only
     } elsif ($f =~ /performer=(.+)/)  { 	# performer (sticky)
 	$performer = $1; 
+    } elsif ($f =~ /.iso$/) {
+	$track_data = $f;
+	if ($i == 0) { printHeading(); }
+	printInfo($format);
+	print "\n";
+	++$i;
     } else {
 	if ($i == 0) { printHeading(); }
 	#if ($i > 0) { print "\n"; }
@@ -255,7 +279,7 @@ sub clearTrackInfo {
 
     $url = "";			    	# === compute; check for longdir
 
-    						# don't clear performer
+    $performer = "" if $nodefaults;		# don't clear performer
     $lyrics = "";				# lyricist
     $music = "";				# composer
     $arranger = "";				# arranger
@@ -263,20 +287,21 @@ sub clearTrackInfo {
     $track_data = "";				# .wav file
 }
 
-### getSongFileInfo($filename)
+### getSongFileInfo($filename, $directory)
 #	Get information from a song (.flk) file
 #	The results are returned in global variables, which are assumed to
-#	have been initialized already.
+#	have been initialized already.  $directory defaults to $songDir
 #
 sub getSongFileInfo {
-    my $filename = shift;
+    my ($filename, $directory) = @_;
     my $shortname = $filename;
+    $directory = $songDir unless $directory;
 
-    if ($filename =~ /^([0-9]+\-+)?([^.]+)\.?/) { 
+    if ($filename =~ /^([a-z]*[0-9]+\-+)?([^.]+)\.?/) { 
 	$shortname = $2;
     }
 
-    open(IN, "$songDir/${filename}.flk") || return 0;
+    open(IN, "$directory/${filename}.flk") || return 0;
     
     while (<IN>) {			
 	if (/^[ \t]*$/) { }		# blank line
@@ -323,13 +348,18 @@ sub getTrackInfo {
     #   a leading numeric prefix separated by hypens is ignored.
     #   everything after "." is ignored.  This allows track numbers
     #   and qualifiers (foo.a, etc.)
-    if ($filename =~ /^^([0-9]+\-+)?([^.]+)\.?/) { 
+    if ($filename =~ /^([a-z]*[0-9]+\-+)?([^.]+)\.?/) { 
 	$shortname = $2;
     }
+    #print STDERR "filename=$filename; shortname=$shortname\n";
 
     clearTrackInfo();
 
     getSongFileInfo($shortname);
+
+    if (-f "./$filename.flk") {
+	getSongFileInfo($filename, ".");
+    }
 
     #print STDERR "shortname = $shortname; title = $title\n";
     $title = $shortname unless $title;
@@ -344,7 +374,11 @@ sub getTrackInfo {
     # If lyricist isn't specified, it's the default
     $lyrics = $default_songwriter unless $lyrics;
 
-    # look for a .wav file in ../Tracks/$shortname/
+    # look for a .wav file:
+    #   o .wav file on the command line
+    #   o Master/$filename.wav (only if format=cd (TOC))
+    #   o ./$filename.wav
+    #   o most recent .wav file in ../Tracks/$shortname/
     
     $trackddir = "$trackDir/$shortname";
     $trackddir = "" unless -d $trackddir;
@@ -354,6 +388,10 @@ sub getTrackInfo {
 	$track = "";
     } elsif ($filename =~ /.wav$/ && -f $filename) {
 	$track_data = $filename;
+    } elsif ($filename =~ /.iso$/ && -f $filename) {
+	$track_data = $filename;
+    } elsif (($format =~ /^cd/) && -f "Master/${filename}.wav") {
+	$track_data = "Master/${filename}.wav";
     } elsif (-f "${filename}.wav") {
 	$track_data = "${filename}.wav";
     } elsif ($trackddir) {
@@ -364,11 +402,31 @@ sub getTrackInfo {
     } else {
 	$track_data = "";
     }
+    my $real_track_data = "Master/${filename}.wav";
+    if (-f $real_track_data &&  $want_timing) {
+	my $tt = `shntool len $real_track_data | tail -1`;
+	$tt =~ /([0-9]+\:[0-9]+).([0-9]+)/;
+	$timing = $1;  $timing .= ":$2" if $format eq "cd";
+    }
 }
 
 sub printInfo {
     $track_number = ($track_number)? $track_number + 1 : 1;
-    if ($format eq "cd") {
+    if ($format eq "cd" && $track_data =~ /.iso/) {
+	print "TRACK MODE1\n";
+	print "COPY\n";
+	print "CD_TEXT {\n";
+        print "  LANGUAGE 0 {\n";
+	print "    TITLE \"CD-ROM Data\"\n";
+        print "    PERFORMER \"-\"\n";
+        print "    SONGWRITER \"-\"\n";
+        print "    COMPOSER \"-\"\n";
+        print "    ARRANGER \"-\"\n" if $arranger;
+        print "  }\n";
+	print "}\n";
+	print "DATAFILE \"$track_data\" 0\n";
+    
+    } elsif ($format eq "cd") {
 	# One would think that there should be a subchannel, but that fails.
 	# === current cdrdao is probably screwed up somehow ===
 
@@ -387,20 +445,17 @@ sub printInfo {
         print "    ARRANGER \"$arranger\"\n" if $arranger;
         print "  }\n";
 	print "}\n";
-	# PREGAP used to work; it now causes an error:
-	#     START 00:02:00 behind or at track end.
-	# The one in sarge still works, so copy that to /usr/local/bin.
 	print "PREGAP 0:2:0\n";
 	print "SILENCE 0:0:1\n";		# make new cdrdao happy
 	#print "SILENCE 0:2:0\n";
 	#print "START 0:2:0\n";
-	print "FILE \"$track_data\" 0\n";
+	print "FILE \"$track_data\" 0 \n"; # can't add $timing if not padded
 	if (! $track_data) {
 	    $status = -1;
 	    print STDERR "SongInfo:  No track data for $shortname ($title)\n";
 	}
-    } elsif ($format eq "files") {
-	# Just the track file names
+    } elsif ($format =~ /files$/) {
+	# Just the track data file names
 	print "$track_data";
     } elsif ($format eq "songs") {
 	# Just the corresponding shortnames
@@ -418,6 +473,9 @@ sub printInfo {
 	    print "\n      $description";
 	}
     } elsif ($format eq "list.html") {
+	# note: when making changes in the number of columns,
+	#       remember to make corresponding changes in the
+	#	following description row.
 	my $d = ($hex && $dec)? sprintf("(%02d) ", $track_number) : "";
 	print ("  <tr> \n");
 	print ("    <td align='right'> " .
@@ -426,18 +484,21 @@ sub printInfo {
 	print ("    <td align='right'> " .
 	       sprintf("(%02d)", $track_number) .
 	       " </td>\n") if $hex && $dec;
-	print ("    <td> ");
-	if (-f "$f.ogg" && $sound_links) {
-	    # put the sound file first -- this is a concert after all
-	    print " <a href='$f.ogg'>[ogg]</a>";
+	# === should just make these columns conditional on $sound_links
+	if ($sound_links) {
+	    print ("    <td> ");
+	    if (-f "$f.ogg") {
+		# put the sound file first -- this is a concert after all
+		print " <a href='$f.ogg'>[ogg]</a>";
+	    }
+	    print ("    </td>\n");
+	    print ("    <td> ");
+	    if (-f "$f.mp3") {
+		# put the sound file first -- this is a concert after all
+		print " <a href='$f.mp3'>[mp3]</a>";
+	    }
+	    print ("    </td>\n");
 	}
-	print ("    </td>\n");
-	print ("    <td> ");
-	if (-f "$f.mp3" && $sound_links) {
-	    # put the sound file first -- this is a concert after all
-	    print " <a href='$f.mp3'>[mp3]</a>";
-	}
-	print ("    </td>\n");
 	print ("    <td> ");
 	if (-f "$songDir/$shortname.html") {
 	    print "<a href='$songURL$shortname.html'>$title</a>";
@@ -462,14 +523,15 @@ sub printInfo {
 	} else {
 	    print "$title";
 	}
+	print ("  ($timing)") if $timing;
 	print ("    </td>\n");
 	print ("  </tr>");
 	if ($long && $description) {
 	    print ("  <tr> \n");
 	    print ("    <td> </td>\n");
-	    print ("    <td> </td>\n");
-	    print ("    <td> </td>\n");
-	    print ("    <td> </td>\n");
+	    print ("    <td> </td>\n") if $hex && $dec;
+	    print ("    <td> </td>\n") if $sound_links;
+	    print ("    <td> </td>\n") if $sound_links;
 	    print ("    <td> $description\n");
 	    print ("    </td>\n");
 	    print ("  </tr>"); 
@@ -491,9 +553,9 @@ sub printInfo {
 	# so we can use $shortname.property 
     } elsif ($format eq "ogg") {
 	# Output an oggenc argument list.
-	print "-a '$performer' ";
+	print "-a '$performer' " if $performer;
 	print "-t \"$title\" " if $title;
-	print "-c 'songwriter=$lyrics' ";
+	print "-c 'songwriter=$lyrics' " if $lyrics;
 	print "-c 'composer=$music' "	 if $music;
 	print "-c 'arranger=$arranger' " if $arranger;
 	print "-l '$ctitle' " 		 if $ctitle;
@@ -501,14 +563,14 @@ sub printInfo {
 	print "$track_data\n";
     } elsif ($format eq "mp3") {
 	# Output a lame argument list.
-	print "--ta '$performer' ";
+	print "--ta '$performer' " if $performer;
 	print "--tt \"$title\" " if $title;
 	#print "-c 'songwriter=$lyrics' ";
 	#print "-c 'composer=$music' "	 if $music;
 	#print "-c 'arranger=$arranger' " if $arranger;
 	print "--tl '$ctitle' " 		 if $ctitle;
 	# === needs license and url
-	print "$track_data\n";
+	print "-\n";  # assume stdin -- "$track_data\n";
     } elsif ($format eq "shell") {
 	# Shell is name='value' -- need single quotes to prevent expansion
 	print "shortname='$shortname'\n";
@@ -549,8 +611,18 @@ sub printInfo {
 
 sub printHeading {
     if ($format eq "cd" && $ctitle) {
-	# multisession disks have to be type CD_ROM_XA
-	print ($multi? "CD_ROM_XA" : "CD_DA");
+	# Print header for CDR TOC
+	#   note that wodim insists on a performer, composer, and songwriter
+	#   for every CD even if it's a mix.  Use the default performer, and
+	#   use the default songwriter for the composer because I'm a singer-
+	#   songwriter.  Eventually need to parametrize them.
+	#
+	#   multisession disks have to be type CD_ROM_XA; single-session
+	#   data disks should be CD_ROM, but we're not doing that yet.
+	#
+	if ($multi) { print "CD_ROM_XA"; }
+	elsif ($cdrom) { print "CD_ROM" ; }
+	else { print "CD_DA"; }
 	print "
 CD_TEXT {
   LANGUAGE_MAP {
@@ -560,6 +632,8 @@ CD_TEXT {
   LANGUAGE 0 {
     TITLE \"$ctitle\"
     PERFORMER \"$default_performer\"
+    COMPOSER \"$default_songwriter\"
+    SONGWRITER \"$default_songwriter\"
   }
 }\n\n";
     } elsif ($format eq "tracklist" && $ctitle) {
@@ -569,6 +643,8 @@ CD_TEXT {
     } elsif ($format eq "ol.html") {
 	print "<ol>\n";
     }
+    $html = 1 if $format =~ /html/;
+    setupFormattingConstants();
 }
 
 sub printFooting {
@@ -762,6 +838,49 @@ sub xmlLine {
 
 }
 
+### Formatting constants:
+sub setupFormattingConstants {
+    if ($html) {
+	$EM  = "<em>";
+	$_EM = "</em>";
+	$BF  = "<b>";
+	$_BF = "</b>";
+	$TT  = "<tt>";
+	$_TT = "</tt>";
+	$UL  = "<u>";
+	$_UL = "</u>";
+	$SPOKEN  = "(spoken)";
+	$_SPOKEN = "";
+	$NL  = "<br />\n";
+	$NP  = "<hr />\n";
+	$SP  = "&nbsp;";
+	$AMP = "&amp;";
+	$FLKTRAN = "<a href='../Tools/TeX/flktran.html'><code>flktran</code></a>";
+	# Creative Commons copyright notice
+	$CCnotice = "<a href=\"http://creativecommons.org/licenses/by-nc-sa/2.0/\"
+><img  alt=\"Creative Commons License\" border=\"0\" 
+       src=\"http://creativecommons.org/images/public/somerights.gif\" 
+     /><small>Some rights reserved.</small></a>";
+    } else {
+	$EM  = "_";
+	$_EM = "_";
+	$BF  = "*";
+	$_BF = "*";
+	$TT  = "";
+	$_TT = "";
+	$UL  = "";
+	$_UL = "";
+	$SPOKEN  = "(spoken)";
+	$_SPOKEN = "";
+	$NL  = "\n";
+	$NP  = "\f";
+	$SP  = " ";
+	$AMP = "&";
+	$FLKTRAN = "flktran";
+	$CCnotice = "Some Rights Reserved:  CC by-nc-sa/2.0/";
+    }
+}
+
 ### Remove LaTeX constructs.
 ###	This would be easier with a table.
 sub deTeX {
@@ -791,7 +910,13 @@ sub deTeX {
 	    $txt =~ s/\}/$_BF/;
 	}
     }
-    if ($html) { $txt =~ s/\~/&nbsp;/g; } else { $txt =~ s/\~/ /g; }
+    if ($html) { 
+	$txt =~ s/\~/&nbsp;/g; 
+	$txt =~ s/---/--/g;			# no &emdash;?
+    } else { 
+	$txt =~ s/\~/ /g;
+	$txt =~ s/---/--/g;
+    }
     while ($txt =~ /\\link\{[^}]+\}\{[^}]+\}/s) {
 	if ($html) {
 	    $txt =~ s/\\link\{([^}]+)\}\{([^}]+)\}/<a href="$1">$2<\/a>/s;

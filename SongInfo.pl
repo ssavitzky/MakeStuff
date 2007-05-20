@@ -1,7 +1,14 @@
 #!/usr/bin/perl
-# $Id: SongInfo.pl,v 1.5 2007-02-19 03:04:50 steve Exp $
+# $Id: SongInfo.pl,v 1.6 2007-05-20 17:44:27 steve Exp $
 # SongInfo [options] infile... 
 #	<title>extract song info</title>
+
+### Open Source/Free Software license notice:
+ # The contents of this file may be used under the terms of the GNU
+ # General Public License Version 2 or later (the "GPL").  The text
+ # of this license can be found on this software's distribution media,
+ # or obtained from  www.gnu.org/copyleft/gpl.html	
+###						    :end license notice	###
 
 ### Extracts information from song (.flk) files 
 #	produces either a TOC file suitable for use in cdrdao, 

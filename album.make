@@ -1,5 +1,5 @@
 ### Makefile template for album directories
-#	$Id: album.make,v 1.10 2007-04-28 15:37:15 steve Exp $
+#	$Id: album.make,v 1.11 2007-05-20 17:44:27 steve Exp $
 #
 #  This template is meant to be included in the Makefile of an "album" 
 #	directory.  The usual directory tree looks like:
@@ -14,6 +14,13 @@
 #  the shortnames of the album's tracks.  The most recent .wav file
 #  in each track directory is used.  (Eventually one ought to be able to
 #  specify the take, but that would require substantial refactoring.)
+
+### Open Source/Free Software license notice:
+ # The contents of this file may be used under the terms of the GNU
+ # Lesser General Public License Version 2 or later (the "LGPL").  The text
+ # of this license can be found on this software's distribution media, or
+ # obtained from  www.gnu.org/copyleft/lesser.html	
+###						    :end license notice	###
 
 ### Usage:
 #
@@ -52,7 +59,7 @@ TRACKINFO = $(TOOLDIR)/TrackInfo.pl
 LIST_TRACKS = $(TOOLDIR)/list-tracks
 
 # In some cases the old CDRDAO (in /usr/local/bin) works better.
-#CDRDAO = /usr/local/bin/cdrdao
+#CDRDAO = /usr/local/bin/cdrdao.sarge
 CDRDAO = /usr/bin/cdrdao
 
 # Look for the new (Etch) replacements for cdrecord and mkisofs
@@ -98,6 +105,11 @@ FLK_FILES := $(shell for f in $(SHORTNAMES); do echo \
 
 OGGS = $(shell for f in $(SONGS); do echo $$f.ogg; done)
 MP3S = $(shell for f in $(SONGS); do echo $$f.mp3; done)
+
+# LOCAL_METADATA -- the local .flk files mainly used for local descriptions,
+#	performers, and so on.
+
+LOCAL_METADATA = $(wildcard *.flk)
 
 # TRACK_SOURCES -- the original .wav files for the tracks
 #	They are first copied into Premaster/WAV, normalized, then
@@ -187,15 +199,15 @@ list-track-info: $(NAME).tracks
 list-text: $(NAME).tracks
 	@$(TRACKINFO) $(TRACKLIST_FLAGS) format=list.text $(TRACKS)
 
-.PHONY: list-long-text
+.PHONY: list-long-text $(LOCAL_METADATA)
 list-long-text: $(NAME).tracks
 	@$(TRACKINFO) $(TRACKLIST_FLAGS) --long format=list.text $(TRACKS)
 
-.PHONY:	list-html 
+.PHONY:	list-html $(LOCAL_METADATA)
 list-html: $(NAME).tracks
 	@$(TRACKINFO) $(TRACKLIST_FLAGS) --long format=list.html $(TRACKS)
 
-.PHONY:	list-html-sound
+.PHONY:	list-html-sound $(LOCAL_METADATA)
 list-html-sound: $(NAME).tracks
 	@$(TRACKINFO) $(TRACKLIST_FLAGS) --sound --long format=list.html \
 		$(TRACKS)
@@ -273,6 +285,10 @@ endif
 #	So instead, we gather them all up into mytracks.make and
 #	run make -f mytracks.make
 #
+#	Also note that we use "-w -t .wav" to force sox to make 16-bit
+#	.wav files; the -t is there because otherwise sox gets confused
+#	by filenames that have dots in them, like foo.bar.wav
+#
 mytracks.make: $(TRACK_SOURCES) $(NAME).tracks
 	echo '# mytracks.make' $(shell date)		 > $@
 	@echo 'TRACKINFO = $(TRACKINFO)'			>> $@
@@ -292,6 +308,9 @@ mytracks.make: $(TRACK_SOURCES) $(NAME).tracks
 		echo "	"sox '$$< -w -t .wav $$@'		>> $@;	\
 		echo update-master:: Master/$$f.wav	 	>> $@;	\
 	done
+
+# this doesn't work because it creates output files with funny names
+# 		echo "	"shntool pad $$@			>> $@;	\
 
 # make ogg and mp3 files
 #	We now make them from the normalized versions in Premaster/WAV
@@ -365,7 +384,7 @@ Premaster/WAV:
 #	Probably don't want -q, either -- it's a long time to go without
 #	output, and we'll almost always be doing it from the command line.
 
-Premaster/WAV/normalized: Premaster/WAV/*.wav
+Premaster/WAV/normalized: $(wildcard Premaster/WAV/*.wav)
 	normalize-audio  $? 
 	echo `date` $? > $@
 	touch Premaster/WAV

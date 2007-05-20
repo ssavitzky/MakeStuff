@@ -1,8 +1,11 @@
 			to.do for Steve_Savitzky/Tools
-	       $Id: to.do,v 1.6 2007-03-23 18:22:05 steve Exp $
+	       $Id: to.do,v 1.7 2007-05-20 17:44:27 steve Exp $
 
 
 =========================================================================
+
+* 20070520 add license boilerplate to .pl, .cgi, .make files
+  (added by hand using boilermaker.pl with boilerplate in ./include)
 
 o note that we're not using SongInfo.pl anymore -- should remove it.
   the audio files are now made with TrackInfo.pl.
@@ -35,25 +38,26 @@ o index.pl, flktran.pl; Songs/Makefile
 
 o album.make
   o debugging/cleanup for concert and dual-session CDs
-  o have separate ISO files for single- and dual-session disks
+  * have separate ISO files for single- and dual-session disks
   o ensure "make clean" does not remove .wav's -- they might be rips or links
-  o Need the following for mastering in concerts ripped from DVDs:
+  = Need the following for mastering in concerts ripped from DVDs:
       sox infile -r 44100 -w -c 2 outfile effect?
 	  -c 2 needed if input is mono;  -w = 16-bit words
 	  effect= polyphase or resample -- default may be sufficient
 
 o TrackInfo:
+  * 20070506 allow ISO file.  -cdrom for CD-ROM disks; can also have audio
+  * 20070508 read songDir/shortname.flk and local filename.flk files in that
+    order so that the more local info overrides the global.
   o should put songwriter and composer into HTML and text lists, especially
     if different from the defaults.
   o need a non-sticky form of performer for the occasional live track.
     maybe performers=[comma-separated list]
   o LaTeX format (for album covers, etc.)
   o use directory name as $shortname when in track directories
-  o read song, track, and local shortname.flk files in that order
-    so that the more local info overrides the global.
   o give preference to <track>/notes and <album>/<track>.notes
-  o get timing from wav files when present.
-  o when making a TOC, allow the occasional 0-length pregap for 
+  o get timing from wav files when present. (shntool len foo.wav)
+  o when making a TOC, -nogap to make a 0-length pregap for 
     run-together tracks like house-c/demon
   o output filename formatting option similar to grip, etc. 
 

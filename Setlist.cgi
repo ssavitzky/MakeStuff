@@ -1,8 +1,15 @@
 #!/usr/bin/perl
-# $Id: Setlist.cgi,v 1.5 2006-11-05 04:31:23 steve Exp $
+# $Id: Setlist.cgi,v 1.6 2007-05-20 17:44:27 steve Exp $
 # Setlist.cgi [options] infile...	make the title index
 # .../Setlist.cgi from web.		make a setlist
 #	<title>make a setlist</title>
+
+### Open Source/Free Software license notice:
+ # The contents of this file may be used under the terms of the GNU
+ # General Public License Version 2 or later (the "GPL").  The text
+ # of this license can be found on this software's distribution media,
+ # or obtained from  www.gnu.org/copyleft/gpl.html	
+###						    :end license notice	###
 
 use CGI;
 

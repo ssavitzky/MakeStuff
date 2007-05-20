@@ -1,5 +1,5 @@
 ### Makefile template for track directories
-#	$Id: track.make,v 1.2 2007-02-19 03:04:50 steve Exp $
+#	$Id: track.make,v 1.3 2007-05-20 17:44:28 steve Exp $
 #
 #  This template is meant to be included in the Makefile of a "track" 
 #	directory.  The usual directory tree looks like:
@@ -19,6 +19,13 @@
 #	It's unfortunate that git doesn't support sub-projects yet;
 #	the best thing would seem to be giving every track directory
 #	its own git repo.
+
+### Open Source/Free Software license notice:
+ # The contents of this file may be used under the terms of the GNU
+ # Lesser General Public License Version 2 or later (the "LGPL").  The text
+ # of this license can be found on this software's distribution media, or
+ # obtained from  www.gnu.org/copyleft/lesser.html	
+###						    :end license notice	###
 
 # === need setup targets, including one to set up a git repository.
 
