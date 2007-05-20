@@ -1,7 +1,14 @@
 #!/usr/bin/perl
-# $Id: flktran.pl,v 1.12 2007-02-19 06:49:02 steve Exp $
+# $Id: flktran.pl,v 1.13 2007-05-20 17:57:20 steve Exp $
 # flktran [options] infile outfile
 #	Perform format translation on filksong files.    
+
+### Open Source/Free Software license notice:
+ # The contents of this file may be used under the terms of the GNU
+ # General Public License Version 2 or later (the "GPL").  The text
+ # of this license can be found on this software's distribution media,
+ # or obtained from  www.gnu.org/copyleft/gpl.html	
+###						    :end license notice	###
 
 ### Print usage info:
 sub usage {

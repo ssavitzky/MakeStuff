@@ -1,7 +1,14 @@
 #!/usr/bin/perl
-# $Id: index.pl,v 1.4 2007-02-19 03:04:50 steve Exp $
+# $Id: index.pl,v 1.5 2007-05-20 17:57:20 steve Exp $
 # index [options] infile... 
 #	Perform indexing operations on filksong files
+
+### Open Source/Free Software license notice:
+ # The contents of this file may be used under the terms of the GNU
+ # General Public License Version 2 or later (the "GPL").  The text
+ # of this license can be found on this software's distribution media,
+ # or obtained from  www.gnu.org/copyleft/gpl.html	
+###						    :end license notice	###
 
 ### Print usage info:
 sub usage {

@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-#	$Id: boilermaker.pl,v 1.1 2007-05-20 17:44:27 steve Exp $
+#	$Id: boilermaker.pl,v 1.2 2007-05-20 17:57:20 steve Exp $
 
 #<title>insert boilerplate</title>
 #	This script is used to insert "boilerplate" text, especially 
@@ -120,7 +120,7 @@ while (@ARGV) {
 	$comment_beg = "<!-- ";
 	$comment_end = " -->";
     } elsif ($content =~ m|^ *//| ||
-	     $content =~ m|^ /\*|) {
+	     $content =~ m|^ */\*|) {
 	print STDERR "   Input file '$infile' appears to be C or Java.\n"
 	    if $verbose;
 	$comment_bol = "*";
