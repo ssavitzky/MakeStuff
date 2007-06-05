@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: TrackInfo.pl,v 1.5 2007-05-20 17:44:27 steve Exp $
+# $Id: TrackInfo.pl,v 1.6 2007-06-05 02:43:19 steve Exp $
 # TrackInfo [options] infile... 
 #	<title>extract track info</title>
 
@@ -446,13 +446,15 @@ sub printInfo {
         print "  }\n";
 	print "}\n";
 	print "PREGAP 0:2:0\n";
-	print "SILENCE 0:0:1\n";		# make new cdrdao happy
-	#print "SILENCE 0:2:0\n";
-	#print "START 0:2:0\n";
-	print "FILE \"$track_data\" 0 \n"; # can't add $timing if not padded
 	if (! $track_data) {
 	    $status = -1;
 	    print STDERR "SongInfo:  No track data for $shortname ($title)\n";
+	    print "SILENCE 0:0:1\n";		# make new cdrdao happy
+	} elsif ($track_data_not_padded) {
+	    print "SILENCE 0:0:1\n";		# make new cdrdao happy
+	    print "FILE \"$track_data\" 0\n"; # don't add $timing if not padded
+	} else {
+	    print "FILE \"$track_data\" 0 $timing \n";
 	}
     } elsif ($format =~ /files$/) {
 	# Just the track data file names
