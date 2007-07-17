@@ -1,5 +1,5 @@
 			to.do for Steve_Savitzky/Tools
-	       $Id: to.do,v 1.7 2007-05-20 17:44:27 steve Exp $
+	       $Id: to.do,v 1.8 2007-07-17 06:20:22 steve Exp $
 
 
 =========================================================================
@@ -16,6 +16,10 @@ o webdir.make should go to projects/WURM
   o incorporate publish.make functionality (?)
   o check out projects/WURM in Tools for easy export 
     or symlink from docroot/Site -- has to be accessible from here
+
+o uploading: 
+  o make sure we can handle multiple destinations.
+  o upload to the fastest (e.g. dreamhost) and sync the others from there
 
 o makefile templates
   o need a good way to get a monochrome printable version of a web page
@@ -39,24 +43,21 @@ o index.pl, flktran.pl; Songs/Makefile
 o album.make
   o debugging/cleanup for concert and dual-session CDs
   * have separate ISO files for single- and dual-session disks
-  o ensure "make clean" does not remove .wav's -- they might be rips or links
+  * ensure "make clean" does not remove .wav's -- they might be rips or links
   = Need the following for mastering in concerts ripped from DVDs:
       sox infile -r 44100 -w -c 2 outfile effect?
 	  -c 2 needed if input is mono;  -w = 16-bit words
 	  effect= polyphase or resample -- default may be sufficient
+  = for mastering need tracks to be padded; go through sox -t cdr
 
 o TrackInfo:
-  * 20070506 allow ISO file.  -cdrom for CD-ROM disks; can also have audio
-  * 20070508 read songDir/shortname.flk and local filename.flk files in that
-    order so that the more local info overrides the global.
-  o should put songwriter and composer into HTML and text lists, especially
+  * should put songwriter and composer into HTML and text lists, especially
     if different from the defaults.
   o need a non-sticky form of performer for the occasional live track.
     maybe performers=[comma-separated list]
   o LaTeX format (for album covers, etc.)
   o use directory name as $shortname when in track directories
   o give preference to <track>/notes and <album>/<track>.notes
-  o get timing from wav files when present. (shntool len foo.wav)
   o when making a TOC, -nogap to make a 0-length pregap for 
     run-together tracks like house-c/demon
   o output filename formatting option similar to grip, etc. 
@@ -76,11 +77,13 @@ o Tracklist.cgi: like Setlist.cgi but builds album tracklists
   o could probably merge both into TrackInfo using a format and template.
 
 o burning:  
-  ? wodim for burning (tao for mixed disks) -- has cue support, not toc
-  o cuetools for toc->cue file;  toc2cue also doesn't like pregap
-  o shntool to manipulate WAV files  shnlen [list-of-files] for length.
+  = shntool to manipulate WAV files  shnlen [list-of-files] for length.
     (doesn't give length in frames for files that aren't "CD quality";
-     this includes monophonic concert files off the sound board.)
+     and the sound files have to be padded to full frames in order not to
+     upset cdrdao.  The current mastering process fixes this.)
+  ? wodim for burning (tao for mixed disks) -- has cue support, not toc,
+    but can use .inf files with -useinfo.  see icedax(0)
+  o it seems to be important to eject the disk before reading the msinfo
 
 o Need a Perl *module* for extracting song/track info:
   o basically a SongInfo _class_
@@ -117,6 +120,7 @@ o list-tracks
 
 o Setlist.cgi 
   * 20061104 add cols=0 for a very compact listing.
+  o doesn't preserve title when adding a song
   o be nice if we could add a note (using a text box)
   o install (via symlink) in mirror's cgi-bin so we can take it out of ~steve
   o all list operations need to be javascript to make them robot-proof
@@ -201,3 +205,10 @@ o TrackInfo:
 o Songs/Makefile
   * mp3's
   * mp3s need to use sox to convert possible 32-bit wavs to 16-bit
+
+o TrackInfo:
+  * 20070506 allow ISO file.  -cdrom for CD-ROM disks; can also have audio
+  * 20070508 read songDir/shortname.flk and local filename.flk files in that
+    order so that the more local info overrides the global.
+  * 20070521 get timing from wav files when present. (shntool len foo.wav)
+    note that they have to be padded using the sox pseudo-type cdr
