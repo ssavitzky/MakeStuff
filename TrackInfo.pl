@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: TrackInfo.pl,v 1.6 2007-06-05 02:43:19 steve Exp $
+# $Id: TrackInfo.pl,v 1.7 2007-07-17 06:18:32 steve Exp $
 # TrackInfo [options] infile... 
 #	<title>extract track info</title>
 
@@ -86,8 +86,11 @@ $cdrom = 0;					# CDROM
 $sound_links = 0;				# show sound-file links
 $ctitle = "";					# collection (album) title
 
+$show_credits = 0;				# show short-form credits
+
 $nodefaults = 0;				# don't use default performer
 $want_timing = 0;				# get exact timing from track
+$dir = ".";					# destination directory 
 
 ### Variables set from song macros:
 $title = "";
@@ -101,6 +104,7 @@ $key = "";
 $timing = "";
 $created = "";
 $cvsid = "";
+$credits = "";
 					## stuff for CD text
 $performer = $default_performer;		# performer
 $lyrics = "";					# lyricist
@@ -110,6 +114,7 @@ $arranger = "";					# arranger
 $index_title = "";				# title without leading A/The
 $filename  = "";				# filename.flk
 $shortname = "";				# filename without .flk
+$longname = '';					# title as a filename
 
 $track = "";					# track data file from cmd line
 $track_data = "";				# actual track data file
@@ -131,6 +136,7 @@ foreach $f (@ARGV) {
 	elsif ($f =~ /-x/)        { ++$hex; }
 	elsif ($f =~ /-l/)	  { ++$long; ++$want_timing; }
 	elsif ($f =~ /--?long/)	  { ++$long; ++$want_timing; }
+	elsif ($f =~ /--?credits/){ ++$show_credits; }
 	elsif ($f =~ /--?multi/)  { ++$multi; $format="cd"; ++$want_timing; }
 	elsif ($f =~ /--?cdrom/)  { ++$cdrom; $format="cd"; ++$want_timing; }
 	elsif ($f =~ /--?sound/)  { ++$sound_links; }
@@ -159,6 +165,8 @@ foreach $f (@ARGV) {
 	if ($format eq "tracklist") { $format = "list.text"; }
 	if ($format eq "html") { $format = "list.html"; }
 	if ($format =~ /html/) { $html = 1; }
+    } elsif ($f =~ /dir=(.+)/)  {		# destination directory
+	$dir = $1; 
     } elsif ($f =~ /title=(.+)/)  {		# collection title
 	$ctitle = $1; 
     } elsif ($f =~ /track=(.+)/)  { 		# track (.wav file)
@@ -283,6 +291,7 @@ sub clearTrackInfo {
     $lyrics = "";				# lyricist
     $music = "";				# composer
     $arranger = "";				# arranger
+    $credits = "";				# credits
 
     $track_data = "";				# .wav file
 }
@@ -324,6 +333,7 @@ sub getSongFileInfo {
 	elsif (/\\music/)	{ $music     = getContent($_); }
 	elsif (/\\lyrics/)	{ $lyrics    = getContent($_); }
 	elsif (/\\arranger/)	{ $arranger  = getContent($_); }
+	elsif (/\\credits/)	{ $credits   = getContent($_); }
 	elsif ($title) { 
 	    # everything's at the top, so we have it all now.
 	    last;
@@ -364,6 +374,10 @@ sub getTrackInfo {
     #print STDERR "shortname = $shortname; title = $title\n";
     $title = $shortname unless $title;
 
+    $longname = $title;
+    $longname =~ s/ /_/g;
+    $longname =~ s/[^0-9a-zA-Z_]/-/g;
+
     # Set index_title (for sorting) from title
     $index_title = "" . $title;
     $index_title =~ s/^(An? |The )//;
@@ -373,6 +387,12 @@ sub getTrackInfo {
 
     # If lyricist isn't specified, it's the default
     $lyrics = $default_songwriter unless $lyrics;
+
+    # If $credits isn't specified, construct it from $music and $lyrics
+    if (! $credits) {
+	$credits = last_name($lyrics);
+	$credits .= "/" . last_name($music) if $music && ($music ne $lyrics);
+    }
 
     # look for a .wav file:
     #   o .wav file on the command line
@@ -408,6 +428,16 @@ sub getTrackInfo {
 	$tt =~ /([0-9]+\:[0-9]+).([0-9]+)/;
 	$timing = $1;  $timing .= ":$2" if $format eq "cd";
     }
+}
+
+### last_name($credits)
+#	used in short-form credits
+#
+sub last_name {
+    my ($name) = @_;
+    if ($name =~ /[Tt]rad/) { $name = "Trad."; }
+    if ($name =~ /[^ ]+ (.*)$/) { $name = $1; }
+    return $name;
 }
 
 sub printInfo {
@@ -464,11 +494,13 @@ sub printInfo {
 	print "$shortname";
     } elsif ($format eq "list.text") {
 	# the timing really needs to come off the track_data if present ===
+	# === kludge: use credits instead of timing if requested
+	my $t = $show_credits? "($credits)" : "($timing)";
 	my $d = ($hex && $dec)? sprintf("(%02d) ", $track_number) : "";
 	if ($hex) {
-	    print sprintf("0x%02x", $track_number) . " $d$title ($timing)";
+	    print sprintf("0x%02x", $track_number) . " $d$title $t";
 	} else {
-	    print sprintf("  %2d:", $track_number) . " $title ($timing)";
+	    print sprintf("  %2d:", $track_number) . " $title $t";
 	}
 	if ($long) {
 	    $description =~ s/\n[ \t]*/\n      /gs;
@@ -525,7 +557,8 @@ sub printInfo {
 	} else {
 	    print "$title";
 	}
-	print ("  ($timing)") if $timing;
+	print ("  ($credits)") if $show_credits;
+	print ("  ($timing)") if $timing && ! $show_credits;
 	print ("    </td>\n");
 	print ("  </tr>");
 	if ($long && $description) {
@@ -576,9 +609,11 @@ sub printInfo {
     } elsif ($format eq "shell") {
 	# Shell is name='value' -- need single quotes to prevent expansion
 	print "shortname='$shortname'\n";
+	print "longname='$longname'\n";
 	print "filename='$filename'\n";
 	print "title='$title'\n";
 	print "index_title='$index_title'\n";
+	print "track_number='$track_number'\n";
 	print "subtitle='$subtitle'\n" if $subtitle;
 	# can't (easily) have multiline items in shell format
 	#print "dedication='$dedication'\n" if $dedication;
@@ -592,12 +627,24 @@ sub printInfo {
 	print "key='$key'\n" if $key;
 	print "created='$created'\n" if $created;
 	print "cvsid='$cvsid'\n" if $cvsid;
+    } elsif ($format eq "symlinks") {
+	# make symlinks in $dir for track files with long names
+	my $d = `echo -n \`/bin/pwd\``;
+	my $s = sprintf("$dir/%02d-$longname", $track_number);
+	for my $e ("ogg", "mp3", "flac") {
+	    [ -e "$shortname.$e" ] && `ln -s $d/$shortname.$e $s.$e`;
+	}
+	[ -e "Master/$shortname.wav" ] &&
+	    `ln -s $d/Master/$shortname.wav $s.wav`;
+	printf("  $d $dir/%02d-$longname", $track_number);
     } else {
 	# Sort of a generic java/make format suitable for a only single song
 	print "shortname=$shortname\n";
+	print "longname=$longname\n";
 	print "filename=$filename\n";
 	print "title=$title\n";
 	print "index_title=$index_title\n";
+	print "track_number=$track_number\n";
 	print "subtitle=$subtitle\n" if $subtitle;
 	print "lyrics=$lyrics\n";
 	print "music=$music\n" if $music;
