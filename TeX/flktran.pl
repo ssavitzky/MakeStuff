@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: flktran.pl,v 1.13 2007-05-20 17:57:20 steve Exp $
+# $Id: flktran.pl,v 1.14 2007-07-17 06:21:05 steve Exp $
 # flktran [options] infile outfile
 #	Perform format translation on filksong files.    
 
@@ -130,10 +130,19 @@ if ($html) {
     $AMP = "&amp;";
     $FLKTRAN = "<a href='../Tools/TeX/flktran.html'><code>flktran</code></a>";
     # Creative Commons copyright notice
-    $CCnotice = "<a href=\"http://creativecommons.org/licenses/by-nc-sa/2.0/\"
-><img  alt=\"Creative Commons License\" border=\"0\" 
-       src=\"http://creativecommons.org/images/public/somerights.gif\" 
-     /><small>Some rights reserved.</small></a>";
+    $SomeRightsReserved =
+'<a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/3.0/us/">
+<img alt="Creative Commons by-nc-sa License" style="border-width:0" 
+     src="http://i.creativecommons.org/l/by-nc-sa/3.0/us/80x15.png" />
+Some Rights Reserved.</a>
+ ';
+    $CCnotice = 
+'<a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/3.0/us/">
+<img alt="Creative Commons by-nc-sa License" style="border-width:0" 
+     src="http://i.creativecommons.org/l/by-nc-sa/3.0/us/88x31.png" /></a>
+This work is licensed under a <a rel="license"
+href="http://creativecommons.org/licenses/by-nc-sa/3.0/us/">Creative Commons
+Attribution-Noncommercial-Share Alike 3.0 United States License</a>. ';
 } else {
     $EM  = "_";
     $_EM = "_";
@@ -150,7 +159,10 @@ if ($html) {
     $SP  = " ";
     $AMP = "&";
     $FLKTRAN = "flktran";
-    $CCnotice = "Some Rights Reserved:  CC by-nc-sa/2.0/";
+    $SomeRightsReserved = "Some Rights Reserved:  CC by-nc-sa/3.0/us";
+    $CCnotice = 'This work is licensed under a Creative Commons
+Attribution-Noncommercial-Share Alike 3.0 United States License</a>. ';
+
 }
 
 ### === Dispatch on input format:
@@ -353,6 +365,9 @@ sub center {
     $text =~ s/^[ \t]*//;
     $text =~ s/[ \t]*\n$//;
     $text =~ s/\\copyright/Copyright/;
+    $text =~ s/[Ss]ome [Rr]ights [Rr]eserved\.?/$SomeRightsReserved/gs;
+    $text =~ s/\\SomeRightsReserved/$SomeRightsReserved/gs;
+    $text =~ s/\\CcByNcSa/$CCNotice/gs;
 
     my $w = $WIDTH - length($text);
     for ( ; $w > 0; $w -= 2) { $text = " " . $text; }
@@ -365,7 +380,9 @@ sub hcenter {
     $text =~ s/\\copyright/\&copy;/;
     $text =~ s/\n/\<br\>/g;
     $text =~ s/\\ttto\{([^\}]+)\}/To the tune of: $1/gs;
-    $text =~ s/[Ss]ome rights reserved\.?/$CCnotice/gs;
+    $text =~ s/[Ss]ome [Rr]ights [Rr]eserved\.?/$SomeRightsReserved/gs;
+    $text =~ s/\\SomeRightsReserved/$SomeRightsReserved/gs;
+    $text =~ s/\\CcByNcSa/$CCNotice/gs;
     $text = "<h$h align=center>$text</h$h>";
     print "$text\n";
 }
