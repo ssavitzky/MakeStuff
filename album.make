@@ -1,5 +1,5 @@
 ### Makefile template for album directories
-#	$Id: album.make,v 1.11 2007-05-20 17:44:27 steve Exp $
+#	$Id: album.make,v 1.12 2007-07-17 06:18:46 steve Exp $
 #
 #  This template is meant to be included in the Makefile of an "album" 
 #	directory.  The usual directory tree looks like:
@@ -171,6 +171,11 @@ oggs.m3u: $(TRACKFILE)
 		echo $(URL_PREFIX)/$$f		>> $@ ;\
 	done
 
+Rips: $(OGGS) $(MP3S)
+	[ -d $@ ] || mkdir $@
+	rm -f $@/*
+	$(TRACKINFO) format=symlinks dir=$@ $(SONGS)
+
 ### Utilities:
 
 ## show the total time (on stdout)
@@ -201,11 +206,13 @@ list-text: $(NAME).tracks
 
 .PHONY: list-long-text $(LOCAL_METADATA)
 list-long-text: $(NAME).tracks
-	@$(TRACKINFO) $(TRACKLIST_FLAGS) --long format=list.text $(TRACKS)
+	@$(TRACKINFO) $(TRACKLIST_FLAGS) --long  --credits \
+		format=list.text $(TRACKS)
 
 .PHONY:	list-html $(LOCAL_METADATA)
 list-html: $(NAME).tracks
-	@$(TRACKINFO) $(TRACKLIST_FLAGS) --long format=list.html $(TRACKS)
+	@$(TRACKINFO) $(TRACKLIST_FLAGS) --long  --credits \
+		format=list.html $(TRACKS)
 
 .PHONY:	list-html-sound $(LOCAL_METADATA)
 list-html-sound: $(NAME).tracks
@@ -238,17 +245,23 @@ $(NAME).list: $(NAME).tracks
 	$(TRACKINFO) $(TRACKLIST_FLAGS) format=list.text $(TRACKS) > $@
 
 $(NAME).long.list: $(NAME).tracks
-	$(TRACKINFO) $(TRACKLIST_FLAGS) --long format=list.text $(TRACKS) > $@
+	$(TRACKINFO) $(TRACKLIST_FLAGS) --long --credits \
+		format=list.text $(TRACKS) > $@
 
 $(NAME).html: $(NAME).tracks  $(FLK_FILES)
-	$(TRACKINFO) $(TRACKLIST_FLAGS) --long format=list.html $(TRACKS) > $@
+	$(TRACKINFO) $(TRACKLIST_FLAGS) --long --credits \
+		format=list.html $(TRACKS) > $@
+
+$(NAME).short.html: $(NAME).tracks  $(FLK_FILES)
+	$(TRACKINFO) $(TRACKLIST_FLAGS) format=list.html $(TRACKS) > $@
 
 # [name].extras.html includes links to the sound files; it's used
 #	most notably to provide "extra features" for people who have
 #	preordered or purchased albums.
 $(NAME).extras.html: $(NAME).tracks  $(FLK_FILES)
-	$(TRACKINFO) $(TRACKLIST_FLAGS) --long --sound format=list.html \
-		 $(TRACKS) > $@
+	$(TRACKINFO) $(TRACKLIST_FLAGS) --long  --credits \
+		--sound format=list.html \
+		$(TRACKS) > $@
 
 $(NAME).files: $(NAME).tracks
 	@$(TRACKINFO) format=files $(TRACKS) > $@
@@ -305,7 +318,8 @@ mytracks.make: $(TRACK_SOURCES) $(NAME).tracks
 		echo "	"rsync  --copy-links -v -p '$$< $$@'	>> $@;	\
 		echo update-tracks:: Premaster/WAV/$$f.wav	>> $@;	\
 		echo Master/$$f.wav: Premaster/WAV/$$f.wav 	>> $@;	\
-		echo "	"sox '$$< -w -t .wav $$@'		>> $@;	\
+		echo "	"sox '$$< -w -t cdr - |'			\
+			 sox '-t cdr - -t .wav $$@'		>> $@;	\
 		echo update-master:: Master/$$f.wav	 	>> $@;	\
 	done
 
@@ -426,7 +440,8 @@ $(SHORTNAME).$(yyyymmdd).tracks: $(SHORTNAME).tracks
 .PHONY: cdr
 cdr: $(NAME).toc
 	@[ `whoami` = "root" ] || (echo "cdrdao must be run by root" && false)
-	/usr/bin/time $(CDRDAO) write --eject --device $(DEVICE) $(NAME).toc
+	/usr/bin/time $(CDRDAO) write --eject --device $(DEVICE) --speed 8\
+	 $(NAME).toc
 
 .PHONY: try-cdr
 try-cdr: $(NAME).toc
