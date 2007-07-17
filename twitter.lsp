@@ -1,8 +1,13 @@
 ;;; make fake modem tones.  Used in "Vampire Megabyte"
-;;;	$Id: twitter.lsp,v 1.1 2007-06-25 06:29:57 steve Exp $
+;;;	$Id: twitter.lsp,v 1.2 2007-07-17 06:20:49 steve Exp $
 
 ;;; c4 ~= 256Hz; let's use c4 and c6
 ;;; c4 = midi 60; c5=72; c6=84
+
+;;; If we want the actual frequencies used in a 300Baud modem[1]:
+;;;   originating station:  mark= 1,270 Hz;  space= 1,070 Hz.
+;;;   answering station:    mark= 2,225 Hz;  space= 2,025 Hz.
+;;;   [1] http://en.wikipedia.org/wiki/Bell_103_modem
 
 ;;; (sine pitch duration)
 ;;; (step-to-hz 60) -> 261.626
