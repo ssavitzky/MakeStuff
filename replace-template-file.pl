@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-#	$Id: replace-template-file.pl,v 1.3 2007-05-20 17:44:27 steve Exp $
+#	$Id: replace-template-file.pl,v 1.4 2007-07-17 06:19:13 steve Exp $
 #
 #<title>replace-template-file</title>
 #	This script is used to replace part of a file -- usually HTML --
@@ -102,7 +102,7 @@ while (@ARGV) {
 	$content =~ s/$first.*$last/$insert/s;
 	$n_replaced ++;
     } else {
-	print STDERR "** Nothing to replace in input file '$infile'.\n";
+	print STDERR "** $template_file not found in input file '$infile'.\n";
 	$n_failed ++
     }
 
@@ -120,7 +120,7 @@ while (@ARGV) {
     `[ -x $infile$bak ] && chmod +x $infile`;
 }
 
-print STDERR "  $n_replaced replaced; $n_failed failed\n";
+print STDERR "  $n_replaced replaced; $n_failed failed $template_file\n";
 
 exit 0;
 
