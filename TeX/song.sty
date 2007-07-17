@@ -1,13 +1,14 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% SONG.STY %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%
 %%% Author: Stephen Savitzky
-%%%	    $Id: song.sty,v 1.8 2007-05-20 17:57:20 steve Exp $
+%%%	    $Id: song.sty,v 1.9 2007-07-17 05:21:41 steve Exp $
 %%%
 %%% Song environment:
 %%%	\begin{song}{title}			% starts on a new page
 %%%						% sets \theSong to title
 %%%	  \subtitle{subtitle, set in smaller type}
 %%%	  \notice{centered copyright notice}
+%%%             \CcByNcSa			% Creative Commons license
 %%%	  \dedication{centered dedication}
 %%%	  \description{description}		% defines \theDescription
 %%%		(The description is used only for liner notes, etc.; it
@@ -20,6 +21,7 @@
 %%%	  \lyrics{lyricist}			% specifies theLyricist
 %%%	  \music{composer}			% specifies theComposer
 %%%	  \arranger{arranger}			% specifies theArranger
+%%%	  \credits{credits}			% specifies theCredits
 %%%
 %%%	  \begin{note}
 %%%		left-justified, paragraphed text set in smaller type
@@ -109,6 +111,9 @@
 %%%
 \def\Centered #1{\begin{center}#1\end{center}}
 \let\notice=\Centered
+\def\SomeRightsReserved{Some Rights Reserved\footnote{\CcByNcSa}}
+\def\CcByNcSa{This work is licensed under a Creative Commons
+Attribution-Noncommercial-Share Alike 3.0 US License.}  
 \def\subtitle #1{\begin{center}\bf #1\end{center}}
 \def\license #1{\begin{center}\small #1\end{center}}
 \let\dedication=\Centered
@@ -125,6 +130,7 @@
 \def\lyrics#1{\global\def\theLyricist{#1}}\def\theLyricist{}
 \def\music#1{\global\def\theComposer{#1}}\def\theComposer{}
 \def\arranger#1{\global\def\theArranger{#1}}\def\theArranger{}
+\def\credits#1{\global\def\theCredits{#1}}\def\theCredits{}
 
 %%%
 %%% note, headnote, tailnote
@@ -354,6 +360,9 @@
 
 \iffalse
 % $Log: song.sty,v $
+% Revision 1.9  2007-07-17 05:21:41  steve
+% add \credits
+%
 % Revision 1.8  2007-05-20 17:57:20  steve
 % snapshot, shortly before mastering ABT
 % mostly inserting license boilerplate.
