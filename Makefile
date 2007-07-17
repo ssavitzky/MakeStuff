@@ -1,5 +1,5 @@
 ### Makefile for www/Steve_Savitzky/Tools
-#	$Id: Makefile,v 1.5 2007-05-20 17:44:27 steve Exp $
+#	$Id: Makefile,v 1.6 2007-07-17 06:16:51 steve Exp $
 # 	COPYRIGHT 2005, HyperSpace Express
 
 TOPDIR=../../../..
@@ -14,6 +14,7 @@ FILES= README Makefile to.do	\
 	list-tracks 		\
 	Setlist.cgi		\
 	$(wildcard *.pl)	\
+	$(wildcard *.lsp)	\
 	$(wildcard *.make) 	\
 	$(wildcard *.html)
 
