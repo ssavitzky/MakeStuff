@@ -27,7 +27,14 @@ else
     i=''
 fi
 
-([ -d test ] && [ "`ls test | grep .aup `" = "" ]) || cd $HOME/Tracks
+if [ -d Tracks ]; then
+    cd Tracks
+elif ([ -d test ] && [ "`ls test | grep .aup `" = "" ]); then
+    true
+else 
+    cd $HOME/Tracks
+fi
+
 
 if [ "$1" = "" ]; then tracks="*"; else tracks="$*"; fi
 for d in $tracks; do

@@ -1,5 +1,5 @@
 			to.do for Steve_Savitzky/Tools
-	       $Id: to.do,v 1.8 2007-07-17 06:20:22 steve Exp $
+	       $Id: to.do,v 1.9 2007-12-19 17:38:19 steve Exp $
 
 
 =========================================================================
@@ -7,7 +7,7 @@
 * 20070520 add license boilerplate to .pl, .cgi, .make files
   (added by hand using boilermaker.pl with boilerplate in ./include)
 
-o note that we're not using SongInfo.pl anymore -- should remove it.
+* 20071219 note that we're not using SongInfo.pl anymore -- should remove it.
   the audio files are now made with TrackInfo.pl.
 
 o webdir.make should go to projects/WURM
@@ -53,21 +53,22 @@ o album.make
 o TrackInfo:
   * should put songwriter and composer into HTML and text lists, especially
     if different from the defaults.
-  o need a non-sticky form of performer for the occasional live track.
-    maybe performers=[comma-separated list]
-  o LaTeX format (for album covers, etc.)
-  o use directory name as $shortname when in track directories
-  o give preference to <track>/notes and <album>/<track>.notes
-  o when making a TOC, -nogap to make a 0-length pregap for 
-    run-together tracks like house-c/demon
-  o output filename formatting option similar to grip, etc. 
-
-o SongInfo.pl -- not clear this is needed anymore
-  o needs a way to echo a single variable's value -- %variable
+  * 20071219 last-name extraction fails on, e.g., William Butler Yeats (PD)
+  * 20071219 look in ./Tracks for tracks if present
+  o need optional path to working directory for sound files
+  o soundfile links should be to longnames in Rips if available
   o needs an option that produces a setlist with proper links.
     (Alternative would be to run Setlist.cgi from the shell, but that's 
     not as versatile.  Maybe a --links option.)
-  o use songlist files like trackinfo does  
+
+  o needs a way to pass a custom format string on the command line
+    (probably just perl with $variable as needed)
+
+  o LaTeX format (for album covers, etc.)
+  o use directory name as $shortname when in track directories
+  o when making a TOC, -nogap to make a 0-length pregap for 
+    run-together tracks like house-c/demon
+  o output filename formatting option similar to grip, etc. 
 
 o concert.make:
   o should be possible to have almost everything in common with album.make
@@ -101,6 +102,11 @@ o Songs/ needs songlist files -- see $(TRACKS) in album.make
   o instead of passing the whole list on the command line to, e.g., index.pl
     this would allow using the same tools in Songs/ and the albums.
   o would remove the dependency on Makefile
+  o use a real sort by title rather than relying on zongbook.tex
+
+  o allow sound files to be symlinks to released tracks in a Rips dir.
+    this allows long, informative filenames
+    handle, e.g., shortname.ogg with a redirect rather than a symlink
 
   o when Songs gets moved, the way ogg files get built will have to change
     o make the ogg file in the track directory (track.make)
@@ -108,12 +114,22 @@ o Songs/ needs songlist files -- see $(TRACKS) in album.make
     ~ Expedient way is to make a link to the _real_ track directory, but that
       would break "make put".
 
+  o per-song directories would allow multiple sound files.
+
 o Should have a track.make template for track directories
   o use Makefile in Tracks to cons up the Makefile, HEADER.html, notes, etc.
   o move ogg generation into track directories.
 
-* pubdir.make to split out the web and publish-to-web functionality (?)
+o publish.make to split out the web and publish-to-web functionality (?)
   * currently used in Concerts and Concerts/Worldcon-2006
+  o if PUBDIR/shortname is a symlink, publishing isn't needed
+    we can upload directly from the working directory.  
+
+o webdir.make
+  o put in a subdirectory needs to go up far enough in the hierarchy
+    to hit other directories that need to be made simultaneously, e.g.
+    Coffee_Computers_and_Song when publishing Albums/coffee
+  o this also lets us update changelogs and RSS feeds.
 
 o list-tracks
   o make check-times to list .aup files that are newer than newest .wav
@@ -121,12 +137,17 @@ o list-tracks
 o Setlist.cgi 
   * 20061104 add cols=0 for a very compact listing.
   o doesn't preserve title when adding a song
-  o be nice if we could add a note (using a text box)
+    (unfixable as long as songs are added with links, not buttons or js)
+  o needs to work from a simple track list (foo.tracks)
+  o make the corresponding html page using TrackInfo
+  o be nice if we could add notes using a text box 
+    would go into track list as indented text; 
+    requires only a slight mod to the grep -v command
   o install (via symlink) in mirror's cgi-bin so we can take it out of ~steve
   o all list operations need to be javascript to make them robot-proof
-
-o Eventually setlists and tracklists need to be built using javascript.
-  preload the data on the server, then PUT back.
+    draggable list items for sequencing
+  o Eventually setlists and tracklists need to be built using javascript.
+    preload the data on the server, then PUT back.
 
 =========================================================================
 =========================================================================
@@ -212,3 +233,8 @@ o TrackInfo:
     order so that the more local info overrides the global.
   * 20070521 get timing from wav files when present. (shntool len foo.wav)
     note that they have to be padded using the sox pseudo-type cdr
+  ~ 20080804 need a non-sticky form of performer for the occasional live track.
+    maybe performers=[comma-separated list] 
+    (gets tricky; album shouldn't look like a compilation)
+  ~ 20080804 give preference to <track>/notes and <album>/<track>.notes
+    (use <album>/<shortname>.flk)

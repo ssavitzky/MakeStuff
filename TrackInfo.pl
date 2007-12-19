@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: TrackInfo.pl,v 1.7 2007-07-17 06:18:32 steve Exp $
+# $Id: TrackInfo.pl,v 1.8 2007-12-19 17:38:19 steve Exp $
 # TrackInfo [options] infile... 
 #	<title>extract track info</title>
 
@@ -49,6 +49,7 @@ $songDir = "../../Songs" unless -d $songDir;
 $songDir = "." unless -d $songDir;
 
 $trackDir = $ENV{TRACKDIR};
+$trackDir = "./Tracks" unless -d $trackDir;
 $trackDir = "../Tracks" unless -d $trackDir;
 $trackDir = "../../Tracks" unless -d $trackDir;
 $trackDir = "." unless -d $trackDir;
@@ -134,6 +135,7 @@ foreach $f (@ARGV) {
 	elsif ($f =~ /--?hex/)	  { ++$hex; }
 	elsif ($f =~ /--?dec/)	  { ++$dec; }
 	elsif ($f =~ /-x/)        { ++$hex; }
+	elsif ($f =~ /-t/)	  { ++$want_timing; }
 	elsif ($f =~ /-l/)	  { ++$long; ++$want_timing; }
 	elsif ($f =~ /--?long/)	  { ++$long; ++$want_timing; }
 	elsif ($f =~ /--?credits/){ ++$show_credits; }
@@ -425,18 +427,27 @@ sub getTrackInfo {
     my $real_track_data = "Master/${filename}.wav";
     if (-f $real_track_data &&  $want_timing) {
 	my $tt = `shntool len $real_track_data | tail -1`;
-	$tt =~ /([0-9]+\:[0-9]+).([0-9]+)/;
-	$timing = $1;  $timing .= ":$2" if $format eq "cd";
+	$tt =~ /([0-9]+)\:([0-9]+).([0-9]+)/;
+	$timing = "$1:$2";
+	if ($format eq "cd") {
+	    $timing .= ":$3";
+	} elsif ($3 > 37) {
+	    # round up to next second
+	    $timing = "$1:" . sprintf("%02d", $2+1);
+	}
     }
 }
 
 ### last_name($credits)
-#	used in short-form credits
+#	used in short-form credits.
+#	special hacks to abbreviate "Trad." and 
+#	eliminate a parenthesized phrase like (PD).
 #
 sub last_name {
     my ($name) = @_;
     if ($name =~ /[Tt]rad/) { $name = "Trad."; }
-    if ($name =~ /[^ ]+ (.*)$/) { $name = $1; }
+    #if ($name =~ /[^ ]+ (*)$/) { $name = $1; }
+    if ($name =~ /([^ ]+)( +\([^\(]*\))?$/) { $name = $1; }
     return $name;
 }
 
@@ -478,7 +489,7 @@ sub printInfo {
 	print "PREGAP 0:2:0\n";
 	if (! $track_data) {
 	    $status = -1;
-	    print STDERR "SongInfo:  No track data for $shortname ($title)\n";
+	    print STDERR "TrackInfo:  No track data for $shortname ($title)\n";
 	    print "SILENCE 0:0:1\n";		# make new cdrdao happy
 	} elsif ($track_data_not_padded) {
 	    print "SILENCE 0:0:1\n";		# make new cdrdao happy
@@ -632,7 +643,7 @@ sub printInfo {
 	my $d = `echo -n \`/bin/pwd\``;
 	my $s = sprintf("$dir/%02d-$longname", $track_number);
 	for my $e ("ogg", "mp3", "flac") {
-	    [ -e "$shortname.$e" ] && `ln -s $d/$shortname.$e $s.$e`;
+	    ( -f "$shortname.$e" ) && `ln -s $d/$shortname.$e $s.$e`;
 	}
 	[ -e "Master/$shortname.wav" ] &&
 	    `ln -s $d/Master/$shortname.wav $s.wav`;

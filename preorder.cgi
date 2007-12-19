@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: preorder.cgi,v 1.2 2007-05-20 17:44:27 steve Exp $
+# $Id: preorder.cgi,v 1.3 2007-12-19 17:38:19 steve Exp $
 # preorder.cgi -- create an album preorder transaction file
 #	<title>make a preorder data file</title>
 
@@ -136,7 +136,7 @@ for my $p (@param_names) {
 	$v =~ s/^\s*//;
 	$v =~ s/\s*$//;
 	$v =~ s/[\n\r\t]/ /g;
-	$record{$p} = $v if $v;
+	$record{$p} = $v if $v;			# === $v .ne ""???
     }
 }
 

@@ -1,5 +1,5 @@
 ### Makefile template for album directories
-#	$Id: album.make,v 1.12 2007-07-17 06:18:46 steve Exp $
+#	$Id: album.make,v 1.13 2007-12-19 17:38:19 steve Exp $
 #
 #  This template is meant to be included in the Makefile of an "album" 
 #	directory.  The usual directory tree looks like:
@@ -202,16 +202,16 @@ list-track-info: $(NAME).tracks
 
 .PHONY: list-text
 list-text: $(NAME).tracks
-	@$(TRACKINFO) $(TRACKLIST_FLAGS) format=list.text $(TRACKS)
+	@$(TRACKINFO) $(TRACKLIST_FLAGS) format=list.text -t $(TRACKS)
 
 .PHONY: list-long-text $(LOCAL_METADATA)
 list-long-text: $(NAME).tracks
-	@$(TRACKINFO) $(TRACKLIST_FLAGS) --long  --credits \
+	@$(TRACKINFO) $(TRACKLIST_FLAGS) --long --credits \
 		format=list.text $(TRACKS)
 
 .PHONY:	list-html $(LOCAL_METADATA)
 list-html: $(NAME).tracks
-	@$(TRACKINFO) $(TRACKLIST_FLAGS) --long  --credits \
+	@$(TRACKINFO) $(TRACKLIST_FLAGS) --long --credits \
 		format=list.html $(TRACKS)
 
 .PHONY:	list-html-sound $(LOCAL_METADATA)
@@ -242,10 +242,14 @@ list-songs:
 ## List tracks to a file:
 
 $(NAME).list: $(NAME).tracks
-	$(TRACKINFO) $(TRACKLIST_FLAGS) format=list.text $(TRACKS) > $@
+	$(TRACKINFO) $(TRACKLIST_FLAGS) format=list.text -t $(TRACKS) > $@
 
 $(NAME).long.list: $(NAME).tracks
 	$(TRACKINFO) $(TRACKLIST_FLAGS) --long --credits \
+		format=list.text $(TRACKS) > $@
+
+$(NAME).credits.list: $(NAME).tracks
+	$(TRACKINFO)  --credits \
 		format=list.text $(TRACKS) > $@
 
 $(NAME).html: $(NAME).tracks  $(FLK_FILES)
@@ -253,7 +257,30 @@ $(NAME).html: $(NAME).tracks  $(FLK_FILES)
 		format=list.html $(TRACKS) > $@
 
 $(NAME).short.html: $(NAME).tracks  $(FLK_FILES)
-	$(TRACKINFO) $(TRACKLIST_FLAGS) format=list.html $(TRACKS) > $@
+	$(TRACKINFO) $(TRACKLIST_FLAGS) format=list.html -t $(TRACKS) > $@
+
+## Move track directories from ../../Tracks to ./Tracks
+#	this is to move to the new tree layout in which each album is 
+#	self-contained. 
+.PHONY: snarf-tracks
+snarf-tracks:	Tracks
+	@for d in $(SONGS); do 						\
+	    if [ ! -d Tracks/$$d ] && [ -d ../../Tracks/$$d ]; then	\
+		echo moving ../../Tracks/$$d to Tracks/;		\
+		mv ../../Tracks/$$d Tracks/;				\
+	    fi								\
+	done
+
+.PHONY: list-misplaced-tracks
+list-misplaced-tracks:	
+	@for d in $(SONGS); do 						\
+	    if [ ! -d Tracks/$$d ] && [ -d ../../Tracks/$$d ]; then	\
+		echo should move ../../Tracks/$$d to Tracks/;		\
+	    fi								\
+	done
+
+Tracks: 
+	mkdir Tracks
 
 # [name].extras.html includes links to the sound files; it's used
 #	most notably to provide "extra features" for people who have
@@ -398,8 +425,10 @@ Premaster/WAV:
 #	Probably don't want -q, either -- it's a long time to go without
 #	output, and we'll almost always be doing it from the command line.
 
+# === no good way to do exception parameters.  perl script?  
+# === $(MAKE) normalize-fixup?
 Premaster/WAV/normalized: $(wildcard Premaster/WAV/*.wav)
-	normalize-audio  $? 
+	for f in $?; do normalize-audio  $$f; done
 	echo `date` $? > $@
 	touch Premaster/WAV
 
@@ -433,23 +462,29 @@ $(SHORTNAME).$(yyyymmdd).tracks: $(SHORTNAME).tracks
 	cp $? $@
 
 ### Burn a CD-R
-#	Note that you have to be root in order to run cdrdao with an ATA
-#	device -- playing with chgrp on /dev/hdd doesn't seem to help.
-#	--speed 24 doesn't appear to be necessary anymore
-
+#	Note that you no longer have to be root in order to run cdrdao, but
+#	you don't get the advantage of realtime scheduling if you're not.
+#	Speed is parametrized, default 8:  you can get away with just about 
+#	anything for data, but audio is more picky.  I've never had any
+#	problems with 8, and _have_ had problems with 24.
+#
+#	Make masters at 4 or lower.  verify with qpxtool (plextor drives) or
+#	readom -c2scan dev=ATA:1,1,0
+#
+SPEED=8
 .PHONY: cdr
 cdr: $(NAME).toc
-	@[ `whoami` = "root" ] || (echo "cdrdao must be run by root" && false)
-	/usr/bin/time $(CDRDAO) write --eject --device $(DEVICE) --speed 8\
-	 $(NAME).toc
+	@[ `whoami` = "root" ] || (echo "cdrdao should be run by root")
+	/usr/bin/time $(CDRDAO) write --eject --device $(DEVICE) \
+	 --speed $(SPEED) $(NAME).toc
 
 .PHONY: try-cdr
 try-cdr: $(NAME).toc
-	@[ `whoami` = "root" ] || (echo "cdrdao must be run by root" && false)
+	@[ `whoami` = "root" ] || (echo "cdrdao should be run by root")
 	/usr/bin/time $(CDRDAO) write --simulate --device $(DEVICE) $(NAME).toc
 
 .PHONY: tao
 tao: 	
-	@[ `whoami` = "root" ] || (echo "wodim must be run by root" && false)
+	@[ `whoami` = "root" ] || (echo "wodim should be run by root")
 	$(WODIM) -pad -tao dev=$(DEVICE) -audio $(TRACK_DATA)
 

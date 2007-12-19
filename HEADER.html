@@ -34,7 +34,7 @@
        generating index pages (<code>index.pl</code>).  These are all showing
        their age, and need to be given an honorable retirement.  In particular
        the LaTeX styles need to be updated for LaTeX 5e, and indexing needs to
-       be done using <code>SongInfo.pl</code>.
+       be done using <code>TrackInfo.pl</code>.
   </dd>
   <dt> <a href="include/" >include</a> </dt>
   <dd> Files to be included in compilations or inserted into source code and
@@ -95,22 +95,12 @@
 	   in Javascript, which will be both faster for users and safer for
 	   search engines.
       </dd>
-      <dt> <a href="SongInfo.pl"><code>SongInfo.pl</code></a>
-      </dt>
-      <dd> Extract song information from a <code>.flk</code> file (basically
-	   LaTeX with a lot of custom macros) and print it on STDOUT in any of
-	   several useful formats.  Once used extensively in
-	   <code>album.make</code>, it has now largely been replaced by
-	   <code>TrackInfo.pl</code>
-      </dd>
       <dt> <a href="TrackInfo.pl"><code>TrackInfo.pl</code></a>
       </dt>
-      <dd> Extract and format track information.  Essentially the same as
-	   <code>SongInfo.pl</code> except that it also looks at information
-	   in the local directory and in the <code><a href="../Tracks/"
-	   >Tracks</a></code> directory.  Especially useful for concert
-	   recordings, which tend to have an eclectic mix of songs, two-song
-	   tracks, introductions, and sometimes a little pure weirdness.
+      <dd> Extract and format track information.  Gets song metadata from the
+	   appropriate <code>.flk</code> files (basically LaTeX with a lot of
+	   custom macros), and track metadata from whichever <code>.wav</code>
+	   file is most appropriate.
       </dd>
       <dt> <a href="list-tracks"><code>list-tracks</code></a>
       </dt>
@@ -188,5 +178,5 @@
 
 <hr />
 <b>Copyright &copy; 2005 HyperSpace Express</b><br />
-<b>$Id: HEADER.html,v 1.11 2007-11-11 04:40:45 steve Exp $</b>
+<b>$Id: HEADER.html,v 1.12 2007-12-19 17:38:19 steve Exp $</b>
 <a name="files"><hr></a>
