@@ -1,10 +1,14 @@
-			to.do for Steve_Savitzky/Tools
-	       $Id: to.do,v 1.10 2008-01-20 07:38:45 steve Exp $
+				to.do for WURM
+	       $Id: to.do,v 1.11 2008-01-20 07:40:41 steve Exp $
+
 
 
 =========================================================================
 
 o webdir.make should go to projects/WURM
+  * 20080119 copy all of Tools into projects/WURM
+  o move the filk stuff into a subdir
+  o convert to git
   o make sure it's all coming out of the same CVS tree
   o use .put, .put.log, .mkdir.log for sanity's sake
   o incorporate publish.make functionality (?)
