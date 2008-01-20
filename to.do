@@ -1,14 +1,8 @@
 			to.do for Steve_Savitzky/Tools
-	       $Id: to.do,v 1.9 2007-12-19 17:38:19 steve Exp $
+	       $Id: to.do,v 1.10 2008-01-20 07:38:45 steve Exp $
 
 
 =========================================================================
-
-* 20070520 add license boilerplate to .pl, .cgi, .make files
-  (added by hand using boilermaker.pl with boilerplate in ./include)
-
-* 20071219 note that we're not using SongInfo.pl anymore -- should remove it.
-  the audio files are now made with TrackInfo.pl.
 
 o webdir.make should go to projects/WURM
   o make sure it's all coming out of the same CVS tree
@@ -27,6 +21,7 @@ o makefile templates
 
 o flktran
   o don't put in excess blank lines in html
+  o performance notes (\pnote{...})
 
 o Songs/Makefile
   ->Index headers are wrong; should be /Steve_Savitzky NOT ../.. 
@@ -42,24 +37,17 @@ o index.pl, flktran.pl; Songs/Makefile
 
 o album.make
   o debugging/cleanup for concert and dual-session CDs
-  * have separate ISO files for single- and dual-session disks
-  * ensure "make clean" does not remove .wav's -- they might be rips or links
-  = Need the following for mastering in concerts ripped from DVDs:
-      sox infile -r 44100 -w -c 2 outfile effect?
-	  -c 2 needed if input is mono;  -w = 16-bit words
-	  effect= polyphase or resample -- default may be sufficient
-  = for mastering need tracks to be padded; go through sox -t cdr
+  o generics names for the various lists: $(BASENAME) =  $(NAME). or ""
+  o separate config file for title, longname
+    allows dependencies; with generic names, makes Makefile generic
+    in fact, Makefile could possibly be a symlink
 
 o TrackInfo:
-  * should put songwriter and composer into HTML and text lists, especially
-    if different from the defaults.
-  * 20071219 last-name extraction fails on, e.g., William Butler Yeats (PD)
-  * 20071219 look in ./Tracks for tracks if present
+  o recording notes (\rnote{...})
   o need optional path to working directory for sound files
   o soundfile links should be to longnames in Rips if available
   o needs an option that produces a setlist with proper links.
-    (Alternative would be to run Setlist.cgi from the shell, but that's 
-    not as versatile.  Maybe a --links option.)
+    format=list.html -T is probably close now.
 
   o needs a way to pass a custom format string on the command line
     (probably just perl with $variable as needed)
@@ -70,9 +58,9 @@ o TrackInfo:
     run-together tracks like house-c/demon
   o output filename formatting option similar to grip, etc. 
 
-o concert.make:
+o eliminate concert.make:
   o should be possible to have almost everything in common with album.make
-  o especially now that we have concert albums like ABT.
+    especially now that we have concert albums like ABT.
 
 o Tracklist.cgi: like Setlist.cgi but builds album tracklists 
   o could probably merge both into TrackInfo using a format and template.
@@ -238,3 +226,28 @@ o TrackInfo:
     (gets tricky; album shouldn't look like a compilation)
   ~ 20080804 give preference to <track>/notes and <album>/<track>.notes
     (use <album>/<shortname>.flk)
+
+o album.make
+  * have separate ISO files for single- and dual-session disks
+  * ensure "make clean" does not remove .wav's -- they might be rips or links
+  * 20071220 use ./Tracks if available
+  * 20071221 *tracks instead of $(NAME).tracks (much more generic)
+  ? generics for the various lists, too: $(BASENAME) =  $(NAME). or ""
+  = Need the following for mastering in concerts ripped from DVDs:
+      sox infile -r 44100 -w -c 2 outfile effect?
+	  -c 2 needed if input is mono;  -w = 16-bit words
+	  effect= polyphase or resample -- default may be sufficient
+  = for mastering need tracks to be padded; go through sox -t cdr
+
+* 20070520 add license boilerplate to .pl, .cgi, .make files
+  (added by hand using boilermaker.pl with boilerplate in ./include)
+
+* 20071219 note that we're not using SongInfo.pl anymore -- should remove it.
+  the audio files are now made with TrackInfo.pl.
+
+o TrackInfo:
+  * should put songwriter and composer into HTML and text lists, especially
+    if different from the defaults.
+  * 20071219 last-name extraction fails on, e.g., William Butler Yeats (PD)
+  * 20071219 look in ./Tracks for tracks if present
+  * 20071220 -T option to show total run time

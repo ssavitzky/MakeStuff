@@ -67,5 +67,7 @@ for d in $tracks; do
 	    if [ -e $d/notes ]; then grep '^\w' $d/notes | tail -1;
 	    else echo; fi
 	fi
+    elif [ ! -e $d ]; then
+	echo "  -  - -	$d"	
     fi
 done

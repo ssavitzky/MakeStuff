@@ -1,5 +1,5 @@
 ### Makefile template for album directories
-#	$Id: album.make,v 1.13 2007-12-19 17:38:19 steve Exp $
+#	$Id: album.make,v 1.14 2008-01-20 07:38:45 steve Exp $
 #
 #  This template is meant to be included in the Makefile of an "album" 
 #	directory.  The usual directory tree looks like:
@@ -44,16 +44,22 @@
 #	CAUTION: the really critical one here is SONGDIR; if it doesn't
 #		 have the .flk files in it, you're hosed.
 
-BASEDIR		= $(subst /Tools/..,/,$(TOOLDIR)/..)
+BASEDIR		:= $(subst /Tools/..,/,$(TOOLDIR)/..)
 #BASEDIR		= ../..
 SONGDIR 	= $(BASEDIR)/Songs
-TRACKDIR	= $(BASEDIR)/Tracks
+
+ifeq ($(shell [ -d ./Tracks ] || echo notracks),)
+	TRACKDIR	:= ./Tracks
+else
+	TRACKDIR	:= $(BASEDIR)/Tracks
+endif
+
 
 ## Directory to publish to
 
 PUBDIR		= ../PUBDIR/$(MYNAME)
 
-## Programs:
+## Metadata extraction and formatting programs:
 
 TRACKINFO = $(TOOLDIR)/TrackInfo.pl
 LIST_TRACKS = $(TOOLDIR)/list-tracks
@@ -79,18 +85,22 @@ DEVICE		= ATA:1,1,0
 
 ###### Rules ##########################################################
 
-# Want to snarf the track data -- could use TrackInfo -get-track-data
-# but there's probably a simple way to do it in pure make.
-
-# Name to use for files.
-NAME=$(SHORTNAME)
-
-# Track file.  
+# Track list file.
 #   TRACKS= @<file> is the shortcut we use for TrackInfo.pl
-TRACKFILE = $(NAME).tracks
+TRACKFILE := $(shell ls *tracks)
 TRACKS	  = @$(TRACKFILE)
 
-# Get the shortnames of all the songs from $(NAME).tracks
+# Base prefix for derived files:
+#	if we're using foo.tracks, BASEPFX is "foo."
+#	otherwise it's null, meaning that the names are generic.
+ifeq ($(TRACKFILE), tracks) 
+	BASEPFX := 
+else
+	BASEPFX := $(SHORTNAME).
+endif
+
+
+# Get the shortnames of all the songs from $(TRACKFILE)
 #	Ignore comment lines.  $(SONGS) has *extended* shortnames
 #	that include the prefixes and suffixes of concert tracks.
 #
@@ -131,12 +141,12 @@ TRACK_DATA = $(shell $(TRACKINFO) format=cd-files $(TRACKS))
 ### All: doesn't do much, just builds the TOC and lists
 
 all::
-	@echo album $(NAME)/ '($(TITLE))'
+	@echo album $(SHORTNAME)/ '($(TITLE))'
 
-all::	$(NAME).list $(NAME).long.list 
-all::	$(NAME).html $(NAME).extras.html
+all::	$(BASEPFX)list $(BASEPFX)long.list 
+all::	$(BASEPFX)short.html $(BASEPFX)long.html $(BASEPFX)extras.html
 all::	mp3s.m3u oggs.m3u
-all::	$(NAME).toc time
+all::	$(BASEPFX)toc est-time time
 
 ### update: do this to capture changed track files
 
@@ -148,12 +158,12 @@ update:: all
 #	Standard target: toc-file
 
 .PHONY:	toc-file
-toc-file: $(NAME).toc
+toc-file: $(BASEPFX)toc
 
 # Note that the toc-file does NOT depend on $(TRACK_DATA).
-$(NAME).toc: $(NAME).tracks $(TRACK_SOURCES)
+$(BASEPFX)toc: $(TRACKFILE) $(TRACK_SOURCES)
 	$(TRACKINFO) -cd $(TOC_FLAGS) title='$(TITLE)' $(SONGS) > $@
-	$(CDRDAO) show-toc $(NAME).toc | tail -1
+	$(CDRDAO) show-toc $(BASEPFX)toc | tail -1
 
 ### Playlists:
 
@@ -180,9 +190,12 @@ Rips: $(OGGS) $(MP3S)
 
 ## show the total time (on stdout)
 
-.PHONY: time
-time:	$(NAME).toc
-	@$(CDRDAO) show-toc $(NAME).toc 2>&1 | tail -1
+.PHONY: time est-time
+time:	$(BASEPFX)toc
+	@$(CDRDAO) show-toc $(BASEPFX)toc 2>&1 | tail -1
+
+est-time: $(BASEPFX)list
+	@echo Estimated `tail -1 $(BASEPFX)list`
 
 ## List tracks to STDOUT in various formats:
 
@@ -190,32 +203,33 @@ time:	$(NAME).toc
 lstracks: list-tracks
 
 .PHONY: list-tracks
-list-tracks: $(NAME).tracks
+list-tracks: $(TRACKFILE)
 	@$(LIST_TRACKS) $(SONGS)
 
 .PHONY: lsti
 lsti: list-track-info
 
 .PHONY: list-track-info 
-list-track-info: $(NAME).tracks
+list-track-info: $(TRACKFILE)
+	@echo TRACKDIR=$(TRACKDIR)
 	@$(LIST_TRACKS) -i $(SONGS)
 
 .PHONY: list-text
-list-text: $(NAME).tracks
-	@$(TRACKINFO) $(TRACKLIST_FLAGS) format=list.text -t $(TRACKS)
+list-text: $(TRACKFILE)
+	@$(TRACKINFO) $(TRACKLIST_FLAGS) format=list.text -t -T $(TRACKS)
 
 .PHONY: list-long-text $(LOCAL_METADATA)
-list-long-text: $(NAME).tracks
-	@$(TRACKINFO) $(TRACKLIST_FLAGS) --long --credits \
+list-long-text: $(TRACKFILE)
+	@$(TRACKINFO) $(TRACKLIST_FLAGS) --long --credits -t -T \
 		format=list.text $(TRACKS)
 
 .PHONY:	list-html $(LOCAL_METADATA)
-list-html: $(NAME).tracks
+list-html: $(TRACKFILE)
 	@$(TRACKINFO) $(TRACKLIST_FLAGS) --long --credits \
 		format=list.html $(TRACKS)
 
 .PHONY:	list-html-sound $(LOCAL_METADATA)
-list-html-sound: $(NAME).tracks
+list-html-sound: $(TRACKFILE)
 	@$(TRACKINFO) $(TRACKLIST_FLAGS) --sound --long format=list.html \
 		$(TRACKS)
 
@@ -230,7 +244,7 @@ list-times:
 ## List, mainly for debugging, various make variables
 
 .PHONY:	list-files list-sources list-songs
-list-files: $(NAME).tracks
+list-files: $(TRACKFILE)
 	@$(TRACKINFO) format=cd-files $(TRACKS)
 
 list-sources: 
@@ -241,22 +255,22 @@ list-songs:
 
 ## List tracks to a file:
 
-$(NAME).list: $(NAME).tracks
-	$(TRACKINFO) $(TRACKLIST_FLAGS) format=list.text -t $(TRACKS) > $@
+$(BASEPFX)list: $(TRACKFILE)
+	$(TRACKINFO) $(TRACKLIST_FLAGS) format=list.text -t -T $(TRACKS) > $@
 
-$(NAME).long.list: $(NAME).tracks
-	$(TRACKINFO) $(TRACKLIST_FLAGS) --long --credits \
+$(BASEPFX)long.list: $(TRACKFILE)
+	$(TRACKINFO) $(TRACKLIST_FLAGS) --long --credits  -T \
 		format=list.text $(TRACKS) > $@
 
-$(NAME).credits.list: $(NAME).tracks
-	$(TRACKINFO)  --credits \
+$(BASEPFX)credits.list: $(TRACKFILE)
+	$(TRACKINFO)  --credits  -T \
 		format=list.text $(TRACKS) > $@
 
-$(NAME).html: $(NAME).tracks  $(FLK_FILES)
-	$(TRACKINFO) $(TRACKLIST_FLAGS) --long --credits \
+$(BASEPFX)long.html: $(TRACKFILE)  $(FLK_FILES)
+	$(TRACKINFO) $(TRACKLIST_FLAGS) --long --credits -t \
 		format=list.html $(TRACKS) > $@
 
-$(NAME).short.html: $(NAME).tracks  $(FLK_FILES)
+$(BASEPFX)short.html: $(TRACKFILE)  $(FLK_FILES)
 	$(TRACKINFO) $(TRACKLIST_FLAGS) format=list.html -t $(TRACKS) > $@
 
 ## Move track directories from ../../Tracks to ./Tracks
@@ -285,12 +299,12 @@ Tracks:
 # [name].extras.html includes links to the sound files; it's used
 #	most notably to provide "extra features" for people who have
 #	preordered or purchased albums.
-$(NAME).extras.html: $(NAME).tracks  $(FLK_FILES)
+$(BASEPFX)extras.html: $(TRACKFILE)  $(FLK_FILES)
 	$(TRACKINFO) $(TRACKLIST_FLAGS) --long  --credits \
 		--sound format=list.html \
 		$(TRACKS) > $@
 
-$(NAME).files: $(NAME).tracks
+$(BASEPFX)files: $(TRACKFILE)
 	@$(TRACKINFO) format=files $(TRACKS) > $@
 
 ### Update Premaster/WAV by importing track data
@@ -310,7 +324,7 @@ update-tracks: Premaster Premaster/WAV mytracks.make
 	touch Premaster/WAV
 
 ifdef NO_PREMASTER
-update-master: $(TRACK_SOURCES) $(NAME).tracks Master
+update-master: $(TRACK_SOURCES) $(TRACKFILE) Master
 	rsync  --copy-links -v -p $(TRACK_SOURCES) Master
 else
 update-master: Premaster Premaster/WAV mytracks.make Master
@@ -329,7 +343,7 @@ endif
 #	.wav files; the -t is there because otherwise sox gets confused
 #	by filenames that have dots in them, like foo.bar.wav
 #
-mytracks.make: $(TRACK_SOURCES) $(NAME).tracks
+mytracks.make: $(TRACK_SOURCES) $(TRACKFILE)
 	echo '# mytracks.make' $(shell date)		 > $@
 	@echo 'TRACKINFO = $(TRACKINFO)'			>> $@
 	@echo 'TITLE	 = $(TITLE)'				>> $@
@@ -473,15 +487,16 @@ $(SHORTNAME).$(yyyymmdd).tracks: $(SHORTNAME).tracks
 #
 SPEED=8
 .PHONY: cdr
-cdr: $(NAME).toc
+cdr: $(BASEPFX)toc
 	@[ `whoami` = "root" ] || (echo "cdrdao should be run by root")
 	/usr/bin/time $(CDRDAO) write --eject --device $(DEVICE) \
-	 --speed $(SPEED) $(NAME).toc
+	  --speed $(SPEED) $(BASEPFX)toc
 
 .PHONY: try-cdr
-try-cdr: $(NAME).toc
+try-cdr: $(BASEPFX)toc
 	@[ `whoami` = "root" ] || (echo "cdrdao should be run by root")
-	/usr/bin/time $(CDRDAO) write --simulate --device $(DEVICE) $(NAME).toc
+	/usr/bin/time $(CDRDAO) write --simulate --device $(DEVICE) \
+	  $(BASEPFX)toc
 
 .PHONY: tao
 tao: 	

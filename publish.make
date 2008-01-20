@@ -1,5 +1,5 @@
 ### Makefile template for web publishing
-#	$Id: publish.make,v 1.3 2007-05-20 17:44:27 steve Exp $
+#	$Id: publish.make,v 1.4 2008-01-20 07:38:45 steve Exp $
 #
 #  This template is meant to be included in the Makefile of a working
 #	directory that has a corresponding web directory to publish to.
@@ -37,8 +37,7 @@
 
 BASEDIR		= $(subst /Tools/..,/,$(TOOLDIR)/..)
 #BASEDIR		= ../..
-SONGDIR 	= $(BASEDIR)/Songs
-TRACKDIR	= $(BASEDIR)/Tracks
+#SONGDIR 	= $(BASEDIR)/Songs
 
 ## Directory to publish to
 

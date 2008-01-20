@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: TrackInfo.pl,v 1.8 2007-12-19 17:38:19 steve Exp $
+# $Id: TrackInfo.pl,v 1.9 2008-01-20 07:38:45 steve Exp $
 # TrackInfo [options] infile... 
 #	<title>extract track info</title>
 
@@ -91,9 +91,11 @@ $show_credits = 0;				# show short-form credits
 
 $nodefaults = 0;				# don't use default performer
 $want_timing = 0;				# get exact timing from track
+$show_ttime = 0;				# show total time
 $dir = ".";					# destination directory 
 
 ### Variables set from song macros:
+
 $title = "";
 $subtitle = "";
 $notice = "";
@@ -120,12 +122,18 @@ $longname = '';					# title as a filename
 $track = "";					# track data file from cmd line
 $track_data = "";				# actual track data file
 
+### Running totals
+
+$total_time = 0;				# total run time
+$untimed = 0;					# # songs without times
+$i = 0;						# track index
+
+
 
 ##########################################################################
 ### Main Program:
 ##########################################################################
 
-$i = 0;
 $morefiles = "";
 
 foreach $f (@ARGV) {
@@ -135,7 +143,8 @@ foreach $f (@ARGV) {
 	elsif ($f =~ /--?hex/)	  { ++$hex; }
 	elsif ($f =~ /--?dec/)	  { ++$dec; }
 	elsif ($f =~ /-x/)        { ++$hex; }
-	elsif ($f =~ /-t/)	  { ++$want_timing; }
+	elsif ($f =~ /-t/)	  { ++$want_timing;}
+	elsif ($f =~ /-T/)	  { ++$show_ttime; }
 	elsif ($f =~ /-l/)	  { ++$long; ++$want_timing; }
 	elsif ($f =~ /--?long/)	  { ++$long; ++$want_timing; }
 	elsif ($f =~ /--?credits/){ ++$show_credits; }
@@ -181,11 +190,13 @@ foreach $f (@ARGV) {
 	printInfo($format);
 	print "\n";
 	++$i;
-    } else {
+    } else {					# Must be a song/track name
 	if ($i == 0) { printHeading(); }
 	#if ($i > 0) { print "\n"; }
 	getTrackInfo($f);
 	printInfo($format);
+	$total_time += mmss_to_seconds($timing);
+	++$untimed unless mmss_to_seconds($timing);
 	print "\n";
 	++$i;
     }
@@ -196,6 +207,8 @@ if ($morefiles) {
 	#if ($i > 0) { print "\n"; }
 	getTrackInfo($f);
 	printInfo($format);
+	$total_time += mmss_to_seconds($timing);
+	++$untimed unless mmss_to_seconds($timing);
 	print "\n";
 	++$i;
     }
@@ -438,6 +451,19 @@ sub getTrackInfo {
     }
 }
 
+### mmss_to_seconds($timing)
+sub mmss_to_seconds {
+    my ($tt) = @_;
+    $tt =~ /([0-9]+)\:([0-9]+)/;
+    return $1 * 60 + $2;
+}
+
+sub seconds_to_mmss {
+    my ($s) = @_;
+    my $m = int($s / 60);
+    #my $s -= $m * 60;
+    return sprintf("%2d:%02d", int($s/60), $s%60);}
+
 ### last_name($credits)
 #	used in short-form credits.
 #	special hacks to abbreviate "Trad." and 
@@ -505,13 +531,13 @@ sub printInfo {
 	print "$shortname";
     } elsif ($format eq "list.text") {
 	# the timing really needs to come off the track_data if present ===
-	# === kludge: use credits instead of timing if requested
-	my $t = $show_credits? "($credits)" : "($timing)";
+	my $c = $show_credits? "($credits)" : "";
+	my $t = $want_timing? " $timing " : "";
 	my $d = ($hex && $dec)? sprintf("(%02d) ", $track_number) : "";
 	if ($hex) {
-	    print sprintf("0x%02x", $track_number) . " $d$title $t";
+	    print sprintf("0x%02x", $track_number) . " $d$t$title $c";
 	} else {
-	    print sprintf("  %2d:", $track_number) . " $title $t";
+	    print sprintf("  %2d:", $track_number) . " $t$title $c";
 	}
 	if ($long) {
 	    $description =~ s/\n[ \t]*/\n      /gs;
@@ -709,10 +735,23 @@ CD_TEXT {
 
 sub printFooting {
     if ($format eq "list.html") {
+	if ($show_ttime) {
+	    print "<tr><th>total:</th><td>"
+		. seconds_to_mmss($total_time)
+		. ($untimed? " ($untimed untimed)" : "")
+		. "</td></tr>\n";
+	}
 	print "</table>\n";
     } elsif ($format eq "ol.html") {
 	print "</ol>\n";
+    } elsif ($format eq 'list.text' && $show_ttime) {
+	print "total: "
+	    . seconds_to_mmss($total_time) 
+	    . " in $i tracks"
+	    . ($untimed? " ($untimed untimed)" : "")
+	    . "\n";
     }
+
 }
 
 
