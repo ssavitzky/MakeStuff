@@ -1,7 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% SONG.STY %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%
 %%% Author: Stephen Savitzky
-%%%	    $Id: song.sty,v 1.9 2007-07-17 05:21:41 steve Exp $
+%%%	    $Id: song.sty,v 1.10 2008-01-20 07:37:11 steve Exp $
 %%%
 %%% Song environment:
 %%%	\begin{song}{title}			% starts on a new page
@@ -22,6 +22,7 @@
 %%%	  \music{composer}			% specifies theComposer
 %%%	  \arranger{arranger}			% specifies theArranger
 %%%	  \credits{credits}			% specifies theCredits
+%%%       \performance{performance notes}       % specifies perf. notes
 %%%
 %%%	  \begin{note}
 %%%		left-justified, paragraphed text set in smaller type
@@ -121,6 +122,9 @@ Attribution-Noncommercial-Share Alike 3.0 US License.}
 
 \def\link#1#2{#2\footnote{$<$#1$>$}}
 
+%%% define global variables for all the header statements
+%%% Note that some aren't used by LaTeX; they're for other formats, too.
+
 \def\timing#1{\global\def\theTiming{#1}}\def\theTiming{}
 \def\category#1{\global\def\theCategory{#1}}\def\theCategory{}
 \def\description#1{\global\def\theDescription{#1}}\def\theDescription{}
@@ -131,6 +135,7 @@ Attribution-Noncommercial-Share Alike 3.0 US License.}
 \def\music#1{\global\def\theComposer{#1}}\def\theComposer{}
 \def\arranger#1{\global\def\theArranger{#1}}\def\theArranger{}
 \def\credits#1{\global\def\theCredits{#1}}\def\theCredits{}
+\def\performance#1{\global\def\thePerformance{#1}}\def\thePerformance{}
 
 %%%
 %%% note, headnote, tailnote
@@ -360,6 +365,9 @@ Attribution-Noncommercial-Share Alike 3.0 US License.}
 
 \iffalse
 % $Log: song.sty,v $
+% Revision 1.10  2008-01-20 07:37:11  steve
+% added \performance for (brief) performance notes
+%
 % Revision 1.9  2007-07-17 05:21:41  steve
 % add \credits
 %
