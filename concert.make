@@ -1,5 +1,5 @@
 ### Makefile template for concerts
-#	$Id: concert.make,v 1.4 2007-05-20 17:44:27 steve Exp $
+#	$Id: concert.make,v 1.5 2008-11-17 16:46:00 steve Exp $
 #
 #  This template is meant to be included in the Makefile of a "concert" 
 #	directory.  The usual directory tree looks like:
@@ -85,7 +85,7 @@ MP3S = $(patsubst %.wav, %.mp3, $(WAVS))
 %.mp3: 
 	sox $(shell $(TRACKINFO) format=files $*) -w -t wav - | \
 	  lame -b 64 -S $(shell $(TRACKINFO) $(SONGLIST_FLAGS)  \
-	   --mp3 title='$(TITLE)' $*) $@
+	   --mp3 title="$(TITLE)" $*) $@
 
 
 ###### Targets ########################################################
