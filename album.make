@@ -1,5 +1,5 @@
 ### Makefile template for album directories
-#	$Id: album.make,v 1.14 2008-01-20 07:38:45 steve Exp $
+#	$Id: album.make,v 1.15 2008-11-17 16:16:56 steve Exp $
 #
 #  This template is meant to be included in the Makefile of an "album" 
 #	directory.  The usual directory tree looks like:
@@ -10,7 +10,7 @@
 #	Albums		a subdirectory for each album
 #	Tools		(this directory) scripts and makefile templates
 #
-#  The album directory contains a file called [name].tracks with
+#  The album directory contains a file called songs or [name].tracks with
 #  the shortnames of the album's tracks.  The most recent .wav file
 #  in each track directory is used.  (Eventually one ought to be able to
 #  specify the take, but that would require substantial refactoring.)
@@ -29,7 +29,8 @@
 #	SHORTNAME	the shortname (directory name) of the album
 #	LONGNAME	the name of the album's collection directory:
 #			(title with words capitalized and separated by _)
-#	TITLE		the full, plaintext title of the album
+#	TITLE		the full, plaintext title of the album 
+#			  special characters must be quoted for use in "..."
 #
 #   Targets:
 #	all		makes the TOC and track-list files
@@ -42,11 +43,13 @@
 
 ## Directories:
 #	CAUTION: the really critical one here is SONGDIR; if it doesn't
-#		 have the .flk files in it, you're hosed.
+#		 have the .flk files in it, you're hosed.  These days it's
+#		 actually $(BASEDIR)/Lyrics; .../Songs has a directory
+#		 per song, but no .flk or .ps files.
 
 BASEDIR		:= $(subst /Tools/..,/,$(TOOLDIR)/..)
 #BASEDIR		= ../..
-SONGDIR 	= $(BASEDIR)/Songs
+SONGDIR 	= $(BASEDIR)/Lyrics
 
 ifeq ($(shell [ -d ./Tracks ] || echo notracks),)
 	TRACKDIR	:= ./Tracks
@@ -54,27 +57,31 @@ else
 	TRACKDIR	:= $(BASEDIR)/Tracks
 endif
 
+## Directory where ogg and mp3 files end up. 
+#	It's essentially a stand-alone web album
+#
+RIPS=Rips
 
-## Directory to publish to
+## Directory to publish to === doesn't seem to be used now
+#PUBDIR		= ../PUBDIR/$(MYNAME)
 
-PUBDIR		= ../PUBDIR/$(MYNAME)
+
+### Programs
 
 ## Metadata extraction and formatting programs:
 
 TRACKINFO = $(TOOLDIR)/TrackInfo.pl
 LIST_TRACKS = $(TOOLDIR)/list-tracks
 
-# In some cases the old CDRDAO (in /usr/local/bin) works better.
-#CDRDAO = /usr/local/bin/cdrdao.sarge
-CDRDAO = /usr/bin/cdrdao
-
-# Look for the new (Etch) replacements for cdrecord and mkisofs
+## CD writing.  wodim and genisoimage are new as of Debian Etch.
 
 WODIM = $(shell if [ -x /usr/bin/wodim ]; \
 		then echo wodim; else echo cdrecord; fi)
 
 GENISOIMAGE = $(shell if [ -x /usr/bin/genisoimage ]; \
 		      then echo genisoimage; else echo mkisofs; fi)
+
+CDRDAO = /usr/bin/cdrdao
 
 ## Devices (for burning):
 #	For a 2.4 kernel with one IDE-SCSI device, use DEVICE=0,0,0
@@ -85,15 +92,35 @@ DEVICE		= ATA:1,1,0
 
 ###### Rules ##########################################################
 
+### This is changing.  
+#	Prior to 2008 we used $(SHORTNAME).songs for the main song list;
+#	Now we use songs as the main song list, and prefix.songs in
+#	field recordings to break out individual concerts or sessions.
+#
+# 	Similarly we now have rips %.rips where we used to have Rips.
+#	
+#	We blithely lump all metadata, ogg, and mp3 files into the main
+#	directory, Master, Premaster, and Tracks; this makes sense because
+#	field recordings in Tracks often mix things (like short concerts
+#	or two-shots) that we want to split later.  
+
+#	We need a separate set of rules for, e.g., songs and %.songs
+
+### The following definitions were used for "albums", where we're mastering
+#	a single CD and we have a single primary list of songs.  As it
+#	turns out, all the legacy cases (released albums) used 
+#	$(SHORTNAME).tracks instead of songs or %.songs; it may be
+#	safe to ignore these now.
+
 # Track list file.
 #   TRACKS= @<file> is the shortcut we use for TrackInfo.pl
-TRACKFILE := $(shell ls *tracks)
+TRACKFILE := $(shell echo $(wildcard songs *.songs *.tracks) | head -1)
 TRACKS	  = @$(TRACKFILE)
 
 # Base prefix for derived files:
-#	if we're using foo.tracks, BASEPFX is "foo."
+#	if we're using foo.songs, BASEPFX is "foo."
 #	otherwise it's null, meaning that the names are generic.
-ifeq ($(TRACKFILE), tracks) 
+ifeq ($(TRACKFILE), songs) 
 	BASEPFX := 
 else
 	BASEPFX := $(SHORTNAME).
@@ -104,14 +131,21 @@ endif
 #	Ignore comment lines.  $(SONGS) has *extended* shortnames
 #	that include the prefixes and suffixes of concert tracks.
 #
-SONGS = $(shell grep -v '\#' $(TRACKFILE))
+SONGS := $(shell grep -v '\#' $(TRACKFILE))
 
 # $(SHORTNAMES) is the songfile shortnames that we need to select
 #	the appropriate .flk files in $(SONGDIR) for dependencies.
 SHORTNAMES := $(shell $(TRACKINFO) format=songs $(TRACKS))
 
-FLK_FILES := $(shell for f in $(SHORTNAMES); do echo \
-		     $(SONGDIR)/$$f.flk; done)
+FLK_FILES := $(shell for f in $(SHORTNAMES); do \
+		[ -f $(SONGDIR)/$$f.flk ] && echo $(SONGDIR)/$$f.flk; \
+		[ -f ./$$f.flk ] && echo ./$$f.flk; \
+		done)
+
+# PRINT_FILES -- the printable (.ps) lyrics
+PRINT_FILES := $(shell for f in $(SHORTNAMES); do \
+		[ -f $(SONGDIR)/$$f.ps ] && echo $(SONGDIR)/$$f.ps; \
+		done)
 
 OGGS = $(shell for f in $(SONGS); do echo $$f.ogg; done)
 MP3S = $(shell for f in $(SONGS); do echo $$f.mp3; done)
@@ -141,12 +175,19 @@ TRACK_DATA = $(shell $(TRACKINFO) format=cd-files $(TRACKS))
 ### All: doesn't do much, just builds the TOC and lists
 
 all::
-	@echo album $(SHORTNAME)/ '($(TITLE))'
+	@echo album $(SHORTNAME)/ "($(TITLE))"
 
 all::	$(BASEPFX)list $(BASEPFX)long.list 
 all::	$(BASEPFX)short.html $(BASEPFX)long.html $(BASEPFX)extras.html
+
+ifeq ($(strip $(shell test -d Master && echo -n 1)),1)
+all::	$(BASEPFX)toc time
+endif
+ifeq ($(strip $(shell test -d Rips && echo -n 1)),1)
 all::	mp3s.m3u oggs.m3u
-all::	$(BASEPFX)toc est-time time
+endif
+
+all::	est-time
 
 ### update: do this to capture changed track files
 
@@ -162,10 +203,12 @@ toc-file: $(BASEPFX)toc
 
 # Note that the toc-file does NOT depend on $(TRACK_DATA).
 $(BASEPFX)toc: $(TRACKFILE) $(TRACK_SOURCES)
-	$(TRACKINFO) -cd $(TOC_FLAGS) title='$(TITLE)' $(SONGS) > $@
+	$(TRACKINFO) -cd $(TOC_FLAGS) title="$(TITLE)" $(SONGS) > $@
 	$(CDRDAO) show-toc $(BASEPFX)toc | tail -1
 
 ### Playlists:
+
+# === the playlist stuff is completely broken
 
 # really need to get this the hard way...
 URL_PREFIX = http://theStarport.com/Steve_Savitzky/Albums/$(MYNAME)
@@ -181,10 +224,26 @@ oggs.m3u: $(TRACKFILE)
 		echo $(URL_PREFIX)/$$f		>> $@ ;\
 	done
 
-Rips: $(OGGS) $(MP3S)
+### Rip directories.
+#
+# legacy: $(BASEPFX)songs -> Rips
+# new: songs -> rips; %.songs -> %.rips
+#
+# === Rips (should it be renamed?) needs to be a stand-alone web album.
+# === all of the .ogg, .mp3, and .m3u files belong in Rips
+# === all of the numbered symlinks should be local
+# === also needs indices and perhaps lyric files
+$(RIPS): $(OGGS) $(MP3S)
 	[ -d $@ ] || mkdir $@
-	rm -f $@/*
+	rm -f $@/[0-9][0-9]-*
 	$(TRACKINFO) format=symlinks dir=$@ $(SONGS)
+
+.PHONY: re-rip
+
+re-rip:	$(OGGS) $(MP3S)
+	rm -f $(RIPS)/[0-9][0-9]-*
+	$(TRACKINFO) format=symlinks dir=$(RIPS) $(SONGS)
+
 
 ### Utilities:
 
@@ -273,6 +332,16 @@ $(BASEPFX)long.html: $(TRACKFILE)  $(FLK_FILES)
 $(BASEPFX)short.html: $(TRACKFILE)  $(FLK_FILES)
 	$(TRACKINFO) $(TRACKLIST_FLAGS) format=list.html -t $(TRACKS) > $@
 
+## Print lyrics either in leadsheet (single-page) or songbook format
+
+.PHONY: print-lyrics print-songbook
+
+print-lyrics: $(PRINT_FILES)
+	@for f in $(PRINT_FILES); do psselect -p1 $$f | lpr; done 
+
+print-songbook: $(PRINT_FILES)
+	@for f in $(PRINT_FILES); do lpr $$f; done 
+
 ## Move track directories from ../../Tracks to ./Tracks
 #	this is to move to the new tree layout in which each album is 
 #	self-contained. 
@@ -346,7 +415,7 @@ endif
 mytracks.make: $(TRACK_SOURCES) $(TRACKFILE)
 	echo '# mytracks.make' $(shell date)		 > $@
 	@echo 'TRACKINFO = $(TRACKINFO)'			>> $@
-	@echo 'TITLE	 = $(TITLE)'				>> $@
+	@echo 'TITLE	 = '"$(TITLE)"				>> $@
 	@echo 'TOOLDIR	 = $(TOOLDIR)'				>> $@
 	@echo 'SONGS	 = $(SONGS)'				>> $@
 	@echo 'include $$(TOOLDIR)/track-depends.make'		>> $@
@@ -376,19 +445,19 @@ mytracks.make: $(TRACK_SOURCES) $(TRACKFILE)
 
 ifdef NO_PREMASTER
 %.ogg: 
-	oggenc -Q -o $@ $(shell $(TRACKINFO) --ogg title='$(TITLE)' $*)
+	oggenc -Q -o $@ $(shell $(TRACKINFO) --ogg title="$(TITLE)" $*)
 %.mp3: 
 	sox $(shell $(TRACKINFO) format=files $*) -w -t wav - | \
 	  lame -b 64 -S $(shell $(TRACKINFO) $(SONGLIST_FLAGS)  \
-	   --mp3 title='$(TITLE)' $*) $@
+	   --mp3 title="$(TITLE)" $*) $@
 else
 %.ogg:  Premaster/WAV/%.wav
 	oggenc -Q -o $@ $(shell $(TRACKINFO) --ogg track=$< \
-	  title='$(TITLE)' $*)
+	  title="$(TITLE)" $*)
 %.mp3: Premaster/WAV/%.wav
 	sox $< -w -t wav - | \
 	  lame -b 64 -S $(shell $(TRACKINFO) $(SONGLIST_FLAGS)  \
-	   --mp3 track=- title='$(TITLE)' $*) $@
+	   --mp3 track=- title="$(TITLE)" $*) $@
 endif
 
 # The rule for oggs and mp3s used to use mytracks.make in, e.g.,
@@ -430,7 +499,7 @@ Premaster:
 
 Premaster/WAV:
 	mkdir Premaster/WAV
-	make update-tracks
+	[-f mytracks.make ] && make update-tracks
 
 #   Normalization:
 # 	Probably don't want the --mix flag on normalize.
