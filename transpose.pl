@@ -1,0 +1,108 @@
+#!/usr/bin/perl
+#
+#   Transpose a song in FlkTex notation (chords in square brackets)
+#   usage:
+#	transpose.pl [+-~]N infile [outfile]
+#	(N in half-steps: negative gets you fewer sharps or more flats.)
+#
+
+### Scales, using sharps and flats.
+#   + and - correspond to \sharp and \flat respectively in in TeX and FlkTex;
+#   We also accept # and b, which are standard in most text formats.
+#   (Which we use on output depends on whether the file extension.)
+# 
+@sharps = ( "A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#" );
+@flats  = ( "A", "Bb", "B", "C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab" );
+
+$usage = "Usage: $0 [+-]N[b] infile [outfile]
+	N is in half-steps; b means use the flatted scale.
+\n";
+
+$xp = $ARGV[0];
+$in = $ARGV[1];
+$out= $ARGV[2];
+
+print "xp='$xp' in='$in' out='$out'\n";
+
+if ($ARGV[0] !~ /^([-+]?[0-9]+)(b?)$/) {
+    print STDERR $usage;
+    exit -1;
+} else {
+    $xp = $1;
+    $use_flats = $2;
+}
+
+if ($in !~ /\..*$/){
+    $in .= ".flk";
+}
+
+$use_tex = 0;
+if ($in =~ /\.(tex|flk)$/ ) {
+    $use_tex = 1;
+}
+
+if (! open(IN, $in)) {
+    print STDERR "$0: cannot open $in for reading.\n";
+    exit -1;
+}
+
+if ($out && $out!~ /\..*$/) {
+    $out .= ".flk";
+}
+
+if ($out && !open(STDOUT, ">$out")) {
+    print STDERR "$0: cannot open $out for writing.\n";
+    exit -1;
+}
+
+print STDERR "xp='$xp' use_flats='$use_flats' '$in' -> '$out'\n";
+
+while (<IN>) {
+    my $out = "";
+
+    while (s/([^\[]*)\[([^\]]+)\]//) {
+	$out .= "${1}[" . transpose($2) . "]";
+    }
+    $out .= $_;
+    print $out;
+}
+
+
+sub transpose {
+    my ($chord) = @_;
+    my $xchord = "";
+
+    while ($chord =~ s/([^A-G]*)([A-G])((\\sharp|\\flat|#|b)?)//) {
+	$xchord .= $1 . transpose1($2, $3);
+    }
+    
+    $xchord .= $chord;
+    return $xchord;
+}
+
+sub transpose1 {
+    my ($note, $accidental) = @_;
+
+    if ($accidental =~ /#|\\sharp/) { $note .= "#"; }
+    if ($accidental =~ /b|\\flat/)  { $note .= "b"; }
+
+    my $nnote = 0;
+    if ($note =~ /-/) {
+	while (($flats[$nnote] ne $note) && $nnote < 12) {$nnote++;}
+    } else {
+	while (($sharps[$nnote] ne $note) && $nnote < 12) {$nnote++;}
+    }
+    my $nnote = ($nnote + $xp) % 12;
+    if ($use_flats) {
+	$note = $flats[$nnote];
+    } else {
+	$note = $sharps[$nnote];
+    }
+
+    if ($use_tex) {
+	$note =~ s/#/\\sharp/;
+	$note =~ s/b/\\flat/;
+    }
+    return $note . $accidental;    
+    
+}
