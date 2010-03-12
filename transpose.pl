@@ -22,7 +22,7 @@ $xp = $ARGV[0];
 $in = $ARGV[1];
 $out= $ARGV[2];
 
-print "xp='$xp' in='$in' out='$out'\n";
+#print "xp='$xp' in='$in' out='$out'\n";
 
 if ($ARGV[0] !~ /^([-+]?[0-9]+)(b?)$/) {
     print STDERR $usage;
