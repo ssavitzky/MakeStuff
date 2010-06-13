@@ -1,5 +1,5 @@
 ### Makefile template for album directories
-#	$Id: album.make,v 1.15 2008-11-17 16:16:56 steve Exp $
+#	$Id: album.make,v 1.16 2010-06-13 18:08:53 steve Exp $
 #
 #  This template is meant to be included in the Makefile of an "album" 
 #	directory.  The usual directory tree looks like:
@@ -49,7 +49,16 @@
 
 BASEDIR		:= $(subst /Tools/..,/,$(TOOLDIR)/..)
 #BASEDIR		= ../..
-SONGDIR 	= $(BASEDIR)/Lyrics
+ifeq ($(shell [ -d ./Lyrics ] && echo Lyrics), Lyrics)
+SONGDIR 	:= ./Lyrics
+else
+SONGDIR 	:= $(BASEDIR)Lyrics
+endif
+LYRICDIR	= $(SONGDIR)
+
+ifeq ($(shell [ -f make.config ] || echo noconfig),)
+	include $(shell /bin/pwd)/make.config
+endif
 
 ifeq ($(shell [ -d ./Tracks ] || echo notracks),)
 	TRACKDIR	:= ./Tracks
@@ -70,7 +79,11 @@ RIPS=Rips
 
 ## Metadata extraction and formatting programs:
 
-TRACKINFO = $(TOOLDIR)/TrackInfo.pl
+TRACKINFO := $(TOOLDIR)/TrackInfo.pl
+ifdef PERFORMER
+  TRACKINFO := $(TRACKINFO) performer="$(PERFORMER)"
+endif
+
 LIST_TRACKS = $(TOOLDIR)/list-tracks
 
 ## CD writing.  wodim and genisoimage are new as of Debian Etch.
@@ -92,40 +105,58 @@ DEVICE		= ATA:1,1,0
 
 ###### Rules ##########################################################
 
-### This is changing.  
-#	Prior to 2008 we used $(SHORTNAME).songs for the main song list;
+### Things are changing.  
+#
+#	Prior to 2008 we used $(SHORTNAME).tracks for the tracklist 
+#	of a CD.  Concerts were handled using concert.make.  Around
+#	the beginning of 2008 we switched to using "songs" as the
+#	main songlist, and %.songs for secondary lists such as 
+#	individual sessions or concerts in a field recording directory.
+#
+#	At this point the plan is to _continue_ using .tracks for
+#	a CD tracklist, and to insist on having only one per directory.
+#	Similarly we'll use Rips for the rips of the CD's tracks.
 #	Now we use songs as the main song list, and prefix.songs in
 #	field recordings to break out individual concerts or sessions.
 #
-# 	Similarly we now have rips %.rips where we used to have Rips.
-#	
-#	We blithely lump all metadata, ogg, and mp3 files into the main
-#	directory, Master, Premaster, and Tracks; this makes sense because
-#	field recordings in Tracks often mix things (like short concerts
-#	or two-shots) that we want to split later.  
-
+# 	Similarly we now want rips %.rips where we used to have Rips; 
+#	it will probably be best to save Rips for the CD.
+#
+#	We blithely continue to lump all metadata and WAV files into
+#	the Master, Premaster, and Tracks; this makes sense because
+#	field recordings in Tracks often mix things (like concerts or
+#	two-shots) that we want to split later.  
+#
+#	For the moment all .ogg and .mp3 files are in the main directory;
+#	this makes for shorter pathnames, but eventually they need to 
+#	be symlinks into the various .rips directories.
+#
 #	We need a separate set of rules for, e.g., songs and %.songs
 
-### The following definitions were used for "albums", where we're mastering
-#	a single CD and we have a single primary list of songs.  As it
-#	turns out, all the legacy cases (released albums) used 
-#	$(SHORTNAME).tracks instead of songs or %.songs; it may be
-#	safe to ignore these now.
+
+### See whether we have a CD, indicated by a *.tracks or songs file
+#	The .tracks file is *only* used for the CD tracks; it's possible
+#	to have both a .tracks file and a .songs file.
+#	It is an error to have both [shortname].tracks and songs.
+
+
+TRACKFILE = $(wildcard songs $(SHORTNAME).tracks)
+ifneq ($(TRACKFILE),)
+
+RELEASED = 1
+
+### The following definitions are used for "albums", where we're mastering
+#	a single CD and we have a single primary list of tracks.
 
 # Track list file.
 #   TRACKS= @<file> is the shortcut we use for TrackInfo.pl
-TRACKFILE := $(shell echo $(wildcard songs *.songs *.tracks) | head -1)
+
 TRACKS	  = @$(TRACKFILE)
 
 # Base prefix for derived files:
-#	if we're using foo.songs, BASEPFX is "foo."
-#	otherwise it's null, meaning that the names are generic.
-ifeq ($(TRACKFILE), songs) 
-	BASEPFX := 
-else
-	BASEPFX := $(SHORTNAME).
+ifneq ($(TRACKFILE),songs)
+BASEPFX := $(SHORTNAME).
 endif
-
 
 # Get the shortnames of all the songs from $(TRACKFILE)
 #	Ignore comment lines.  $(SONGS) has *extended* shortnames
@@ -137,6 +168,7 @@ SONGS := $(shell grep -v '\#' $(TRACKFILE))
 #	the appropriate .flk files in $(SONGDIR) for dependencies.
 SHORTNAMES := $(shell $(TRACKINFO) format=songs $(TRACKS))
 
+# We know at this point that all the metadata is in SONGDIR
 FLK_FILES := $(shell for f in $(SHORTNAMES); do \
 		[ -f $(SONGDIR)/$$f.flk ] && echo $(SONGDIR)/$$f.flk; \
 		[ -f ./$$f.flk ] && echo ./$$f.flk; \
@@ -166,9 +198,44 @@ TRACK_SOURCES = $(shell $(TRACKINFO) format=files $(TRACKS))
 
 TRACK_DATA = $(shell $(TRACKINFO) format=cd-files $(TRACKS))
 
-#%.wav: $(TRACKDIR)/%
-#	@echo snagging $@ from `ls $?/*.wav | tail -1`
-#	rsync `ls $?/*.wav | tail -1` $@
+## Compute targets
+
+TRACKLISTS = $(BASEPFX)short.list $(BASEPFX)files $(BASEPFX)long.list \
+	$(BASEPFX)short.html $(BASEPFX)long.html $(BASEPFX)extras.html
+endif ### CD
+
+
+### Look for songs and *.songs.
+
+SONGFILES=$(wildcard *songs)
+ifneq ($(SONGFILES),,)
+
+
+ifeq ($(wildcard songs),songs)  # compute targets for the default, "songs"
+  SONGLISTS := short.list long.list short.html long.html extras.html
+  SUBMAKES := mytracks.make
+  RIPDIRS := Rips
+endif
+
+ifneq ($(wildcard *.songs),)	# compute targets for *.songs
+  DOTSONGS=$(wildcard *.songs)
+  SONGLISTS += \
+	$(subst .songs,.names, $(DOTSONGS)) \
+	$(subst .songs,.files, $(DOTSONGS)) \
+	$(subst .songs,.oggs, $(DOTSONGS)) \
+	$(subst .songs,.mp3s, $(DOTSONGS)) \
+	$(subst .songs,.short.list, $(DOTSONGS))\
+	$(subst .songs,.long.list, $(DOTSONGS)) \
+	$(subst .songs,.short.html, $(DOTSONGS)) \
+	$(subst .songs,.long.html, $(DOTSONGS)) \
+	$(subst .songs,.extras.html, $(DOTSONGS)) 
+
+  SUBMAKES += $(subst .songs,.make, $(DOTSONGS))
+  RIPDIRS += $(subst .songs,.rips, $(DOTSONGS)) 
+endif
+
+
+endif
 
 ###### Targets ########################################################
 
@@ -176,9 +243,10 @@ TRACK_DATA = $(shell $(TRACKINFO) format=cd-files $(TRACKS))
 
 all::
 	@echo album $(SHORTNAME)/ "($(TITLE))"
+	@echo performer: $(PERFORMER)
 
-all::	$(BASEPFX)list $(BASEPFX)long.list 
-all::	$(BASEPFX)short.html $(BASEPFX)long.html $(BASEPFX)extras.html
+ifdef RELEASED
+all::	$(TRACKLISTS)
 
 ifeq ($(strip $(shell test -d Master && echo -n 1)),1)
 all::	$(BASEPFX)toc time
@@ -187,13 +255,32 @@ ifeq ($(strip $(shell test -d Rips && echo -n 1)),1)
 all::	mp3s.m3u oggs.m3u
 endif
 
+endif # end of all targets for CD
+
+all:: $(SONGFILES)
+	@echo songfiles: $(SONGFILES)
+
+all:: $(SONGLISTS) 
+
+
+ifeq ($(strip $(shell test -f songs && echo -n 1)),1)
 all::	est-time
+endif
 
 ### update: do this to capture changed track files
 
 .PHONY: update
 update:: update-tracks normalized update-master 
 update:: all
+
+### re-list, clean-lists
+.PHONY: re-list clean-lists
+clean-lists:
+	rm -f $(SONGLISTS)
+
+re-list: 
+	rm -f $(SONGLISTS)
+	$(MAKE) $(SONGLISTS)
 
 ### Table of contents for CD-R:
 #	Standard target: toc-file
@@ -224,26 +311,6 @@ oggs.m3u: $(TRACKFILE)
 		echo $(URL_PREFIX)/$$f		>> $@ ;\
 	done
 
-### Rip directories.
-#
-# legacy: $(BASEPFX)songs -> Rips
-# new: songs -> rips; %.songs -> %.rips
-#
-# === Rips (should it be renamed?) needs to be a stand-alone web album.
-# === all of the .ogg, .mp3, and .m3u files belong in Rips
-# === all of the numbered symlinks should be local
-# === also needs indices and perhaps lyric files
-$(RIPS): $(OGGS) $(MP3S)
-	[ -d $@ ] || mkdir $@
-	rm -f $@/[0-9][0-9]-*
-	$(TRACKINFO) format=symlinks dir=$@ $(SONGS)
-
-.PHONY: re-rip
-
-re-rip:	$(OGGS) $(MP3S)
-	rm -f $(RIPS)/[0-9][0-9]-*
-	$(TRACKINFO) format=symlinks dir=$(RIPS) $(SONGS)
-
 
 ### Utilities:
 
@@ -253,8 +320,8 @@ re-rip:	$(OGGS) $(MP3S)
 time:	$(BASEPFX)toc
 	@$(CDRDAO) show-toc $(BASEPFX)toc 2>&1 | tail -1
 
-est-time: $(BASEPFX)list
-	@echo Estimated `tail -1 $(BASEPFX)list`
+est-time: $(BASEPFX)short.list
+	@echo Estimated `tail -1 $(BASEPFX)short.list`
 
 ## List tracks to STDOUT in various formats:
 
@@ -312,9 +379,11 @@ list-sources:
 list-songs: 
 	@echo $(SONGS)
 
-## List tracks to a file:
 
-$(BASEPFX)list: $(TRACKFILE)
+### Rules for things that depend on $(TRACKFILE)
+
+ifneq ($(TRACKFILE),)
+$(BASEPFX)short.list: $(TRACKFILE)
 	$(TRACKINFO) $(TRACKLIST_FLAGS) format=list.text -t -T $(TRACKS) > $@
 
 $(BASEPFX)long.list: $(TRACKFILE)
@@ -325,15 +394,93 @@ $(BASEPFX)credits.list: $(TRACKFILE)
 	$(TRACKINFO)  --credits  -T \
 		format=list.text $(TRACKS) > $@
 
-$(BASEPFX)long.html: $(TRACKFILE)  $(FLK_FILES)
+$(BASEPFX)long.html: $(TRACKFILE)  # $(FLK_FILES)
 	$(TRACKINFO) $(TRACKLIST_FLAGS) --long --credits -t \
 		format=list.html $(TRACKS) > $@
 
-$(BASEPFX)short.html: $(TRACKFILE)  $(FLK_FILES)
+$(BASEPFX)short.html: $(TRACKFILE)  # $(FLK_FILES)
 	$(TRACKINFO) $(TRACKLIST_FLAGS) format=list.html -t $(TRACKS) > $@
 
-## Print lyrics either in leadsheet (single-page) or songbook format
+# [name].extras.html includes links to the sound files; it's used
+#	most notably to provide "extra features" for people who have
+#	preordered or purchased albums.
+$(BASEPFX)extras.html: $(TRACKFILE)  # $(FLK_FILES)
+	$(TRACKINFO) $(TRACKLIST_FLAGS) --long  --credits \
+		--sound format=list.html \
+		$(TRACKS) > $@
 
+$(BASEPFX)files: $(TRACKFILE)
+	@$(TRACKINFO) format=files $(TRACKS) > $@
+
+$(BASEPFX)names: $(TRACKFILE)
+	grep -v '^#' $< | grep -ve '^$$' > $@
+
+Rips: $(BASEPFX)names $(OGGS) $(MP3S)
+	[ -d $@ ] || mkdir $@
+	rm -f $@/[0-9][0-9]-*
+	make -f mytracks.make
+	$(TRACKINFO) format=symlinks dir=$@ @$<
+
+re-rip: $(BASEPFX)names  $(OGGS) $(MP3S)
+	[ -d Rips ] || mkdir Rips
+	rm -f Rips/[0-9][0-9]-*
+	make -f mytracks.make
+	$(TRACKINFO) format=symlinks dir=Rips @$<
+endif
+
+### Rules for things derived from %.songs
+
+# %.names:  just the shortnames, with comments and blank lines removed
+%.names: %.songs
+	grep -v '^#' $< | grep -ve '^$$' > $@
+# %.files:  track data input files 
+%.files: %.songs
+	$(TRACKINFO) format=files @$< > $@
+
+%.short.list: %.songs
+	$(TRACKINFO) $(TRACKLIST_FLAGS) format=list.text -t -T @$< > $@
+
+%.long.list: %.songs
+	$(TRACKINFO) $(TRACKLIST_FLAGS) --long --credits  -T \
+		format=list.text @$< > $@
+
+%.credits.list: %.songs
+	$(TRACKINFO)  --credits  -T format=list.text @$< > $@
+
+%.long.html: %.songs
+	$(TRACKINFO) $(TRACKLIST_FLAGS) --long --credits -t \
+		format=list.html @$< > $@
+
+%.short.html: %.songs
+	$(TRACKINFO) $(TRACKLIST_FLAGS) \
+		 format=list.html -t @$< > $@
+
+%.extras.html: %.songs
+	$(TRACKINFO) $(TRACKLIST_FLAGS) --long  --credits \
+		--sound format=list.html @$< > $@
+
+%.oggs: %.names
+	(for f in `cat $<`; do echo $$f.ogg; done) > $@
+
+%.mp3s: %.names
+	(for f in `cat $<`; do echo $$f.mp3; done) > $@
+
+%.rips: %.names %.make %.oggs %.mp3s
+	[ -d $@ ] || mkdir $@
+	rm -f $@/[0-9][0-9]-*
+	make -f $*.make
+	$(TRACKINFO) format=symlinks dir=$@ @$*.names
+
+%.re-rip: %.names %.make %.oggs %.mp3s
+	[ -d $*.rips ] || mkdir $*.rips
+	rm -f $*.rips/[0-9][0-9]-*
+	make -f $*.make
+	$(TRACKINFO) format=symlinks dir=$*.rips @$*.names
+
+
+
+## Print lyrics either in leadsheet (single-page) or songbook format
+##	use print-songbook for now with TGl's fully-chorded lead sheets
 .PHONY: print-lyrics print-songbook
 
 print-lyrics: $(PRINT_FILES)
@@ -365,16 +512,6 @@ list-misplaced-tracks:
 Tracks: 
 	mkdir Tracks
 
-# [name].extras.html includes links to the sound files; it's used
-#	most notably to provide "extra features" for people who have
-#	preordered or purchased albums.
-$(BASEPFX)extras.html: $(TRACKFILE)  $(FLK_FILES)
-	$(TRACKINFO) $(TRACKLIST_FLAGS) --long  --credits \
-		--sound format=list.html \
-		$(TRACKS) > $@
-
-$(BASEPFX)files: $(TRACKFILE)
-	@$(TRACKINFO) format=files $(TRACKS) > $@
 
 ### Update Premaster/WAV by importing track data
 #	This is not done by default because normalization and other 
@@ -419,6 +556,7 @@ mytracks.make: $(TRACK_SOURCES) $(TRACKFILE)
 	@echo 'TOOLDIR	 = $(TOOLDIR)'				>> $@
 	@echo 'SONGS	 = $(SONGS)'				>> $@
 	@echo 'include $$(TOOLDIR)/track-depends.make'		>> $@
+	@echo 'all:: oggs mp3s'					>> $@
 	@echo 'oggs: $$(OGGS)'					>> $@
 	@echo 'mp3s: $$(MP3S)'					>> $@
 	@for f in $(SONGS); do	\
@@ -432,6 +570,30 @@ mytracks.make: $(TRACK_SOURCES) $(TRACKFILE)
 			 sox '-t cdr - -t .wav $$@'		>> $@;	\
 		echo update-master:: Master/$$f.wav	 	>> $@;	\
 	done
+
+### Now do *.make for all the prefixes
+%.make: %.songs 
+	echo '# $@' $(shell date)		 	> $@
+	@echo 'TRACKINFO = $(TRACKINFO)'			>> $@
+	@echo 'TITLE	 = '"$(TITLE)"				>> $@
+	@echo 'TOOLDIR	 = $(TOOLDIR)'				>> $@
+	@echo 'SONGS	 = '`cat $*.names`			>> $@
+	@echo 'include $$(TOOLDIR)/track-depends.make'		>> $@
+	@echo 'all:: oggs mp3s'					>> $@
+	@echo 'oggs: '`cat $*.oggs`				>> $@
+	@echo 'mp3s: '`cat $*.mp3s`				>> $@
+	@for f in `cat $*.names`; do	\
+		tf=`$(TRACKINFO) format=files $$f`;			\
+		pf=Premaster/WAV/$$f.wav;				\
+		echo Premaster/WAV/$$f.wav: $$tf	 	>> $@;	\
+		echo "	"rsync  --copy-links -v -p '$$< $$@'	>> $@;	\
+		echo update-tracks:: Premaster/WAV/$$f.wav	>> $@;	\
+		echo Master/$$f.wav: Premaster/WAV/$$f.wav 	>> $@;	\
+		echo "	"sox '$$< -w -t cdr - |'			\
+			 sox '-t cdr - -t .wav $$@'		>> $@;	\
+		echo update-master:: Master/$$f.wav	 	>> $@;	\
+	done
+
 
 # this doesn't work because it creates output files with funny names
 # 		echo "	"shntool pad $$@			>> $@;	\
@@ -499,7 +661,7 @@ Premaster:
 
 Premaster/WAV:
 	mkdir Premaster/WAV
-	[-f mytracks.make ] && make update-tracks
+	[ -f mytracks.make ] && make update-tracks
 
 #   Normalization:
 # 	Probably don't want the --mix flag on normalize.
