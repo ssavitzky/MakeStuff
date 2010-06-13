@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: TrackInfo.pl,v 1.9 2008-01-20 07:38:45 steve Exp $
+# $Id: TrackInfo.pl,v 1.10 2010-06-13 18:09:48 steve Exp $
 # TrackInfo [options] infile... 
 #	<title>extract track info</title>
 
@@ -24,10 +24,13 @@
 #	Note that the "songwriter" is assumed to be both the lyricist and
 #	the composer unless otherwise noted.  
 $default_songwriter  = "Steve Savitzky";
-$default_performer   = "Steve Savitzky";
+$default_performer   = $ENV{'PERFORMER'};
+$default_performer   = "Steve Savitzky" unless $default_performer;
 
-$publicSongs = "/Steve_Savitzky/Songs/";
-$publicSite  = "http://theStarport.com";
+#$publicSongs = "/Steve_Savitzky/Songs/";
+#$publicSite  = "http://theStarport.com";
+$publicSongs = "/Songs/";
+$publicSite  = "http://steve.savitzky.net";
 
 
 ### Look for the songs in the usual places:
@@ -46,7 +49,15 @@ $songDir = $ENV{SONGDIR};
 $songDir = "./Songs" unless -d $songDir;
 $songDir = "../Songs" unless -d $songDir;
 $songDir = "../../Songs" unless -d $songDir;
+$songDir = "../../../Songs" unless -d $songDir;
 $songDir = "." unless -d $songDir;
+
+$lyricDir = $ENV{LYRICDIR};
+$lyricDir = "./Lyrics" unless -d $lyricDir;
+$lyricDir = "../Lyrics" unless -d $lyricDir;
+$lyricDir = "../../Lyrics" unless -d $lyricDir;
+$lyricDir = "../../../Lyrics" unless -d $lyricDir;
+$lyricDir = "." unless -d $lyricDir;
 
 $trackDir = $ENV{TRACKDIR};
 $trackDir = "./Tracks" unless -d $trackDir;
@@ -56,21 +67,23 @@ $trackDir = "." unless -d $trackDir;
 
 # === this will have to change eventually ===
 
-if (-f  "$songDir$songlistFile") {
+if (-f  "$lyricDir$songlistFile") {
     # everything's cool
 } elsif (-f "$root$publicSongs$songlistFile") {
     # we must be on the public site, then.
-    $songDir = "$root$publicSongs";
+    $lyricDir = "$root$publicSongs";
 } else {
     # can't find the song directory, so we're hosed anyway.
 }
 
 # === needs to come from config file or be computed from $songs
 $songURL = "$publicSite$publicSongs";
-$songlistFile = "$songDir$songlistFile";
+$songlistFile = "$lyricDir$songlistFile";
 
 
 ### Option variables and their defaults:
+
+$debug = 0;					# debug
 
 $verbose = 0;					# be verbose
 $format = "";					# output format
@@ -102,7 +115,7 @@ $notice = "";
 $license = "";
 $dedication = "";
 $description = "";
-$category = "";
+$tags = "";
 $key = "";
 $timing = "";
 $created = "";
@@ -140,6 +153,8 @@ foreach $f (@ARGV) {
     if ($f =~ /^-/) {
 	if ($f =~ /-v/)        { ++$verbose; }
      	elsif ($f =~ /--verbose/) { ++$verbose; }
+	elsif ($f =~ /--?debug/)  { ++$debug; }
+	elsif ($f =~ /-d/)  	  { ++$debug; }
 	elsif ($f =~ /--?hex/)	  { ++$hex; }
 	elsif ($f =~ /--?dec/)	  { ++$dec; }
 	elsif ($f =~ /-x/)        { ++$hex; }
@@ -193,7 +208,9 @@ foreach $f (@ARGV) {
     } else {					# Must be a song/track name
 	if ($i == 0) { printHeading(); }
 	#if ($i > 0) { print "\n"; }
+	print STDERR "  getting  track info for $f\n" if $debug;
 	getTrackInfo($f);
+	print STDERR "  printing track info for $f\n" if $debug;
 	printInfo($format);
 	$total_time += mmss_to_seconds($timing);
 	++$untimed unless mmss_to_seconds($timing);
@@ -205,7 +222,9 @@ if ($morefiles) {
     for $f (split(/ +/, trim($morefiles))) {
 	if ($i == 0) { printHeading(); }
 	#if ($i > 0) { print "\n"; }
+	print STDERR "  getting  track info for $f\n" if $debug;
 	getTrackInfo($f);
+	print STDERR "  printing track info for $f\n" if $debug;
 	printInfo($format);
 	$total_time += mmss_to_seconds($timing);
 	++$untimed unless mmss_to_seconds($timing);
@@ -230,7 +249,9 @@ sub songLinks {
 
     for my $f (@list) {
 	my $ttl = $titleMap{$f};
-	if (-f "$songDir/$f.html") {
+	if (-d "$songDir/$f/") {
+	    $content .= "   <a href='$songURL$f/'>$ttl</a>";
+	} elsif (-f "$songDir/$f.html") {
 	    $content .= "   <a href='$songURL$f.html'>$ttl</a>";
 	} else {
 	    $content .= $ttl;
@@ -294,7 +315,7 @@ sub clearTrackInfo {
     $license = "";
     $dedication = "";
     $description = "";
-    $category = "";
+    $tags = "";
     $key = "";
     $timing = "";
     $created = "";
@@ -314,12 +335,12 @@ sub clearTrackInfo {
 ### getSongFileInfo($filename, $directory)
 #	Get information from a song (.flk) file
 #	The results are returned in global variables, which are assumed to
-#	have been initialized already.  $directory defaults to $songDir
+#	have been initialized already.  $directory defaults to $lyricDir
 #
 sub getSongFileInfo {
     my ($filename, $directory) = @_;
     my $shortname = $filename;
-    $directory = $songDir unless $directory;
+    $directory = $lyricDir unless $directory;
 
     if ($filename =~ /^([a-z]*[0-9]+\-+)?([^.]+)\.?/) { 
 	$shortname = $2;
@@ -334,10 +355,11 @@ sub getSongFileInfo {
     # Variable-setting macros:
 
 	elsif (/\\begin\{song/)	{ begSong($_); }  # \begin{song}{title}
-
+	elsif (/\\title/)  	{ $title	= getContent($_); }
 	elsif (/\\subtitle/)  	{ $subtitle	= getContent($_); }
 	elsif (/\\key/)  	{ $key		= getContent($_); }
-	elsif (/\\category/)	{ $category	= getContent($_); }
+	elsif (/\\tags/)	{ $tags		= getContent($_); }
+	elsif (/\\category/)	{ $tags		= getContent($_); }
 	elsif (/\\dedication/)	{ $dedication	= getContent($_); }
 	elsif (/\\description/)	{ $description	= getContent($_); }
 	elsif (/\\license/) 	{ $license	= getContent($_); }
@@ -549,10 +571,10 @@ sub printInfo {
 	#	following description row.
 	my $d = ($hex && $dec)? sprintf("(%02d) ", $track_number) : "";
 	print ("  <tr> \n");
-	print ("    <td align='right'> " .
+	print ("    <td valign='top' align='right'> " .
 	       ($hex? sprintf("0x%02x", $track_number) : $track_number) .
 	       " </td>\n");
-	print ("    <td align='right'> " .
+	print ("    <td valign='top' align='right'> " .
 	       sprintf("(%02d)", $track_number) .
 	       " </td>\n") if $hex && $dec;
 	# === should just make these columns conditional on $sound_links
@@ -571,8 +593,19 @@ sub printInfo {
 	    print ("    </td>\n");
 	}
 	print ("    <td> ");
-	if (-f "$songDir/$shortname.html") {
-	    print "<a href='$songURL$shortname.html'>$title</a>";
+	if (-d "$songDir/$shortname") {
+	    print "<a href='$songURL$shortname/'>$title</a>";
+	} elsif (-f "./$shortname.flk") {
+	    # There's a local .flk file: 
+	    # check for a local lyrics page or song directory
+	    if ( -f "./$shortname.html") {
+		print "<a href='$shortname.html'>$title</a>";
+	    } elsif ( -d "./$shortname") {
+		print "<a href='$shortname/'>$title</a>";
+	    } else {
+		# === should really go on to check for (.+)_(.+) as below
+		print $title;
+	    }
 	} elsif ($shortname =~ /(.+)_(.+)/) {
 	    $s1 = $1; $s2 = $2;
 	    if ($title =~ /(.+) *\/ *(.+)/) {
@@ -580,13 +613,13 @@ sub printInfo {
 	    } else {
 		$t1 = $s1; $t2 = $s2; $ts = " ";
 	    }
-	    if (-f "$songDir/$s1.html") {
-		print "<a href='$songURL$s1.html'>$t1</a>$ts";
+	    if (-d "$songDir/$s1") {
+		print "<a href='$songURL$s1/'>$t1</a>$ts";
 	    } else {
 		print "$t1$ts";
 	    }
-	    if (-f "$songDir/$s2.html") {
-		print "<a href='$songURL$s2.html'>$t2</a>";
+	    if (-d "$songDir/$s2") {
+		print "<a href='$songURL$s2/'>$t2</a>";
 	    } else {
 		print $t2;
 	    }
@@ -614,7 +647,9 @@ sub printInfo {
 	    # put the sound file first -- this is a concert after all
 	    print " <a href='$f.ogg'>[ogg]</a>";
 	}
-	if (-f "$songDir/$shortname.html") {
+	if (-d "$songDir/$shortname") {
+	    print "<a href='$songURL$shortname/'>$title</a>";
+	} elsif (-f "$songDir/$shortname.html") {
 	    print "<a href='$songURL$shortname.html'>$title</a>";
 	} else {
 	    print "$title";
@@ -630,7 +665,7 @@ sub printInfo {
 	print "-c 'songwriter=$lyrics' " if $lyrics;
 	print "-c 'composer=$music' "	 if $music;
 	print "-c 'arranger=$arranger' " if $arranger;
-	print "-l '$ctitle' " 		 if $ctitle;
+	print "-l \"$ctitle\" "		 if $ctitle;
 	# === needs license and url
 	print "$track_data\n";
     } elsif ($format eq "mp3") {
@@ -640,7 +675,7 @@ sub printInfo {
 	#print "-c 'songwriter=$lyrics' ";
 	#print "-c 'composer=$music' "	 if $music;
 	#print "-c 'arranger=$arranger' " if $arranger;
-	print "--tl '$ctitle' " 		 if $ctitle;
+	print "--tl \"$ctitle\" " 		 if $ctitle;
 	# === needs license and url
 	print "-\n";  # assume stdin -- "$track_data\n";
     } elsif ($format eq "shell") {
@@ -660,20 +695,28 @@ sub printInfo {
 	print "music='$music'\n" if $music;
 	print "arranger='$arranger'\n" if $arranger;
 	print "timing='$timing'\n" if $timing;
-	print "category='$category'\n" if $category;
+	print "tags='$tags'\n" if $tags;
 	print "key='$key'\n" if $key;
 	print "created='$created'\n" if $created;
 	print "cvsid='$cvsid'\n" if $cvsid;
     } elsif ($format eq "symlinks") {
 	# make symlinks in $dir for track files with long names
-	my $d = `echo -n \`/bin/pwd\``;
-	my $s = sprintf("$dir/%02d-$longname", $track_number);
+	# the link target should either be in . or $dir.
+	# $dir becomes a self-contained album directory.
+	my $s = sprintf("%02d-$longname", $track_number);
+	print "    $s";
 	for my $e ("ogg", "mp3", "flac") {
-	    ( -f "$shortname.$e" ) && `ln -s $d/$shortname.$e $s.$e`;
+	    if ( -f  "$dir/$shortname.$e" ) {
+		`cd $dir; ln -s $shortname.$e $s.$e`;
+	    } elsif  ( -f  "$shortname.$e" ) {
+		# if the file is in ., make a symlink to it to ensure that
+		# the directory is self-contained.
+		`cd $dir; ln -s ../$shortname.$e .; ln -s $shortname.$e $s.$e`;
+	    }
 	}
-	[ -e "Master/$shortname.wav" ] &&
-	    `ln -s $d/Master/$shortname.wav $s.wav`;
-	printf("  $d $dir/%02d-$longname", $track_number);
+	if ( -d "Master" && -f "Master/$shortname.wav" ) {
+	    `cd Master; ln -s $shortname.wav $s.wav`;
+	}
     } else {
 	# Sort of a generic java/make format suitable for a only single song
 	print "shortname=$shortname\n";
@@ -686,8 +729,9 @@ sub printInfo {
 	print "lyrics=$lyrics\n";
 	print "music=$music\n" if $music;
 	print "arranger=$arranger\n" if $arranger;
+	print "performer=$performer\n" if $performer;
 	print "timing=$timing\n" if $timing;
-	print "category=$category\n" if $category;
+	print "tags=$tags\n" if $tags;
 	print "key=$key\n" if $key;
 	print "created=$created\n" if $created;
 	print "cvsid=$cvsid\n" if $cvsid;
@@ -987,7 +1031,7 @@ sub deTeX {
 
     while ($txt =~ /\%/) {	# TeX comments eat the line break, too.
 	$txt =~ s/\%.*$//;
-	$txt .= <STDIN>;
+	$txt .= <IN>;
      }
     while ($txt =~ /\{\\em[ \t\n]/
 	   || $txt =~ /\{\\tt[ \t\n]/
