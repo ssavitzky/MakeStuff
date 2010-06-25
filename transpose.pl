@@ -87,7 +87,7 @@ sub transpose1 {
     if ($accidental =~ /b|\\flat/)  { $note .= "b"; }
 
     my $nnote = 0;
-    if ($note =~ /-/) {
+    if ($note =~ /b/) {
 	while (($flats[$nnote] ne $note) && $nnote < 12) {$nnote++;}
     } else {
 	while (($sharps[$nnote] ne $note) && $nnote < 12) {$nnote++;}
@@ -103,6 +103,6 @@ sub transpose1 {
 	$note =~ s/#/\\sharp/;
 	$note =~ s/b/\\flat/;
     }
-    return $note . $accidental;    
+    return $note;    
     
 }
