@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: flktran.pl,v 1.14 2007-07-17 06:21:05 steve Exp $
+# $Id: flktran.pl,v 1.15 2010-10-14 06:48:15 steve Exp $
 # flktran [options] infile outfile
 #	Perform format translation on filksong files.    
 
@@ -69,7 +69,7 @@ $subtitle = "";
 $notice = "";
 $license = "";
 $dedication = "";
-$category = "";
+$tags = "";
 $key = "";
 $timing = "";
 $created = "";
@@ -98,16 +98,40 @@ if ($ARGV[0]) { $outfile= shift; }
 if ($infile !~ /\./) { $infile .= ".flk"; }
 if ($html) { $outfmt = "html"; }
 
-if ($outfile =~ /\.html$/) { $outfmt = "html"; $html = 1; }
-if ($outfile && $outfile !~ /\./ && $outfmt) { $outfile .= ".$outfmt"; }
-$html = $outfmt eq "html";
+# If $outfile ends in /, it's a directory.  In that case, the output
+# goes into the corresponding directory, in a file called lyrics.html
 
-$outfile =~ m|^([^/]+)\.[^.]+$|;
-$filebase = $1;
-$htmlfile = "$filebase.html";
+if ($outfile =~ /\.html$/) { $outfmt = "html"; $html = 1; }
+if ($outfile && $outfile !~ /\./ && $outfile !~ /\/$/ && $outfmt) {
+    $outfile .= ".$outfmt";
+}
+
+$html = $outfmt eq "html";
+$outfile =~ s|/lyrics.html$|/|;
+
+if ($outfile =~ m|^(.*/)?([^/]+)\.[^./]+$|) {
+    $filebase = "$2";
+    $filedir  = ($1 eq "")? "." : $1;
+    $shortname= $2;
+    $htmlfile = "$filebase.html";
+} elsif ($outfile =~ m|^(.*/)?([^/]+)/$|) {
+    $filebase = "$2";
+    $filedir  = "$1$2";
+    $shortname= $2;
+    $htmlfile = "$filebase/";
+    $outfile  = "$filedir/lyrics.html";
+} 
+
+if ($WEBSITE) {
+    $WEBSITE =~ m|http://([^/]+)|;
+    $sitename = $1;
+} else {
+    $sitename = '';
+}
 
 if ($verbose) {
-    print STDERR "  infile = $infile; outfile = $outfile; format = $outfmt.\n";
+    print STDERR "  infile=$infile; outfile=$outfile; format=$outfmt\n";
+    print STDERR "  filedir=$filedir; filebase=$filebase; htmlfile=$htmlfile\n";
 }
 if ($infile) { open(STDIN, $infile); }
 if ($outfile) { open(STDOUT, ">$outfile"); }
@@ -124,11 +148,15 @@ if ($html) {
     $_UL = "</u>";
     $SPOKEN  = "(spoken)";
     $_SPOKEN = "";
+    $SUBSEC  = "<h3>";
+    $_SUBSEC  = "</h3>";
+    $SUBSUB  = "<h4>";
+    $_SUBSUB  = "</h4>";
     $NL  = "<br />\n";
     $NP  = "<hr />\n";
     $SP  = "&nbsp;";
     $AMP = "&amp;";
-    $FLKTRAN = "<a href='../Tools/TeX/flktran.html'><code>flktran</code></a>";
+    $FLKTRAN = "<a href='/Tools/TeX/flktran.html'><code>flktran</code></a>";
     # Creative Commons copyright notice
     $SomeRightsReserved =
 '<a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/3.0/us/">
@@ -154,6 +182,10 @@ Attribution-Noncommercial-Share Alike 3.0 United States License</a>. ';
     $_UL = "";
     $SPOKEN  = "(spoken)";
     $_SPOKEN = "";
+    $SUBSEC  = "";
+    $_SUBSEC  = "";
+    $SUBSUB  = "";
+    $_SUBSUB  = "";
     $NL  = "\n";
     $NP  = "\f";
     $SP  = " ";
@@ -178,7 +210,8 @@ while (<STDIN>) {
 
     elsif (/\\subtitle/)  	{ $subtitle = getContent($_); }
     elsif (/\\key/)  		{ $key = getContent($_); }
-    elsif (/\\category/)	{ $category = getContent($_); }
+    elsif (/\\tags/)		{ $tags = getContent($_); }
+    elsif (/\\category/)	{ $tags = getContent($_); }
     elsif (/\\dedication/)	{ $dedication = getContent($_); }
     elsif (/\\license/) 	{ $license = getContent($_); }
     elsif (/\\timing/)  	{ $timing = getContent($_); }
@@ -194,6 +227,8 @@ while (<STDIN>) {
 
     elsif (/\\begin\{refrain/)	{ begRefrain(); } # Refrain
     elsif (/\\end\{refrain/)	{ endRefrain(); }
+    elsif (/\\begin\{bridge/)	{ begBridge(); } # Bridhg
+    elsif (/\\end\{bridge/)	{ endBridge(); }
     elsif (/\\begin\{note/)	{ begNote(); } 	  # Note
     elsif (/\\end\{note/)	{ endNote(); }
     elsif (/\\begin\{quotation/){ begQuote(); }	  # Quote
@@ -249,14 +284,18 @@ sub begSong {
     $line =~ s/^.*song\}//;
     $title = getContent($line);	
     if ($html) {
-	my $alinks = " <a href='$filebase.pdf'>[pdf]</a>";
-	$alinks .= " <a href='$filebase.ogg'>[ogg]</a>" if -f "$filebase.ogg";
-	$alinks .= " <a href='$filebase.mp3'>[mp3]</a>" if -f "$filebase.mp3";
+	my $alinks = " <a href='lyrics.pdf'>[pdf]</a>";
+	$alinks .= " <a href='$filebase.ogg'>[ogg]</a>" 
+	    if -f "$filedir/$filebase.ogg";
+	$alinks .= " <a href='$filebase.mp3'>[mp3]</a>"
+	    if -f "$filedir/$filebase.mp3";
 	print "<html><head>";
 	print "<title>$title</title>\n";
 	print "</head><body>\n";
 	#print "<h3><a href='./'>$WEBDIR</a> / $htmlfile</h3>\n";
-	print "<h3>" . expandPath("$WEBDIR/$htmlfile") . $alinks . "</h3>\n";
+	print "<h3>"
+	    . ($sitename? "<a href='$WEBSITE'>$sitename</a>" : "")
+	    . expandPath("$WEBDIR/$htmlfile") . $alinks . "</h3>\n";
     } else {
 	print "Online: $WEBSITE$WEBDIR/$htmlfile\n\n";
     }
@@ -312,6 +351,22 @@ sub endRefrain {
     print "\n"; 
     $vlines = 0;
     $indent -= $TABSTOP;
+}
+
+### Begin a bridge:
+sub begBridge {
+    if ($vlines) { endVerse(); }
+    $indent += $TABSTOP * 2;
+    # Note that begVerse will get called when the first line appears,
+    # so we don't have to deal with verse count, line count, or <pre>.
+}
+
+### End a bridge:
+sub endBridge {
+    if ($html) { print "</pre>"; }
+    print "\n"; 
+    $vlines = 0;
+    $indent -= $TABSTOP * 2;
 }
 
 ### Begin a note:
@@ -518,6 +573,7 @@ sub deTeX {
 	   || $txt =~ /\{\\bf[ \t\n]/
 	   || $txt =~ /\\underline/
 	   || $txt =~ /\\link/
+	   || $txt =~ /\\sub(sub)?section/
 	   ) {
 	if ($txt =~ /\{\\em[ \t\n]/) {
 	    $txt =~ s/\{\\em[ \t\n]/$EM/; 
@@ -548,7 +604,18 @@ sub deTeX {
 		$txt =~ s/\\link\{([^\}]*)\}\{([^\}]*)\}/$2/;
 	    }
 	}
+	if ($txt =~ /\\subsection\*?\{/) {
+	    $txt =~ s/\\subsection\*?\{/$SUBSEC/;
+	    while ($txt !~ /\}/) { $txt .= <STDIN>; }
+	    $txt =~ s/\}/$_SUBSEC/;
+	}
+	if ($txt =~ /\\subsubsection\*?\{/) {
+	    $txt =~ s/\\subsubsection\*?\{/$SUBSUB/;
+	    while ($txt !~ /\}/) { $txt .= <STDIN>; }
+	    $txt =~ s/\}/$_SUBSUB/;
+	}
     }
+    $txt =~ s/\\clearpage//g;
     $txt =~ s/\\hfill//g;
     $txt =~ s/---/--/g;
     $txt =~ s/\\&/$AMP/g;
@@ -598,6 +665,7 @@ sub expandPath {
     my $result = '';
     my $pfx = '';
 
+    $path .= ' ' if $path =~ m|/$|;
     while ($path =~ s|^(/+)([^/]+)/(.+)$|/$3| ) {
 	$result .= $1;
 	$pfx .= $1 . $2;

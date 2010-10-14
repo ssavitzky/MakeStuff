@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: index.pl,v 1.5 2007-05-20 17:57:20 steve Exp $
+# $Id: index.pl,v 1.6 2010-10-14 06:48:15 steve Exp $
 # index [options] infile... 
 #	Perform indexing operations on filksong files
 
@@ -69,7 +69,7 @@ $subtitle = "";
 $notice = "";
 $license = "";
 $dedication = "";
-$category = "";
+$tags = "";
 $key = "";
 $timing = "";
 $created = "";
@@ -108,6 +108,9 @@ while ($ARGV[0]) {
     $timing = "";
 
     if ($infile !~ /\./) { $infile .= ".flk"; }
+
+    $infile = "../Lyrics/$infile" unless -f $infile;	
+
     open(STDIN, $infile);
     getTitle();
     close(STDIN);
@@ -117,11 +120,11 @@ while ($ARGV[0]) {
     }
 
     if ($title) {
-	$fn = $infile;
-	$fn =~ s/\.[^.]*$//;	# $fn is filename without extension
+	$infile =~ m|([^/]+)\.[^.]*$|;
+	$fn = $1;			   # $fn is filename without extension
 
-	$fns{$title} = $fn;	# fns maps title => fn
-	$titles{$fn} = $title;	# titles maps fn => title
+	$fns{$title} = $fn;			# fns maps title => fn
+	$titles{$fn} = $title;			# titles maps fn => title
 	$subtitles{$fn} = $subtitle;
 	$keys{$fn} = $key;
 	$times{$fn} = $timing;
@@ -184,14 +187,17 @@ sort @fnList;
 sort @titleList;
 sort @shortTitles;
 
-### === Dispatch on output format:
+### See if we're looking at Lyrics or Songs
+
+
+# We're now assuming that everything is in ../Songs/$fn/
 
 if ($outfmt eq "dsc") {		# .htaccess description lines
     for ($j = 0; $j < $i; $j++) {
 	$fn = $fnList[$j];
 	print "AddDescription \"", $titles{$fn};
 	if ($subtitles{$fn}) {print " ($subtitles{$fn})"; }
-	print "\" $fn.html\n";
+	print "\" $fn\n";
     }
 } elsif ($outfmt eq "html" && $tables) {	# HTML table
     print "<table class='songlist'>\n";
@@ -201,16 +207,19 @@ if ($outfmt eq "dsc") {		# .htaccess description lines
     print "<th align=left> Title </tr>\n ";
     for ($j = 0; $j < $i; $j++) {
 	$fn = $fnList[$j];
-	my $audio_o = (-f "$fn.ogg")? "<a href='$fn.ogg'>ogg</a>" : "";
-	my $audio_m = (-f "$fn.mp3")? "<a href='$fn.mp3'>mp3</a>" : "";
+	my $d = (-d $fn)? "" : "../Songs/";
+	my $audio_o =
+	    (-f "$d$fn/$fn.ogg")? "<a href='$d$fn/$fn.ogg'>ogg</a>" : "";
+	my $audio_m =
+	    (-f "$d$fn/$fn.mp3")? "<a href='$d$fn/$fn.mp3'>mp3</a>" : "";
 	print "<tr> ";
 	print "  <td valign='top'> $audio_o </td>";
 	print "  <td valign='top'> $audio_m </td>";
-	print "  <td valign='top'> <a href='$fn.pdf'>pdf</a>	\n";
-	print "  <td valign='top'> <tt>$fn</tt></td>\n";
+	print "  <td valign='top'> <a href='$d$fn/lyrics.pdf'>pdf</a>	\n";
+	print "  <td valign='top'> <tt><a href='$d$fn/'>$fn</a></tt></td>\n";
 	print "  <td valign='top'> $times{$fn}	</td>";
-	if ($ps) { print "  <td> <a href='$fn.ps'>[ps]</a>	\n"; }
-	print "  <td valign='top'> <a href='$fn.html'>", $titles{$fn};
+	if ($ps) { print "  <td> <a href='$d$fn.ps'>[ps]</a>	\n"; }
+	print "  <td valign='top'> <a href='$d$fn/'>", $titles{$fn};
 	if ($subtitles{$fn}) {print " <small>($subtitles{$fn})</small>"; }
 	print "</a> </td> </tr>\n";
     }
@@ -220,14 +229,17 @@ if ($outfmt eq "dsc") {		# .htaccess description lines
     print "<ol class='songlist'>\n";
     for ($j = 0; $j < $i; $j++) {
 	$fn = $fnList[$j];
+	my $d = (-d $fn)? "" : "../Songs/";
 	print "  <li> ";
 	if ($ps) { print "<a href='$fn.ps'>[ps]</a>	"; }
-	print "<a href='$fn.pdf'>[pdf]</a>	"; 
-	print "<a href='$fn.html'>", $titles{$fn};
+	print "<a href='$d$fn/lyrics.pdf'>[pdf]</a>	"; 
+	print "<a href='$d$fn/'>", $titles{$fn};
 	if ($subtitles{$fn}) {print " ($subtitles{$fn})"; }
 	print "</a> $times{$fn}";
-	my $audio_o = (-f "$fn.ogg")? "<a href='$fn.ogg'>ogg</a>" : "";
-	my $audio_m = (-f "$fn.mp3")? "<a href='$fn.mp3'>mp3</a>" : "";
+	my $audio_o
+	    = (-f "$d$fn/$fn.ogg")? "<a href='$d$fn/$fn.ogg'>ogg</a>" : "";
+	my $audio_m
+	    = (-f "$d$fn/$fn.mp3")? "<a href='$d$fn/$fn.mp3'>mp3</a>" : "";
 	print "$audio_o $audio_m\n";
     }
     print "</ol>\n";
@@ -259,7 +271,8 @@ sub getTitle {
 
 	elsif (/\\subtitle/)  	{ $subtitle = getContent($_); }
 	elsif (/\\key/)  	{ $key = getContent($_); }
-	elsif (/\\category/)	{ $category = getContent($_); }
+	elsif (/\\tags/)	{ $tags = getContent($_); }
+	elsif (/\\category/)	{ $tags = getContent($_); }
 	elsif (/\\dedication/)	{ $dedication = getContent($_); }
 	elsif (/\\license/) 	{ $license = getContent($_); }
 	elsif (/\\timing/)  	{ $timing = getContent($_); }

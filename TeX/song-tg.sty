@@ -1,7 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% SONG.STY %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%
 %%% Author: Stephen Savitzky
-%%%	    $Id: song.sty,v 1.11 2010-10-14 06:48:15 steve Exp $
+%%%	    $Id: song-tg.sty,v 1.1 2010-10-14 06:48:15 steve Exp $
 %%%
 %%% Song environment:
 %%%	\begin{song}{title}			% starts on a new page
@@ -38,9 +38,6 @@
 %%%	  \begin{refrain}
 %%%	    indented refrain with verse spacing
 %%%	  \end{refrain}
-%%%	  \begin{bridge}
-%%%	      indented (2em) bridge with verse spacing
-%%%	  \end{bridge}
 %%%	  \inset{1-line instructions in italics, indented 1em}
 %%%	\end{song}
 %%%	\tailnote{Note text at the bottom of the page}
@@ -119,8 +116,8 @@
 \def\SomeRightsReserved{Some Rights Reserved\footnote{\CcByNcSa}}
 \def\CcByNcSa{This work is licensed under a Creative Commons
 Attribution-Noncommercial-Share Alike 3.0 US License.}  
-\def\subtitle #1{\begin{center}\bf #1\end{center}}
-\def\license #1{\begin{center}\small #1\end{center}}
+\def\subtitle #1{\global\def\theSubtitle{#1}\begin{center}\bf #1\end{center}}
+\def\license #1{\global\def\theLicense{#1}\begin{center}\small #1\end{center}}
 \let\dedication=\Centered
 \def\ttto #1{{\sc ttto:} {\em #1\/}}
 
@@ -156,8 +153,9 @@ Attribution-Noncommercial-Share Alike 3.0 US License.}
 %%% The song and refrain environments
 %%%
 \def\song#1{\newpage
- \Centered{{\Large\bf#1}}
  \global\def\theSong{#1}
+ \global\def\theTitle{#1}
+ %\tagUC{{\Large\bf \theSong}}
  \global\def\theTags{}\global\def\theTiming{}
  \global\def\theCrDate{}\global\def\theKey{}
  \begingroup
@@ -180,14 +178,6 @@ Attribution-Noncommercial-Share Alike 3.0 US License.}
  \obeylines
  \parsep 0pt plus 1pt}\item[]}
 \let\endrefrain=\endlist
-
-\def\bridge{\list{}{\listparindent 2em
- \itemindent\listparindent
- \labelwidth 0pt
- \rightmargin 0pt
- \obeylines
- \parsep 0pt plus 1pt}\item[]}
-\let\endbridge=\endlist
 {\obeylines% We have to do this inside \obeylines to make it work right.
 \global\def\Indented#1{\begin{refrain}
  #1
@@ -330,6 +320,7 @@ Attribution-Noncommercial-Share Alike 3.0 US License.}
 \def\DefineSongTags{%
 \tagUL{\sl\theTags}\tagUR{\chord{\theKey}\makebox[.5in][r]{\sl\theTiming}}
 \tagLL{{\sl\theCrDate}}\tagLR{{\tt\theFile}}
+\tagUC{{\Large\bf\theSong}}%
 }
 \def\DefineBroadsideMarks{%
 \DefineSongTags\markUR{\sl\theSong}%
@@ -377,8 +368,8 @@ Attribution-Noncommercial-Share Alike 3.0 US License.}
 }
 
 \iffalse
-% $Log: song.sty,v $
-% Revision 1.11  2010-10-14 06:48:15  steve
+% $Log: song-tg.sty,v $
+% Revision 1.1  2010-10-14 06:48:15  steve
 % massive snapshot before converting to git
 %
 % Revision 1.10  2008-01-20 07:37:11  steve

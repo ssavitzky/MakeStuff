@@ -1,5 +1,5 @@
 ### Makefile template for concerts
-#	$Id: concert.make,v 1.5 2008-11-17 16:46:00 steve Exp $
+#	$Id: concert.make,v 1.6 2010-10-14 06:48:16 steve Exp $
 #
 #  This template is meant to be included in the Makefile of a "concert" 
 #	directory.  The usual directory tree looks like:
@@ -43,7 +43,7 @@
 
 BASEDIR		= $(subst /Tools/..,/,$(TOOLDIR)/..)
 #BASEDIR		= ../..
-SONGDIR 	= $(BASEDIR)/Songs
+SONGDIR 	= $(BASEDIR)/Lyrics
 TRACKDIR	= $(BASEDIR)/Tracks
 
 ## Directory to publish to
@@ -83,7 +83,7 @@ MP3S = $(patsubst %.wav, %.mp3, $(WAVS))
 .wav.ogg:
 	oggenc -Q -o $@ $(shell $(TRACKINFO) $(SONGLIST_FLAGS) --ogg $*)
 %.mp3: 
-	sox $(shell $(TRACKINFO) format=files $*) -w -t wav - | \
+	sox $(shell $(TRACKINFO) format=files $*) -b 16 -t wav - | \
 	  lame -b 64 -S $(shell $(TRACKINFO) $(SONGLIST_FLAGS)  \
 	   --mp3 title="$(TITLE)" $*) $@
 
@@ -94,6 +94,7 @@ MP3S = $(patsubst %.wav, %.mp3, $(WAVS))
 
 all::
 	@echo album $(MYNAME)/ '($(TITLE))'
+	@echo SONGDIR=$(SONGDIR)
 
 all::	$(MYNAME).toc $(MYNAME).list
 
@@ -206,5 +207,3 @@ try-cdr: $(MYNAME).toc
 	@[ `whoami` = "root" ] || (echo "cdrdao must be run by root" && false)
 	/usr/bin/time cdrdao write --simulate --device $(DEVICE) $(MYNAME).toc
 
-### Publish to the web
-#

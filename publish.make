@@ -1,5 +1,5 @@
 ### Makefile template for web publishing
-#	$Id: publish.make,v 1.4 2008-01-20 07:38:45 steve Exp $
+#	$Id: publish.make,v 1.5 2010-10-14 06:48:15 steve Exp $
 #
 #  This template is meant to be included in the Makefile of a working
 #	directory that has a corresponding web directory to publish to.
@@ -53,12 +53,14 @@ BASEDIR		= $(subst /Tools/..,/,$(TOOLDIR)/..)
 ### publish
 #
 
-.PHONY: publish published prepublish publishable
+.PHONY: publish published prepublish publishable pubdir
 publish: .publish.log
 published: .publish.log
 
 publishable: 
 	@echo $(PUBFILES)
+
+.publish.log:: $(PUBDIR)
 
 .publish.log:: prepublish
 .publish.log::  $(PUBFILES)
@@ -67,6 +69,14 @@ publishable:
 	    || ( rsync $$f $(PUBDIR); echo "  published $$f" );		\
 	) done
 	date >> .publish.log
+
+### This one makes the target directory. It's separate in case the tree
+#   turns out to be messed up, in which case making a target directory
+#   could turn out to be a disastrous mistake.
+
+pubdir: 
+	mkdir $(PUBDIR)
+
 
 # This line may not be needed
 prepublish:

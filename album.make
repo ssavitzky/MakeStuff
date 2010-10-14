@@ -1,5 +1,5 @@
 ### Makefile template for album directories
-#	$Id: album.make,v 1.16 2010-06-13 18:08:53 steve Exp $
+#	$Id: album.make,v 1.17 2010-10-14 06:48:16 steve Exp $
 #
 #  This template is meant to be included in the Makefile of an "album" 
 #	directory.  The usual directory tree looks like:
@@ -547,7 +547,8 @@ endif
 #
 #	Also note that we use "-w -t .wav" to force sox to make 16-bit
 #	.wav files; the -t is there because otherwise sox gets confused
-#	by filenames that have dots in them, like foo.bar.wav
+#	by filenames that have dots in them, like foo.bar.wav.  -w is
+#	no longer supported as of lenny/karmic
 #
 mytracks.make: $(TRACK_SOURCES) $(TRACKFILE)
 	echo '# mytracks.make' $(shell date)		 > $@
@@ -566,7 +567,7 @@ mytracks.make: $(TRACK_SOURCES) $(TRACKFILE)
 		echo "	"rsync  --copy-links -v -p '$$< $$@'	>> $@;	\
 		echo update-tracks:: Premaster/WAV/$$f.wav	>> $@;	\
 		echo Master/$$f.wav: Premaster/WAV/$$f.wav 	>> $@;	\
-		echo "	"sox '$$< -w -t cdr - |'			\
+		echo "	"sox '$$<  -t cdr - |'			\
 			 sox '-t cdr - -t .wav $$@'		>> $@;	\
 		echo update-master:: Master/$$f.wav	 	>> $@;	\
 	done
@@ -589,7 +590,7 @@ mytracks.make: $(TRACK_SOURCES) $(TRACKFILE)
 		echo "	"rsync  --copy-links -v -p '$$< $$@'	>> $@;	\
 		echo update-tracks:: Premaster/WAV/$$f.wav	>> $@;	\
 		echo Master/$$f.wav: Premaster/WAV/$$f.wav 	>> $@;	\
-		echo "	"sox '$$< -w -t cdr - |'			\
+		echo "	"sox '$$< -b 16 -t cdr - |'			\
 			 sox '-t cdr - -t .wav $$@'		>> $@;	\
 		echo update-master:: Master/$$f.wav	 	>> $@;	\
 	done
@@ -609,7 +610,7 @@ ifdef NO_PREMASTER
 %.ogg: 
 	oggenc -Q -o $@ $(shell $(TRACKINFO) --ogg title="$(TITLE)" $*)
 %.mp3: 
-	sox $(shell $(TRACKINFO) format=files $*) -w -t wav - | \
+	sox $(shell $(TRACKINFO) format=files $*) -b 16 -t wav - | \
 	  lame -b 64 -S $(shell $(TRACKINFO) $(SONGLIST_FLAGS)  \
 	   --mp3 title="$(TITLE)" $*) $@
 else
@@ -617,9 +618,9 @@ else
 	oggenc -Q -o $@ $(shell $(TRACKINFO) --ogg track=$< \
 	  title="$(TITLE)" $*)
 %.mp3: Premaster/WAV/%.wav
-	sox $< -w -t wav - | \
-	  lame -b 64 -S $(shell $(TRACKINFO) $(SONGLIST_FLAGS)  \
-	   --mp3 track=- title="$(TITLE)" $*) $@
+	sox $< -t wav -b 16 - | \
+	lame -b 64 -S $(shell $(TRACKINFO) $(SONGLIST_FLAGS)  \
+	   --mp3 title="$(TITLE)" $*) $@
 endif
 
 # The rule for oggs and mp3s used to use mytracks.make in, e.g.,

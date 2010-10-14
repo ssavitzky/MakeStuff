@@ -1,7 +1,8 @@
-<h2><a href="../" >Steve_Savitzky</a>
+<h2><a href="../" >Steve.Savitzky.net</a>
   / <a href="./" ><code>Tools</code></a> /</h2>
 <p> <a href="../">[..]</a>
     <a href="#files">[files]</a></p>
+<link rel="stylesheet" type="text/css" href="/style.css" />
 
 <p> Unlike most other directories on this website, where the
     <code>HEADER.html</code> file is hidden from casual browsing by an
@@ -42,6 +43,9 @@
        format suitable for use with either <code>boilermaker.pl</code> or
        <code>replace-template-file.pl</code>.
   </dd>
+  <dt> <a href="scripts/" >scripts</a> </dt>
+  <dd> Short scripts and fragments, mostly one-shot mass fixups.  Customize as
+       needed.
 </dl>
 
 <h3>Makefile templates</h3>
@@ -49,14 +53,11 @@
   <dt> <a href="album.make"><code>album.make</code></a>
   </dt>
   <dd> Makefile template for "Album" subdirectories.  Has targets for things
-       like burning CD-Rs and managing track lists.
-  </dd>
-  <dt> <a href="concert.make"><code>concert.make</code></a>
-  </dt>
-  <dd> Makefile template for "Concert" subdirectories.  Basically similar to
-       <code>album.make</code> except that all the audio files are local to
-       the directory instead of being pulled from <code><a href="../Tracks/"
-       >Tracks</a></code>. 
+       like burning CD-Rs and managing track lists.  Has since acquired
+       everything it needs to replace the old <code>concert.make</code>, so it
+       can now handle audio files in any reasonable location, though
+       <code>./Tracks</code> is preferable.  Builds a stand-alone web "album"
+       in <code>./Rips</code>.
   </dd>
   <dt> <a href="publish.make"><code>publish.make</code></a>
   </dt>
@@ -178,5 +179,5 @@
 
 <hr />
 <b>Copyright &copy; 2005 HyperSpace Express</b><br />
-<b>$Id: HEADER.html,v 1.12 2007-12-19 17:38:19 steve Exp $</b>
+<b>$Id: HEADER.html,v 1.13 2010-10-14 06:48:16 steve Exp $</b>
 <a name="files"><hr></a>

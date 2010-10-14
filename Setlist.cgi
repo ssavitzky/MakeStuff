@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: Setlist.cgi,v 1.6 2007-05-20 17:44:27 steve Exp $
+# $Id: Setlist.cgi,v 1.7 2010-10-14 06:48:16 steve Exp $
 # Setlist.cgi [options] infile...	make the title index
 # .../Setlist.cgi from web.		make a setlist
 #	<title>make a setlist</title>
@@ -126,7 +126,7 @@ $subtitle = "";
 $notice = "";
 $license = "";
 $dedication = "";
-$category = "";
+$tags = "";
 $key = "";
 $timing = "";
 $created = "";
@@ -523,7 +523,8 @@ sub getTitle {
 
 	elsif (/\\subtitle/)  	{ $subtitle = getContent($_); }
 	elsif (/\\key/)  	{ $key = getContent($_); }
-	elsif (/\\category/)	{ $category = getContent($_); }
+	elsif (/\\category/)	{ $tags = getContent($_); }
+	elsif (/\\tags/)	{ $tags = getContent($_); }
 	elsif (/\\dedication/)	{ $dedication = getContent($_); }
 	elsif (/\\license/) 	{ $license = getContent($_); }
 	elsif (/\\timing/)  	{ $timing = getContent($_); }
