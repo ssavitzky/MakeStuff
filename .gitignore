@@ -1,0 +1,59 @@
+# Top-level .gitignore file
+
+*.[oa]
+*~
+*.bak
+*.BAK
+*.old
+
+\#*
+.#*
+tags 
+TAGS 
+*.ps
+*.pdf
+
+#For reference, here's the list for rsync --cvs-exclude:
+# RCS  SCCS  CVS  CVS.adm   RCSLOG   cvslog.*   tags   TAGS
+# .make.state  .nse_depinfo *~ #* .#* ,* _$* *$ *.old *.bak
+# *.BAK *.orig *.rej .del-* *.a *.olb *.o *.obj *.so  *.exe
+# *.Z *.elc *.ln core .svn/
+
+CVS
+
+*.a 
+*.olb 
+*.o 
+*.obj 
+*.so  
+*.exe
+*.Z 
+*.elc 
+*.ln 
+core 
+.svn
+
+# Music-specific stuff.  
+# Ignore huge files and directories containing huge files
+
+Tracks
+Premaster
+Master
+
+WAV
+*.aup
+*_data
+*.wav
+
+*.ogg
+*.mp3
+
+# generated files
+# songlist.txt
+0[Ii]ndex*
+1[Ii]ndex*
+
+# These are generated song files in Lyrics directories
+# suggested.txt isn't, but it's been moved to tempered-glass.info
+
+#*.txt

@@ -1,0 +1,74 @@
+\begin{song}{The World Inside the Crystal}
+\cvsid{$Id: world.flk,v 1.4 2001/04/11 14:37:12 steve Exp $}
+\notice{\copyright 1985 Stephen Savitzky.
+	All rights reserved.}
+\tags{computer}
+\key{A\min}
+\timing{2:15}
+
+\begin{note}
+  \link{http://electricpenguin.com/ovff/pegasus.html}{1997 Pegasus Award} %
+  \link{http://electricpenguin.com/ovff/oldpeg.html}{winner: Best Science Song.}
+  \link{http://artists.mp3s.com/artists/22/kathy\_mar.html}{Kathy Mar's performance on mp3.com}
+
+	Here is where the mild-mannered hacker takes off his disguise
+	and stands revealed as a wizard of great power---because, you see,
+	there {\em is} a world where magic really works\ldots
+\end{note}
+
+\begin{twocolumns}
+        [A\min]Beside the world we [C]live in  
+        Ap[G]art from [C]day and [E\min]night
+        Is a world ablaze with [A\min]wonder
+        Of [E\min]magic and del[A\min]ight
+\\
+        Like a magic crystal mirror, 
+        My computer lets me know
+        Of the other world within it
+        Where my body cannot go.
+\begin{refrain}         
+            [D\min]You can only see the shadows
+            Of [A\min]electrons on [G]a [A\min]screen
+            From the [D\min]world inside the [A\min]crystal
+            That no [E\min]human eye has [A\min]seen.
+\end{refrain}
+\\
+        The computer is a gateway
+        To a world where magic rules
+        Where the only law is logic
+        Webs of words the only tools
+\\
+        Where we play with words and symbols
+        And creation is the game
+        For our symbols have the power
+        To become the things they name.
+\\
+\inset{refrain}
+\\
+        Now you who do not know this world
+        Its dangers or its joys
+        You take the things we build there
+        And you use them as your toys.
+\\
+        You trust them with your fortunes,
+        Or let them guard your lives.
+        From the chaos of creation
+        Just their final form survives.
+\\
+\inset{refrain}
+\\
+        Call us hackers, call us wizards,
+        With derision or respect,
+        Still our souls are marked by something
+        That your labels can't affect.
+\\
+        Though our words are touched by strangeness
+        There is little we can say.
+        You would only hear the echo
+        Of a music far away.
+\\
+\inset{refrain}
+\vfiller{7}
+
+\end{twocolumns}
+\end{song}
