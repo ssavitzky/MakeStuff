@@ -717,21 +717,23 @@ $(SHORTNAME).$(yyyymmdd).tracks: $(SHORTNAME).tracks
 #	Make masters at 4 or lower.  verify with qpxtool (plextor drives) or
 #	readom -c2scan dev=ATA:1,1,0
 #
-SPEED=8
+# 	Note that it is no longer necessary to specify a device
+#
+#SPEED=--speed 8
 .PHONY: cdr
 cdr: $(BASEPFX)toc
 	@[ `whoami` = "root" ] || (echo "cdrdao should be run by root")
-	/usr/bin/time $(CDRDAO) write --eject --device $(DEVICE) \
-	  --speed $(SPEED) $(BASEPFX)toc
+	/usr/bin/time $(CDRDAO) write --driver generic-mmc-raw --eject \
+	  $(SPEED) $(BASEPFX)toc
 
 .PHONY: try-cdr
 try-cdr: $(BASEPFX)toc
 	@[ `whoami` = "root" ] || (echo "cdrdao should be run by root")
-	/usr/bin/time $(CDRDAO) write --simulate --device $(DEVICE) \
+	/usr/bin/time $(CDRDAO) write --driver generic-mmc-raw --simulate \
 	  $(BASEPFX)toc
 
 .PHONY: tao
 tao: 	
 	@[ `whoami` = "root" ] || (echo "wodim should be run by root")
-	$(WODIM) -pad -tao dev=$(DEVICE) -audio $(TRACK_DATA)
+	$(WODIM) -pad -tao -audio $(TRACK_DATA)
 
