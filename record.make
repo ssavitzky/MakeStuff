@@ -1,19 +1,16 @@
-### Makefile template for album directories
-#	$Id: album.make,v 1.17 2010-10-14 06:48:16 steve Exp $
+### Makefile template for sound recordings
 #
-#  This template is meant to be included in the Makefile of an "album" 
-#	directory.  The usual directory tree looks like:
+# This template is meant to be symlinked to the Makefile of an "album" 
+#   "concert", or "practice" directory.  It automagically searches
+#   up the directory tree to find the Tools, Lyrics, and Songs directories. 
 #
-#  top/
-#	Songs		song information (.flk files)
-#	Tracks		recorded tracks; a subdirectory per song
-#	Albums		a subdirectory for each album
-#	Tools		(this directory) scripts and makefile templates
+# It can usually do a good job of figuring out good defaults, but just in
+#   case it looks for a "record.conf" and includes it if present; this is
+#   most useful for albums.
 #
-#  The album directory contains a file called songs or [name].tracks with
-#  the shortnames of the album's tracks.  The most recent .wav file
-#  in each track directory is used.  (Eventually one ought to be able to
-#  specify the take, but that would require substantial refactoring.)
+# It allows multiple sets, sessions, versions, or whatever, each with a 
+#   .songs file.  (Unlike its predecessors, it does not allow a default
+#   "songs" file; this avoids having to make duplicate rules for it.)
 
 ### Open Source/Free Software license notice:
  # The contents of this file may be used under the terms of the GNU
@@ -24,13 +21,13 @@
 
 ### Usage:
 #
-#   Variables:
-#	TOOLDIR		the directory containing this file
+#   Variables: (use make.config to override the defaults)
+#
 #	SHORTNAME	the shortname (directory name) of the album
 #	LONGNAME	the name of the album's collection directory:
 #			(title with words capitalized and separated by _)
 #	TITLE		the full, plaintext title of the album 
-#			  special characters must be quoted for use in "..."
+#			special characters must be quoted for use in "..."
 #
 #   Targets:
 #	all		makes the TOC and track-list files
@@ -41,30 +38,71 @@
 
 ### Site-dependent variables:
 
-## Directories:
-#	CAUTION: the really critical one here is SONGDIR; if it doesn't
-#		 have the .flk files in it, you're hosed.  These days it's
-#		 actually $(BASEDIR)/Lyrics; .../Songs has a directory
-#		 per song, but no .flk or .ps files.
 
-BASEDIR		:= $(subst /Tools/..,/,$(TOOLDIR)/..)
-#BASEDIR		= ../..
+### Figure out where we are:
+
+MYPATH := $(shell pwd -P)
+MYNAME := $(shell basename $(MYPATH))
+MYDIR  := $(shell dirname  $(MYPATH))
+
+# Look up the directory tree until we find Tools.  That's TOOLDIR.
+# Its parent is BASEDIR.
+
+BASEDIR := $(shell d=$(MYDIR); 					\
+		  while [ ! -d $$d/Tools ] && [ ! $$d = / ]; do	\
+			d=`dirname $$d`;			\
+		  done; echo $$d)
+
+TOOLDIR := $(BASEDIR)/Tools
+
+# Make sure we actually found Tools, because we can't proceed without it.
+
+ifeq ($(BASEDIR),/)
+     $(error Cannot find Tools)
+endif
+
+### At this point, we could move all the default-finding stuff, rules,
+#   and so on into separate include files.
+
+# Now look for Lyrics, which has all the .flk (metadata) files in it.
+
 ifeq ($(shell [ -d ./Lyrics ] && echo Lyrics), Lyrics)
-SONGDIR 	:= ./Lyrics
+  LYRICDIR := ./Lyrics
 else
-SONGDIR 	:= $(BASEDIR)Lyrics
+  LYRICDIR := $(shell d=$(MYDIR); 					\
+		  while [ ! -d $$d/Lyrics ] && [ ! $$d = / ]; do	\
+			d=`dirname $$d`;				\
+		  done; echo $$d/Lyrics)
 endif
-LYRICDIR	= $(SONGDIR)
+ifeq ($(shell [ -d $(LYRICDIR) ] || echo notfound),notfound)
+     $(error Cannot find Lyrics)
+endif
 
-ifeq ($(shell [ -f make.config ] || echo noconfig),)
-	include $(shell /bin/pwd)/make.config
+# Figure out the default title.  
+#   practice session - the whole path looks like a date
+#   concert - a prefix of the path looks like a date
+#   "album" - anything else
+
+
+
+
+### See whether we have a record.conf file, and include it if we do.
+#   Putting it here allows for overriding the defaults
+
+ifeq ($(shell [ -f record.conf ] || echo noconf),)
+     $(info record.conf found)
+     include $(shell /bin/pwd)/record.conf
 endif
+
+# look for Tracks.  
 
 ifeq ($(shell [ -d ./Tracks ] || echo notracks),)
-	TRACKDIR	:= ./Tracks
+     TRACKDIR	:= ./Tracks
 else
-	TRACKDIR	:= $(BASEDIR)/Tracks
+     $(warn No Tracks directory:  things could get weird.)
 endif
+
+##############
 
 ## Directory where ogg and mp3 files end up. 
 #	It's essentially a stand-alone web album
@@ -105,7 +143,7 @@ DEVICE		= ATA:1,1,0
 
 ###### Rules ##########################################################
 
-### Things are changing.  
+### The times, they are a'changing.  
 #
 #	Prior to 2008 we used $(SHORTNAME).tracks for the tracklist 
 #	of a CD.  Concerts were handled using concert.make.  Around
@@ -113,56 +151,29 @@ DEVICE		= ATA:1,1,0
 #	main songlist, and %.songs for secondary lists such as 
 #	individual sessions or concerts in a field recording directory.
 #
-#	At this point the plan is to _continue_ using .tracks for
-#	a CD tracklist, and to insist on having only one per directory.
-#	Similarly we'll use Rips for the rips of the CD's tracks.
-#	Now we use songs as the main song list, and prefix.songs in
-#	field recordings to break out individual concerts or sessions.
+#	Now, starting in late 2011, we use only %.songs; this means that
+#	we no longer need duplicate rules to handle "songs" and so on.
 #
-# 	Similarly we now want rips %.rips where we used to have Rips; 
-#	it will probably be best to save Rips for the CD.
+#	From %.songs, we generate corresponding %.oggs and %.mp3s 
+#	directories numbered symlinks to the corresponding compressed
+#	audio files.
 #
-#	We blithely continue to lump all metadata and WAV files into
-#	the Master, Premaster, and Tracks; this makes sense because
-#	field recordings in Tracks often mix things (like concerts or
-#	two-shots) that we want to split later.  
+#	Note that song names must be unique, allowing a single song to 
+#	be part of several playlists.  This lets us keep compressed
+#	files in the current directory, and continue keeping single 
+#	Tracks, Master, and Premaster directories.  If there are multiple
+#	takes on a song, each should have a suffix separated by "--". 
 #
-#	For the moment all .ogg and .mp3 files are in the main directory;
-#	this makes for shorter pathnames, but eventually they need to 
-#	be symlinks into the various .rips directories.
-#
-#	We need a separate set of rules for, e.g., songs and %.songs
+#	We no longer require a Premaster/WAV 
 
-
-### See whether we have a CD, indicated by a *.tracks or songs file
-#	The .tracks file is *only* used for the CD tracks; it's possible
-#	to have both a .tracks file and a .songs file.
-#	It is an error to have both [shortname].tracks and songs.
-
-
-TRACKFILE = $(wildcard songs $(SHORTNAME).tracks)
-ifneq ($(TRACKFILE),)
-
-RELEASED = 1
-
-### The following definitions are used for "albums", where we're mastering
-#	a single CD and we have a single primary list of tracks.
-
-# Track list file.
-#   TRACKS= @<file> is the shortcut we use for TrackInfo.pl
-
-TRACKS	  = @$(TRACKFILE)
-
-# Base prefix for derived files:
-ifneq ($(TRACKFILE),songs)
-BASEPFX := $(SHORTNAME).
-endif
+# Get the filenames of all the .song files
+SONGFILES := $(wildcard *.songs)
 
 # Get the shortnames of all the songs from $(TRACKFILE)
 #	Ignore comment lines.  $(SONGS) has *extended* shortnames
 #	that include the prefixes and suffixes of concert tracks.
 #
-SONGS := $(shell grep -v '\#' $(TRACKFILE))
+SONGS := $(foreach f,$(SONGFILES),$(shell grep -v '\#' $(f)))
 
 # $(SHORTNAMES) is the songfile shortnames that we need to select
 #	the appropriate .flk files in $(SONGDIR) for dependencies.
@@ -202,20 +213,12 @@ TRACK_DATA = $(shell $(TRACKINFO) format=cd-files $(TRACKS))
 
 TRACKLISTS = $(BASEPFX)short.list $(BASEPFX)files $(BASEPFX)long.list \
 	$(BASEPFX)short.html $(BASEPFX)long.html $(BASEPFX)extras.html
-endif ### CD
 
 
 ### Look for songs and *.songs.
 
-SONGFILES=$(wildcard *songs)
+SONGFILES=$(wildcard *.songs)
 ifneq ($(SONGFILES),,)
-
-
-ifeq ($(wildcard songs),songs)  # compute targets for the default, "songs"
-  SONGLISTS := short.list long.list short.html long.html extras.html
-  SUBMAKES := mytracks.make
-  RIPDIRS := Rips
-endif
 
 ifneq ($(wildcard *.songs),)	# compute targets for *.songs
   DOTSONGS=$(wildcard *.songs)
@@ -737,3 +740,39 @@ tao:
 	@[ `whoami` = "root" ] || (echo "wodim should be run by root")
 	$(WODIM) -pad -tao -audio $(TRACK_DATA)
 
+
+######################################################################
+
+### Web upload location and excludes:
+#	Eventually HOST ought to be in an include file, e.g. WURM.cf
+
+HOST	 = savitzky@savitzky.net
+EXCLUDES = --exclude=Tracks --exclude=Master --exclude=Premaster
+
+# DOTDOT is the path to this directory on $(HOST)
+#   === for now, fake it knowing that /vv -> ~/vv on savitzky.net
+
+DOTDOT = .$(MYDIR)
+
+### Greatly simplified put target because we're using rsync to put the
+#	whole subtree.  
+
+.phony: put
+put: all
+	rsync -a -z -v $(EXCLUDES) --delete ./ $(HOST):$(DOTDOT)/$(MYNAME)
+
+
+#######################################################################
+
+### Test - list important variables
+
+.phony: test
+V1 := BASEDIR LYRICDIR MYNAME 
+V2 := LONGNAME TITLE
+V3 := HOST DOTDOT 
+test:
+	@echo $(foreach v,$(V1), $(v)=$($(v)) )
+	@echo $(foreach v,$(V2), $(v)=$($(v)) )
+	@echo $(foreach v,$(V3), $(v)=$($(v)) )
+	@echo SONGFILES: $(SONGFILES)
+	@echo SONGS: $(SONGS)
