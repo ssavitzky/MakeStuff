@@ -78,12 +78,30 @@ ifeq ($(shell [ -d $(LYRICDIR) ] || echo notfound),notfound)
      $(error Cannot find Lyrics)
 endif
 
-# Figure out the default title.  
-#   practice session - the whole path looks like a date
+# Figure out the default title from the path between here and BASEDIR.  
+#   session - the whole path looks like a date
+#	      could be a practice or a recording session.  Don't care.
 #   concert - a prefix of the path looks like a date
 #   "album" - anything else
+#
+#   We can also handle paths like yyyy/mm-dd/, and day ranges like 
+#   yyyy/mm/dd-dd
+#
 
+DATEX = m|/([0-9][0-9][0-9][0-9])/([0-9][0-9])[-/]([0-9][0-9](-[0-9][0-9])?)|
+DATE := $(shell perl -e '"$(MYPATH)" =~ $(DATEX) && print "$$1/$$2/$$3";')
 
+EVNAME := $(shell perl -e '"$(MYNAME)" =~ /^[-0-9]*(.*)$$/; print "$$1";')
+
+ifeq ($(strip $(DATE)),,)
+  TITLE = $(MYNAME)
+else
+ifeq ($(EVNAME),,)
+  TITLE = Session on $(DATE)
+else
+  TITLE = $(EVNAME)
+endif
+endif
 
 
 ### See whether we have a record.conf file, and include it if we do.
@@ -94,6 +112,7 @@ ifeq ($(shell [ -f record.conf ] || echo noconf),)
      include $(shell /bin/pwd)/record.conf
 endif
 
+
 # look for Tracks.  
 
 ifeq ($(shell [ -d ./Tracks ] || echo notracks),)
@@ -103,14 +122,6 @@ else
 endif
 
 ##############
-
-## Directory where ogg and mp3 files end up. 
-#	It's essentially a stand-alone web album
-#
-RIPS=Rips
-
-## Directory to publish to === doesn't seem to be used now
-#PUBDIR		= ../PUBDIR/$(MYNAME)
 
 
 ### Programs
@@ -134,11 +145,6 @@ GENISOIMAGE = $(shell if [ -x /usr/bin/genisoimage ]; \
 
 CDRDAO = /usr/bin/cdrdao
 
-## Devices (for burning):
-#	For a 2.4 kernel with one IDE-SCSI device, use DEVICE=0,0,0
-#	For a 2.6 kernel with the burner on /dev/hdd, use ATA:1,1,0
-DEVICE		= ATA:1,1,0
-
 ### From here on it's constant ###
 
 ###### Rules ##########################################################
@@ -155,7 +161,7 @@ DEVICE		= ATA:1,1,0
 #	we no longer need duplicate rules to handle "songs" and so on.
 #
 #	From %.songs, we generate corresponding %.oggs and %.mp3s 
-#	directories numbered symlinks to the corresponding compressed
+#	directories, with numbered symlinks to the corresponding 
 #	audio files.
 #
 #	Note that song names must be unique, allowing a single song to 
@@ -190,8 +196,8 @@ PRINT_FILES := $(shell for f in $(SHORTNAMES); do \
 		[ -f $(SONGDIR)/$$f.ps ] && echo $(SONGDIR)/$$f.ps; \
 		done)
 
-OGGS = $(shell for f in $(SONGS); do echo $$f.ogg; done)
-MP3S = $(shell for f in $(SONGS); do echo $$f.mp3; done)
+OGGS = $(addsuffix .ogg, $(SONGS))
+MP3S = $(addsuffix .mp3, $(SONGS))
 
 # LOCAL_METADATA -- the local .flk files mainly used for local descriptions,
 #	performers, and so on.
@@ -215,12 +221,10 @@ TRACKLISTS = $(BASEPFX)short.list $(BASEPFX)files $(BASEPFX)long.list \
 	$(BASEPFX)short.html $(BASEPFX)long.html $(BASEPFX)extras.html
 
 
-### Look for songs and *.songs.
+### Look for *.songs.
 
 SONGFILES=$(wildcard *.songs)
 ifneq ($(SONGFILES),,)
-
-ifneq ($(wildcard *.songs),)	# compute targets for *.songs
   DOTSONGS=$(wildcard *.songs)
   SONGLISTS += \
 	$(subst .songs,.names, $(DOTSONGS)) \
@@ -235,8 +239,6 @@ ifneq ($(wildcard *.songs),)	# compute targets for *.songs
 
   SUBMAKES += $(subst .songs,.make, $(DOTSONGS))
   RIPDIRS += $(subst .songs,.rips, $(DOTSONGS)) 
-endif
-
 
 endif
 
@@ -247,6 +249,14 @@ endif
 all::
 	@echo album $(SHORTNAME)/ "($(TITLE))"
 	@echo performer: $(PERFORMER)
+
+reindex::
+	rm -f *.names *.files *.list 
+	rm -f *.short.html *.long.html *.extras.html
+
+clean::
+	rm -f *.names *.files *.list 
+	rm -f *.short.html *.long.html *.extras.html
 
 ifdef RELEASED
 all::	$(TRACKLISTS)
@@ -287,6 +297,8 @@ re-list:
 
 ### Table of contents for CD-R:
 #	Standard target: toc-file
+
+# === needs work - there may be multiple toc files now
 
 .PHONY:	toc-file
 toc-file: $(BASEPFX)toc
@@ -383,53 +395,6 @@ list-songs:
 	@echo $(SONGS)
 
 
-### Rules for things that depend on $(TRACKFILE)
-
-ifneq ($(TRACKFILE),)
-$(BASEPFX)short.list: $(TRACKFILE)
-	$(TRACKINFO) $(TRACKLIST_FLAGS) format=list.text -t -T $(TRACKS) > $@
-
-$(BASEPFX)long.list: $(TRACKFILE)
-	$(TRACKINFO) $(TRACKLIST_FLAGS) --long --credits  -T \
-		format=list.text $(TRACKS) > $@
-
-$(BASEPFX)credits.list: $(TRACKFILE)
-	$(TRACKINFO)  --credits  -T \
-		format=list.text $(TRACKS) > $@
-
-$(BASEPFX)long.html: $(TRACKFILE)  # $(FLK_FILES)
-	$(TRACKINFO) $(TRACKLIST_FLAGS) --long --credits -t \
-		format=list.html $(TRACKS) > $@
-
-$(BASEPFX)short.html: $(TRACKFILE)  # $(FLK_FILES)
-	$(TRACKINFO) $(TRACKLIST_FLAGS) format=list.html -t $(TRACKS) > $@
-
-# [name].extras.html includes links to the sound files; it's used
-#	most notably to provide "extra features" for people who have
-#	preordered or purchased albums.
-$(BASEPFX)extras.html: $(TRACKFILE)  # $(FLK_FILES)
-	$(TRACKINFO) $(TRACKLIST_FLAGS) --long  --credits \
-		--sound format=list.html \
-		$(TRACKS) > $@
-
-$(BASEPFX)files: $(TRACKFILE)
-	@$(TRACKINFO) format=files $(TRACKS) > $@
-
-$(BASEPFX)names: $(TRACKFILE)
-	grep -v '^#' $< | grep -ve '^$$' > $@
-
-Rips: $(BASEPFX)names $(OGGS) $(MP3S)
-	[ -d $@ ] || mkdir $@
-	rm -f $@/[0-9][0-9]-*
-	make -f mytracks.make
-	$(TRACKINFO) format=symlinks dir=$@ @$<
-
-re-rip: $(BASEPFX)names  $(OGGS) $(MP3S)
-	[ -d Rips ] || mkdir Rips
-	rm -f Rips/[0-9][0-9]-*
-	make -f mytracks.make
-	$(TRACKINFO) format=symlinks dir=Rips @$<
-endif
 
 ### Rules for things derived from %.songs
 
@@ -483,7 +448,7 @@ endif
 
 
 ## Print lyrics either in leadsheet (single-page) or songbook format
-##	use print-songbook for now with TGl's fully-chorded lead sheets
+##	use print-songbook with TGl's fully-chorded lead sheets
 .PHONY: print-lyrics print-songbook
 
 print-lyrics: $(PRINT_FILES)
@@ -491,29 +456,6 @@ print-lyrics: $(PRINT_FILES)
 
 print-songbook: $(PRINT_FILES)
 	@for f in $(PRINT_FILES); do lpr $$f; done 
-
-## Move track directories from ../../Tracks to ./Tracks
-#	this is to move to the new tree layout in which each album is 
-#	self-contained. 
-.PHONY: snarf-tracks
-snarf-tracks:	Tracks
-	@for d in $(SONGS); do 						\
-	    if [ ! -d Tracks/$$d ] && [ -d ../../Tracks/$$d ]; then	\
-		echo moving ../../Tracks/$$d to Tracks/;		\
-		mv ../../Tracks/$$d Tracks/;				\
-	    fi								\
-	done
-
-.PHONY: list-misplaced-tracks
-list-misplaced-tracks:	
-	@for d in $(SONGS); do 						\
-	    if [ ! -d Tracks/$$d ] && [ -d ../../Tracks/$$d ]; then	\
-		echo should move ../../Tracks/$$d to Tracks/;		\
-	    fi								\
-	done
-
-Tracks: 
-	mkdir Tracks
 
 
 ### Update Premaster/WAV by importing track data
@@ -527,18 +469,15 @@ Tracks:
 #	original wav files are local to this directory.  This is indicated
 #	by setting the makefile variable NO_PREMASTER
 
-.PHONY: update-tracks update-master 
-update-tracks: Premaster Premaster/WAV mytracks.make
-	$(MAKE) -f mytracks.make update-tracks
-	touch Premaster/WAV
+# === work needed
 
-ifdef NO_PREMASTER
-update-master: $(TRACK_SOURCES) $(TRACKFILE) Master
-	rsync  --copy-links -v -p $(TRACK_SOURCES) Master
-else
-update-master: Premaster Premaster/WAV mytracks.make Master
+.PHONY: update-tracks update-master 
+update-tracks: Premaster mytracks.make
+	$(MAKE) -f mytracks.make update-tracks
+	touch Premaster
+
+update-master: Premaster Premaster Master
 	$(MAKE) -f mytracks.make update-master
-endif
 
 ### Make ogg and mp3 files and other things that depend on tracks.
 #
@@ -553,29 +492,7 @@ endif
 #	by filenames that have dots in them, like foo.bar.wav.  -w is
 #	no longer supported as of lenny/karmic
 #
-mytracks.make: $(TRACK_SOURCES) $(TRACKFILE)
-	echo '# mytracks.make' $(shell date)		 > $@
-	@echo 'TRACKINFO = $(TRACKINFO)'			>> $@
-	@echo 'TITLE	 = '"$(TITLE)"				>> $@
-	@echo 'TOOLDIR	 = $(TOOLDIR)'				>> $@
-	@echo 'SONGS	 = $(SONGS)'				>> $@
-	@echo 'include $$(TOOLDIR)/track-depends.make'		>> $@
-	@echo 'all:: oggs mp3s'					>> $@
-	@echo 'oggs: $$(OGGS)'					>> $@
-	@echo 'mp3s: $$(MP3S)'					>> $@
-	@for f in $(SONGS); do	\
-		tf=`$(TRACKINFO) format=files $$f`;			\
-		pf=Premaster/WAV/$$f.wav;				\
-		echo Premaster/WAV/$$f.wav: $$tf	 	>> $@;	\
-		echo "	"rsync  --copy-links -v -p '$$< $$@'	>> $@;	\
-		echo update-tracks:: Premaster/WAV/$$f.wav	>> $@;	\
-		echo Master/$$f.wav: Premaster/WAV/$$f.wav 	>> $@;	\
-		echo "	"sox '$$<  -t cdr - |'			\
-			 sox '-t cdr - -t .wav $$@'		>> $@;	\
-		echo update-master:: Master/$$f.wav	 	>> $@;	\
-	done
 
-### Now do *.make for all the prefixes
 %.make: %.songs 
 	echo '# $@' $(shell date)		 	> $@
 	@echo 'TRACKINFO = $(TRACKINFO)'			>> $@
@@ -603,50 +520,41 @@ mytracks.make: $(TRACK_SOURCES) $(TRACKFILE)
 # 		echo "	"shntool pad $$@			>> $@;	\
 
 # make ogg and mp3 files
-#	We now make them from the normalized versions in Premaster/WAV
+#	We now make them from the normalized versions in Premaster
 #	unless the make variable NO_PREMASTER is defined.  The NO_PREMASTER
 #	versions only work in, e.g., concert directories where the .wav
-#	files are local or locally-symlinked.  Otherwise we'd have to
-#	put the dependencies in mytracks.make.
+#	files are local or locally-symlinked.  
 
-ifdef NO_PREMASTER
-%.ogg: 
-	oggenc -Q -o $@ $(shell $(TRACKINFO) --ogg title="$(TITLE)" $*)
-%.mp3: 
-	sox $(shell $(TRACKINFO) format=files $*) -b 16 -t wav - | \
-	  lame -b 64 -S $(shell $(TRACKINFO) $(SONGLIST_FLAGS)  \
-	   --mp3 title="$(TITLE)" $*) $@
-else
-%.ogg:  Premaster/WAV/%.wav
+%.ogg: Premaster/%.wav
 	oggenc -Q -o $@ $(shell $(TRACKINFO) --ogg track=$< \
 	  title="$(TITLE)" $*)
-%.mp3: Premaster/WAV/%.wav
+%.mp3: Premaster/%.wav
 	sox $< -t wav -b 16 - | \
 	lame -b 64 -S $(shell $(TRACKINFO) $(SONGLIST_FLAGS)  \
-	   --mp3 title="$(TITLE)" $*) $@
-endif
+	   --mp3  title="$(TITLE)" $*) $@
 
-# The rule for oggs and mp3s used to use mytracks.make in, e.g.,
-#	$(MAKE) -f mytracks.make oggs
-#
-#	This is no longer necessary, since we make them from the 
-#	(presumably normalized and tweaked) files in Premaster/WAV
-#	using the rules above, or from .wav files (or symlinks) in
-#	this directory.
 
-.PHONY: oggs mp3s mytracks
+.PHONY: oggs mp3s
 oggs:  $(OGGS)
 
 mp3s:  $(MP3S)
 
-mytracks: mytracks.make
+clean::
+	rm -f *.ogg *.mp3
 
-### Master directory
+### Make the subdirectories:
+
+# Tracks directory
+
+Tracks: 
+	mkdir Tracks
+
+# Master directory
 
 Master:
 	mkdir Master
 
-### Premaster directory
+# Premaster directory
 #	At some point we may need to build a Premaster/Makefile; 
 #	it's certainly necessary when there's an ISO subdirectory.
 #	wing it for now.
@@ -654,20 +562,7 @@ Master:
 Premaster:
 	mkdir Premaster
 
-#   Premaster/WAV contains the (typically 32-bit) .wav files that are
-#	normalized and converted to 16-bit files (in Master) for putting
-#	on the CD.  Now that the default is to export 32-bit files from
-#	Audacity, we have to make the intermediate files this way.
-#
-#	We don't make update-tracks automatically except to initially
-#	populate the directory.
-#
-
-Premaster/WAV:
-	mkdir Premaster/WAV
-	[ -f mytracks.make ] && make update-tracks
-
-#   Normalization:
+# Normalization:
 # 	Probably don't want the --mix flag on normalize.
 #	That would make bring everything to the same average level,
 #	rather than maximizing each track separately.  
@@ -676,16 +571,19 @@ Premaster/WAV:
 
 # === no good way to do exception parameters.  perl script?  
 # === $(MAKE) normalize-fixup?
-Premaster/WAV/normalized: $(wildcard Premaster/WAV/*.wav)
+Premaster/normalized: $(wildcard Premaster/*.wav)
 	for f in $?; do normalize-audio  $$f; done
 	echo `date` $? > $@
-	touch Premaster/WAV
+	touch Premaster
 
 .PHONY: test-normalize normalized
 test-normalize: Premaster/WAV
-	cd Premaster/WAV; normalize-audio -n *.wav
+	cd Premaster; normalize-audio -n *.wav
 
-normalized: Premaster/WAV/normalized
+normalized: Premaster/normalized
+
+clean::
+	rm -f Premaster/normalized
 
 #   Premaster/ISO is only needed if we're building a CDROM or dual-session
 #	disk; it contains the directory tree that gets rolled up into the
@@ -776,3 +674,5 @@ test:
 	@echo $(foreach v,$(V3), $(v)=$($(v)) )
 	@echo SONGFILES: $(SONGFILES)
 	@echo SONGS: $(SONGS)
+	@echo TITLE: $(TITLE)
+	@echo DATE: $(DATE)
