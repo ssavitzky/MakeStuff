@@ -108,7 +108,6 @@ endif
 #   Putting it here allows for overriding the defaults
 
 ifeq ($(shell [ -f record.conf ] || echo noconf),)
-     $(info record.conf found)
      include $(shell /bin/pwd)/record.conf
 endif
 
@@ -144,6 +143,8 @@ GENISOIMAGE = $(shell if [ -x /usr/bin/genisoimage ]; \
 		      then echo genisoimage; else echo mkisofs; fi)
 
 CDRDAO = /usr/bin/cdrdao
+
+PLAYER = play
 
 ### From here on it's constant ###
 
@@ -185,6 +186,7 @@ SONGS := $(foreach f,$(SONGFILES),$(shell grep -v '\#' $(f)))
 #	the appropriate .flk files in $(SONGDIR) for dependencies.
 SHORTNAMES := $(shell $(TRACKINFO) format=songs $(TRACKS))
 
+SONGDIR=$(LYRICDIR)
 # We know at this point that all the metadata is in SONGDIR
 FLK_FILES := $(shell for f in $(SHORTNAMES); do \
 		[ -f $(SONGDIR)/$$f.flk ] && echo $(SONGDIR)/$$f.flk; \
@@ -192,8 +194,8 @@ FLK_FILES := $(shell for f in $(SHORTNAMES); do \
 		done)
 
 # PRINT_FILES -- the printable (.ps) lyrics
-PRINT_FILES := $(shell for f in $(SHORTNAMES); do \
-		[ -f $(SONGDIR)/$$f.ps ] && echo $(SONGDIR)/$$f.ps; \
+PRINT_FILES := $(shell for f in $(SONGS); do \
+		[ -f $(LYRICDIR)/$$f.ps ] && echo $(LYRICDIR)/$$f.ps; \
 		done)
 
 OGGS = $(addsuffix .ogg, $(SONGS))
@@ -384,7 +386,7 @@ list-times:
 
 ## List, mainly for debugging, various make variables
 
-.PHONY:	list-files list-sources list-songs
+.PHONY:	list-files list-sources list-songs list-oggs list-mp3s play
 list-files: $(TRACKFILE)
 	@$(TRACKINFO) format=cd-files $(TRACKS)
 
@@ -394,7 +396,18 @@ list-sources:
 list-songs: 
 	@echo $(SONGS)
 
+list-oggs:
+	@ for f in `make list-songs`; do \
+		if [ -e $$f.ogg ]; then echo $$f.ogg; fi \
+	done
 
+list-mp3s:
+	@ for f in `make list-songs`; do \
+		if [ -e $$f.mp3 ]; then echo $$f.mp3; fi \
+	done
+
+play: oggs
+	$(PLAYER) `make list-oggs`
 
 ### Rules for things derived from %.songs
 
@@ -673,6 +686,7 @@ test:
 	@echo $(foreach v,$(V2), $(v)=$($(v)) )
 	@echo $(foreach v,$(V3), $(v)=$($(v)) )
 	@echo SONGFILES: $(SONGFILES)
+	@echo PRINTFILES: $(PRINT_FILES)
 	@echo SONGS: $(SONGS)
 	@echo TITLE: $(TITLE)
 	@echo DATE: $(DATE)
