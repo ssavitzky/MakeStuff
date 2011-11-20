@@ -120,10 +120,8 @@ else
      $(warn No Tracks directory:  things could get weird.)
 endif
 
-##############
 
-
-### Programs
+###### Commands ######################################################
 
 ## Metadata extraction and formatting programs:
 
@@ -144,11 +142,13 @@ GENISOIMAGE = $(shell if [ -x /usr/bin/genisoimage ]; \
 
 CDRDAO = /usr/bin/cdrdao
 
+## audio player
+
 PLAYER = play
 
 ### From here on it's constant ###
 
-###### Rules ##########################################################
+###### Lists ##########################################################
 
 ### The times, they are a'changing.  
 #
@@ -227,22 +227,87 @@ TRACKLISTS = $(BASEPFX)short.list $(BASEPFX)files $(BASEPFX)long.list \
 
 SONGFILES=$(wildcard *.songs)
 ifneq ($(SONGFILES),,)
-  DOTSONGS=$(wildcard *.songs)
   SONGLISTS += \
-	$(subst .songs,.names, $(DOTSONGS)) \
-	$(subst .songs,.files, $(DOTSONGS)) \
-	$(subst .songs,.oggs, $(DOTSONGS)) \
-	$(subst .songs,.mp3s, $(DOTSONGS)) \
-	$(subst .songs,.short.list, $(DOTSONGS))\
-	$(subst .songs,.long.list, $(DOTSONGS)) \
-	$(subst .songs,.short.html, $(DOTSONGS)) \
-	$(subst .songs,.long.html, $(DOTSONGS)) \
-	$(subst .songs,.extras.html, $(DOTSONGS)) 
+	$(subst .songs,.names, $(SONGFILES)) \
+	$(subst .songs,.files, $(SONGFILES)) \
+	$(subst .songs,.oggs, $(SONGFILES)) \
+	$(subst .songs,.mp3s, $(SONGFILES)) \
+	$(subst .songs,.short.list, $(SONGFILES))\
+	$(subst .songs,.long.list, $(SONGFILES)) \
+	$(subst .songs,.short.html, $(SONGFILES)) \
+	$(subst .songs,.long.html, $(SONGFILES)) \
+	$(subst .songs,.extras.html, $(SONGFILES)) 
 
-  SUBMAKES += $(subst .songs,.make, $(DOTSONGS))
-  RIPDIRS += $(subst .songs,.rips, $(DOTSONGS)) 
+  SUBMAKES += $(subst .songs,.make, $(SONGFILES))
+  RIPDIRS += $(subst .songs,.rips, $(SONGFILES)) 
 
 endif
+
+###### Rules ##########################################################
+
+### Rules for things derived from %.songs
+
+# %.names:  just the shortnames, with comments and blank lines removed
+%.names: %.songs
+	grep -v '^#' $< | grep -ve '^$$' > $@
+# %.files:  track data input files 
+%.files: %.songs
+	$(TRACKINFO) format=files @$< > $@
+
+%.short.list: %.songs
+	$(TRACKINFO) $(TRACKLIST_FLAGS) format=list.text -t -T @$< > $@
+
+%.long.list: %.songs
+	$(TRACKINFO) $(TRACKLIST_FLAGS) --long --credits  -T \
+		format=list.text @$< > $@
+
+%.credits.list: %.songs
+	$(TRACKINFO)  --credits  -T format=list.text @$< > $@
+
+%.long.html: %.songs
+	$(TRACKINFO) $(TRACKLIST_FLAGS) --long --credits -t \
+		format=list.html @$< > $@
+
+%.short.html: %.songs
+	$(TRACKINFO) $(TRACKLIST_FLAGS) \
+		 format=list.html -t @$< > $@
+
+%.extras.html: %.songs
+	$(TRACKINFO) $(TRACKLIST_FLAGS) --long  --credits \
+		--sound format=list.html @$< > $@
+
+%.oggs: %.names
+	(for f in `cat $<`; do echo $$f.ogg; done) > $@
+
+%.mp3s: %.names
+	(for f in `cat $<`; do echo $$f.mp3; done) > $@
+
+%.rips: %.names %.make %.oggs %.mp3s
+	[ -d $@ ] || mkdir $@
+	rm -f $@/[0-9][0-9]-*
+	make -f $*.make
+	$(TRACKINFO) format=symlinks dir=$@ @$*.names
+
+%.re-rip: %.names %.make %.oggs %.mp3s
+	[ -d $*.rips ] || mkdir $*.rips
+	rm -f $*.rips/[0-9][0-9]-*
+	make -f $*.make
+	$(TRACKINFO) format=symlinks dir=$*.rips @$*.names
+
+## rules to make ogg and mp3 files
+#	We now make them from the normalized versions in Premaster
+#	unless the make variable NO_PREMASTER is defined.  The NO_PREMASTER
+#	versions only work in, e.g., concert directories where the .wav
+#	files are local or locally-symlinked.  
+
+%.ogg: Premaster/%.wav
+	oggenc -Q -o $@ $(shell $(TRACKINFO) --ogg track=$< \
+	  title="$(TITLE)" $*)
+%.mp3: Premaster/%.wav
+	sox $< -t wav -b 16 - | \
+	lame -b 64 -S $(shell $(TRACKINFO) $(SONGLIST_FLAGS)  \
+	   --mp3  title="$(TITLE)" $*) $@
+
 
 ###### Targets ########################################################
 
@@ -386,7 +451,7 @@ list-times:
 
 ## List, mainly for debugging, various make variables
 
-.PHONY:	list-files list-sources list-songs list-oggs list-mp3s play
+.PHONY:	list-files list-sources list-songs list-missing
 list-files: $(TRACKFILE)
 	@$(TRACKINFO) format=cd-files $(TRACKS)
 
@@ -396,68 +461,24 @@ list-sources:
 list-songs: 
 	@echo $(SONGS)
 
+list-missing:
+	@for f in $(SONGS); do \
+		if [ ! -e Premaster/$$f.wav ]; then echo $$f; fi \
+	done
+
+.PHONY: list-oggs list-mp3s play
 list-oggs:
-	@ for f in `make list-songs`; do \
+	@ for f in $(SONGS); do \
 		if [ -e $$f.ogg ]; then echo $$f.ogg; fi \
 	done
 
 list-mp3s:
-	@ for f in `make list-songs`; do \
+	@ for f in $(SONGS); do \
 		if [ -e $$f.mp3 ]; then echo $$f.mp3; fi \
 	done
 
 play: oggs
 	$(PLAYER) `make list-oggs`
-
-### Rules for things derived from %.songs
-
-# %.names:  just the shortnames, with comments and blank lines removed
-%.names: %.songs
-	grep -v '^#' $< | grep -ve '^$$' > $@
-# %.files:  track data input files 
-%.files: %.songs
-	$(TRACKINFO) format=files @$< > $@
-
-%.short.list: %.songs
-	$(TRACKINFO) $(TRACKLIST_FLAGS) format=list.text -t -T @$< > $@
-
-%.long.list: %.songs
-	$(TRACKINFO) $(TRACKLIST_FLAGS) --long --credits  -T \
-		format=list.text @$< > $@
-
-%.credits.list: %.songs
-	$(TRACKINFO)  --credits  -T format=list.text @$< > $@
-
-%.long.html: %.songs
-	$(TRACKINFO) $(TRACKLIST_FLAGS) --long --credits -t \
-		format=list.html @$< > $@
-
-%.short.html: %.songs
-	$(TRACKINFO) $(TRACKLIST_FLAGS) \
-		 format=list.html -t @$< > $@
-
-%.extras.html: %.songs
-	$(TRACKINFO) $(TRACKLIST_FLAGS) --long  --credits \
-		--sound format=list.html @$< > $@
-
-%.oggs: %.names
-	(for f in `cat $<`; do echo $$f.ogg; done) > $@
-
-%.mp3s: %.names
-	(for f in `cat $<`; do echo $$f.mp3; done) > $@
-
-%.rips: %.names %.make %.oggs %.mp3s
-	[ -d $@ ] || mkdir $@
-	rm -f $@/[0-9][0-9]-*
-	make -f $*.make
-	$(TRACKINFO) format=symlinks dir=$@ @$*.names
-
-%.re-rip: %.names %.make %.oggs %.mp3s
-	[ -d $*.rips ] || mkdir $*.rips
-	rm -f $*.rips/[0-9][0-9]-*
-	make -f $*.make
-	$(TRACKINFO) format=symlinks dir=$*.rips @$*.names
-
 
 
 ## Print lyrics either in leadsheet (single-page) or songbook format
@@ -472,6 +493,9 @@ print-songbook: $(PRINT_FILES)
 
 
 ### Update Premaster/WAV by importing track data
+#
+# === probably not necessary now that we export directly into Premaster
+#
 #	This is not done by default because normalization and other 
 #	premastering is done there; as a side-effect we get an archive
 #	of exactly what track data is on the disk.
@@ -489,7 +513,7 @@ update-tracks: Premaster mytracks.make
 	$(MAKE) -f mytracks.make update-tracks
 	touch Premaster
 
-update-master: Premaster Premaster Master
+update-master: Premaster Master
 	$(MAKE) -f mytracks.make update-master
 
 ### Make ogg and mp3 files and other things that depend on tracks.
@@ -532,19 +556,6 @@ update-master: Premaster Premaster Master
 # this doesn't work because it creates output files with funny names
 # 		echo "	"shntool pad $$@			>> $@;	\
 
-# make ogg and mp3 files
-#	We now make them from the normalized versions in Premaster
-#	unless the make variable NO_PREMASTER is defined.  The NO_PREMASTER
-#	versions only work in, e.g., concert directories where the .wav
-#	files are local or locally-symlinked.  
-
-%.ogg: Premaster/%.wav
-	oggenc -Q -o $@ $(shell $(TRACKINFO) --ogg track=$< \
-	  title="$(TITLE)" $*)
-%.mp3: Premaster/%.wav
-	sox $< -t wav -b 16 - | \
-	lame -b 64 -S $(shell $(TRACKINFO) $(SONGLIST_FLAGS)  \
-	   --mp3  title="$(TITLE)" $*) $@
 
 
 .PHONY: oggs mp3s
@@ -590,7 +601,7 @@ Premaster/normalized: $(wildcard Premaster/*.wav)
 	touch Premaster
 
 .PHONY: test-normalize normalized
-test-normalize: Premaster/WAV
+test-normalize: 
 	cd Premaster; normalize-audio -n *.wav
 
 normalized: Premaster/normalized
