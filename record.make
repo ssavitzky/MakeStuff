@@ -78,11 +78,12 @@ ifeq ($(shell [ -d $(LYRICDIR) ] || echo notfound),notfound)
      $(error Cannot find Lyrics)
 endif
 
-# Figure out the default title from the path between here and BASEDIR.  
+# Figure out the default type and title from the path:
+#
 #   session - the whole path looks like a date
 #	      could be a practice or a recording session.  Don't care.
 #   concert - a prefix of the path looks like a date
-#   "album" - anything else
+#   album   - anything else
 #
 #   We can also handle paths like yyyy/mm-dd/, and day ranges like 
 #   yyyy/mm/dd-dd
@@ -95,11 +96,14 @@ EVNAME := $(shell perl -e '"$(MYNAME)" =~ /^[-0-9]*(.*)$$/; print "$$1";')
 
 ifeq ($(strip $(DATE)),,)
   TITLE = $(MYNAME)
+  TYPE  = album
 else
 ifeq ($(EVNAME),,)
   TITLE = Session on $(DATE)
+  TYPE  = session
 else
   TITLE = $(EVNAME)
+  TYPE  = concert
 endif
 endif
 
@@ -146,7 +150,6 @@ CDRDAO = /usr/bin/cdrdao
 
 PLAYER = play
 
-### From here on it's constant ###
 
 ###### Lists ##########################################################
 
@@ -226,7 +229,7 @@ TRACKLISTS = $(BASEPFX)short.list $(BASEPFX)files $(BASEPFX)long.list \
 ### Look for *.songs.
 
 SONGFILES=$(wildcard *.songs)
-ifneq ($(SONGFILES),,)
+ifneq ($(SONGFILES),)
   SONGLISTS += \
 	$(subst .songs,.names, $(SONGFILES)) \
 	$(subst .songs,.files, $(SONGFILES)) \
@@ -240,8 +243,11 @@ ifneq ($(SONGFILES),,)
 
   SUBMAKES += $(subst .songs,.make, $(SONGFILES))
   RIPDIRS += $(subst .songs,.rips, $(SONGFILES)) 
-
+else
+  # no songfiles -- set the default so setup: can make it later.
+  DEFAULT_SONGFILE = $(TYPE).songs
 endif
+
 
 ###### Rules ##########################################################
 
@@ -566,6 +572,7 @@ mp3s:  $(MP3S)
 clean::
 	rm -f *.ogg *.mp3
 
+
 ### Make the subdirectories:
 
 # Tracks directory
@@ -586,7 +593,7 @@ Master:
 Premaster:
 	mkdir Premaster
 
-# Normalization:
+### Normalization:
 # 	Probably don't want the --mix flag on normalize.
 #	That would make bring everything to the same average level,
 #	rather than maximizing each track separately.  
@@ -662,6 +669,18 @@ tao:
 	@[ `whoami` = "root" ] || (echo "wodim should be run by root")
 	$(WODIM) -pad -tao -audio $(TRACK_DATA)
 
+### Setup
+
+.PHONY: setup
+
+setup:: Tracks Premaster $(DEFAULT_SONGFILE)
+
+ifdef DEFAULT_SONGFILE
+
+$(DEFAULT_SONGFILE):
+	echo '# $@ for $(TITLE)' > $@
+
+endif
 
 ######################################################################
 
@@ -692,7 +711,7 @@ put: all
 V1 := BASEDIR LYRICDIR MYNAME 
 V2 := LONGNAME TITLE
 V3 := HOST DOTDOT 
-test:
+test::
 	@echo $(foreach v,$(V1), $(v)=$($(v)) )
 	@echo $(foreach v,$(V2), $(v)=$($(v)) )
 	@echo $(foreach v,$(V3), $(v)=$($(v)) )
@@ -700,4 +719,6 @@ test:
 	@echo PRINTFILES: $(PRINT_FILES)
 	@echo SONGS: $(SONGS)
 	@echo TITLE: $(TITLE)
-	@echo DATE: $(DATE)
+	@echo TYPE:  $(TYPE)
+	@echo DATE:  $(DATE)
+	@echo DEFAULT_SONGFILE: $(DEFAULT_SONGFILE)
