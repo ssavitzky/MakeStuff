@@ -94,16 +94,16 @@ DATE := $(shell perl -e '"$(MYPATH)" =~ $(DATEX) && print "$$1/$$2/$$3";')
 
 EVNAME := $(shell perl -e '"$(MYNAME)" =~ /^[-0-9]*(.*)$$/; print "$$1";')
 
-ifeq ($(strip $(DATE)),,)
-  TITLE = $(MYNAME)
-  TYPE  = album
+ifeq ($(strip $(DATE)),)
+  TITLE := $(MYNAME)
+  TYPE  := album
 else
-ifeq ($(EVNAME),,)
-  TITLE = Session on $(DATE)
-  TYPE  = session
+ifeq ($(strip $(EVNAME)),)
+  TITLE := Session on $(DATE)
+  TYPE  := session
 else
-  TITLE = $(EVNAME)
-  TYPE  = concert
+  TITLE := $(EVNAME)
+  TYPE  := concert
 endif
 endif
 
@@ -320,7 +320,7 @@ endif
 ### All: doesn't do much, just builds the TOC and lists
 
 all::
-	@echo album $(SHORTNAME)/ "($(TITLE))"
+	@echo $(TYPE) $(SHORTNAME)/ "($(TITLE))"
 	@echo performer: $(PERFORMER)
 
 reindex::
@@ -721,4 +721,5 @@ test::
 	@echo TITLE: $(TITLE)
 	@echo TYPE:  $(TYPE)
 	@echo DATE:  $(DATE)
+	@echo EVNAME: "($(EVNAME))"  MYNAME: "($(MYNAME))"
 	@echo DEFAULT_SONGFILE: $(DEFAULT_SONGFILE)
