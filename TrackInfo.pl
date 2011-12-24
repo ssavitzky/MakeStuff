@@ -342,9 +342,11 @@ sub getSongFileInfo {
     my $shortname = $filename;
     $directory = $lyricDir unless $directory;
 
-    if ($filename =~ /^([a-z]*[0-9]+\-+)?([^.]+)\.?/) { 
+    if ($filename =~ /^(.+)\-\-/) {
+	$shortname = $1;
+    } elsif ($filename =~ /^([a-z]*[0-9]+\-+)?([^.]+)\.?/) { 
 	$shortname = $2;
-    }
+    } 
 
     open(IN, "$directory/${filename}.flk") || return 0;
     
@@ -395,7 +397,9 @@ sub getTrackInfo {
     #   a leading numeric prefix separated by hypens is ignored.
     #   everything after "." is ignored.  This allows track numbers
     #   and qualifiers (foo.a, etc.)
-    if ($filename =~ /^([a-z]*[0-9]+\-+)?([^.]+)\.?/) { 
+    if ($filename =~ /^(.+)\-\-/) {
+	$shortname = $1;
+    } elsif ($filename =~ /^([a-z]*[0-9]+\-+)?([^.]+)\.?/) { 
 	$shortname = $2;
     }
     #print STDERR "filename=$filename; shortname=$shortname\n";
