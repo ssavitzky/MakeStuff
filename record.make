@@ -495,7 +495,7 @@ print-lyrics: $(PRINT_FILES)
 	@for f in $(PRINT_FILES); do psselect -p1 $$f | lpr; done 
 
 print-songbook: $(PRINT_FILES)
-	@for f in $(PRINT_FILES); do lpr $$f; done 
+	lp $(PRINT_FILES)
 
 
 ### Update Premaster/WAV by importing track data
