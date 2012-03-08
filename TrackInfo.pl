@@ -344,6 +344,8 @@ sub getSongFileInfo {
 
     if ($filename =~ /^(.+)\-\-/) {
 	$shortname = $1;
+    } elsif ($filename =~ /^.+\.([^.]+)(\.|\-\-)?/) { 
+	$shortname = $1;
     } elsif ($filename =~ /^([a-z]*[0-9]+\-+)?([^.]+)\.?/) { 
 	$shortname = $2;
     } 
@@ -398,6 +400,8 @@ sub getTrackInfo {
     #   everything after "." is ignored.  This allows track numbers
     #   and qualifiers (foo.a, etc.)
     if ($filename =~ /^(.+)\-\-/) {
+	$shortname = $1;
+    } elsif ($filename =~ /^.+\.([^.]+)(\.|\-\-)?/) { 
 	$shortname = $1;
     } elsif ($filename =~ /^([a-z]*[0-9]+\-+)?([^.]+)\.?/) { 
 	$shortname = $2;
