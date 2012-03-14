@@ -1,5 +1,6 @@
-Options +ExecCGI
+#Options +ExecCGI
 #AddType application/x-httpd-cgi .cgi
-AddHandler cgi-script .cgi
+#AddHandler cgi-script .cgi
+AddType text/plain .cgi
 AddType text/plain .pl .pm .sh .lsp .tex .sty
 AddHandler default-handler  .pl .pm .sh .lsp
