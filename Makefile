@@ -4,7 +4,7 @@
 
 MYNAME :=$(shell basename `/bin/pwd`)
 PARENT :=$(shell dirname  `/bin/pwd`)
-TOOLDIR = .Tools
+TOOLDIR = ../Tools
 DOTDOT=vv/users/steve
 
 ### Web upload location and excludes:
