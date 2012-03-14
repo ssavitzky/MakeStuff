@@ -2,19 +2,27 @@
 #	$Id: Makefile,v 1.4 2006-05-21 03:24:39 steve Exp $
 # 	COPYRIGHT 1998, HyperSpace Express
 
-TOPDIR=../../../../..
-MYNAME=TeX
-DOTDOT=www/Steve_Savitzky/Tools
-SRCDIR=../../../.
+MYNAME :=$(shell basename `/bin/pwd`)
+PARENT :=$(shell dirname  `/bin/pwd`)
+TOOLDIR = ../../Tools
+DOTDOT=vv/users/steve/Tools
 
-FILES= \
-	$(wildcard *.html) $(wildcard *.ps) $(wildcard *.flk) \
-	$(wildcard *.tex) $(wildcard *.sty) \
-	$(wildcard *.pl) Makefile.txt .htaccess \
-	flktran.pl index.pl chord.c Makefile.txt \
-	song.sty fullpage.sty twocolumns.sty 1song.tex zongbook.sty
+### Web upload location and excludes:
+#	Eventually HOST ought to be in an include file, e.g. WURM.cf
 
-MF_DIR=$(TOPDIR)/Config/makefiles
-include $(MF_DIR)/file.make
-include $(MF_DIR)/webdir.make
+HOST=savitzky@savitzky.net
+EXCLUDES=--exclude=Tracks --exclude=Master --exclude=Premaster \
+	--exclude=tmp --exclude=\*temp --exclude=.audacity\*
+
+FILES= HEADER.html Makefile
+
+all:: $(FILES)
+
+### Greatly simplified put target because we're using rsync to put the
+#	whole subtree.
+#
+
+put:: all
+	rsync -a -z -v $(EXCLUDES) --delete $(RSYNC_FLAGS) \
+	      ./ $(HOST):$(DOTDOT)/$(MYNAME)
 
