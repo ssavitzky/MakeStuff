@@ -54,14 +54,18 @@
   </dt>
   <dd> Makefile template for audio recordings, including albums, concerts, and
        practice sessions.  Has targets for things like burning CD-Rs and
-       managing track lists.
+       managing track lists.  Replaces the now-obsolete <a href="album.make"
+       >album.make</a>, <a href="concert.make" >concert.make</a>, and <a
+       href="practice.make" >practice.make</a> (which have, however, been kept
+       around to keep from breaking older parts of the site).
   </dd>
   <dt> <a href="publish.make"><code>publish.make</code></a>
   </dt>
   <dd> Makefile template for working directories that have to be "published"
        to a web staging directory.  Relies on having a symlink called
        <code>PUBDIR</code> someplace up the tree that points to the web
-       directory. 
+       directory.   Obsolete, but could still be useful for sites relying on
+       FTP or SFTP.
   </dd>
   <dt> <a href="track-depends.make"><code>track-depends.make</code></a>
   </dt>
