@@ -5,7 +5,7 @@
 #
 
 
-# tex to dvi:
+### .tex to various output formats
 # 	the "echo q" bit quits out of the error dialog if necessary;
 # 	running latex for a  second time makes sure the most recent 
 #	auxiliary file has been included -- we only need it if the 
