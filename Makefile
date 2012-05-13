@@ -10,68 +10,78 @@
  # obtained from  www.gnu.org/copyleft/lesser.html	
 ###						    :end license notice	###
 
-### Figure out where we are and where the Tools directory is: 
+### Tools:  Figure out where we are and where the Tools directory is: 
 #   BASEDIR is the directory that contains Tools, possibly as a symlink.
 #
 MYPATH := $(shell pwd -P)
 MYNAME := $(notdir $(MYPATH))
 MYDIR  := $(dir $(MYPATH))
-BASEDIR := $(shell d=$(MYDIR); 					\
+BASEDIR:= $(shell d=$(MYPATH); 					\
 		  while [ ! -d $$d/Tools ] && [ ! $$d = / ]; do	\
 			d=`dirname $$d`;			\
 		  done; echo $$d)
-TOOLDIR = $(BASEDIR)Tools
-include $(TOOLDIR)/make/rules.make
+TOOLDIR := $(BASEDIR)/Tools
 #
-### Done. 
+### From this point we can start including stuff from TOOLDIR/make. 
 
-### Web upload location and excludes:
-#	Eventually HOST ought to be in an include file, e.g. WURM.cf
+include $(TOOLDIR)/make/defines.make
+include $(MFDIR)/rules.make
 
-HOST	 = savitzky@savitzky.net
-EXCLUDES = --exclude=Tracks --exclude=Master --exclude=Premaster \
-	   --exclude=\*temp --exclude=.audacity\*
+### site-wide and local config files
+#   and include it to add or override make variables.
 
-# DOTDOT is the path to this directory on $(HOST)
-#   === for now, fake it knowing that /vv maps to ~/vv on savitzky.net
+RULES_FILE  = rules.make
+DIR_CONFIG  = config.make
+DIR_TARGETS = depends.make
 
-DOTDOT = .$(MYDIR)
+### Now include rules.make from BASEDIR   === BASEDIR/site?
 
-
-FILES= HEADER.html Makefile to.do
-
-SUBDIRS= TeX
-
-
-
-### See whether we have a local config.make file, and include it if we do.
-#   Putting it here allows for overriding the defaults
-
-LOCAL_CONFIG = config.make
-ifeq ($(shell [ -f $(LOCAL_CONFIG) ] || echo noconf),)
-     include $(shell /bin/pwd)/$(LOCAL_CONFIG)
+ifeq ($(shell [ -f $(BASEDIR)/$(RULES_FILE) ] || echo no),)
+     include $(BASEDIR)/$(RULES_FILE)
 endif
 
+### If there's a local config.make, include that too.
 
+ifeq ($(shell [ -f $(DIR_CONFIG) ] || echo no),)
+     include $(MYPATH)/$(DIR_CONFIG)
+endif
+#
+###
 
+###### Targets ##########################################################
+
+# Note:  It's useful to be able to grep Makefile for targets, and bash 
+#	 completion also looks there.  So we want to have as many common 
+#	 targets as possible in the main Makefile.
+
+### all -- the default target; must come first or confusion reigns.
+
+.PHONY: all
 all:: $(FILES)
 
 ### Greatly simplified put target, using rsync to put the whole subtree.
-#
 
-.phony: put
-put:: all
+.PHONY: put
+put:: 	all
 	rsync -a -z -v $(EXCLUDES) --delete $(RSYNC_FLAGS) \
 	      ./ $(HOST):$(DOTDOT)/$(MYNAME)
 
 
-#######################################################################
-
 ### Test - list important variables
 
-.phony: test
+.PHONY: test
 V1 := BASEDIR MYNAME 
 V2 := HOST DOTDOT 
 test::
 	@echo $(foreach v,$(V1), $(v)=$($(v)) )
 	@echo $(foreach v,$(V2), $(v)=$($(v)) )
+	@echo FILES: $(FILES)
+	@echo git_dirs: $(GIT_DIRS)
+
+### Include local targets & depends from depends.make if present 
+#
+ifeq ($(shell [ -f $(DIR_TARGETS) ] || echo no),)
+     include $(MYPATH)/$(DIR_TARGETS)
+endif
+#
+###### End of Tools/Makefile.  Thanks for playing. ######
