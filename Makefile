@@ -2,6 +2,8 @@
 #
 #   This is not only the Makefile for the Tools directory, but is written so 
 #   that it can be symlinked into almost any directory in the "vv/..." tree.
+#
+###
 
 ### Open Source/Free Software license notice:
  # The contents of this file may be used under the terms of the GNU
@@ -21,32 +23,17 @@ BASEDIR:= $(shell d=$(MYPATH); 					\
 			d=`dirname $$d`;			\
 		  done; echo $$d)
 TOOLDIR := $(BASEDIR)/Tools
-#
+
 ### From this point we can start including stuff from TOOLDIR/make. 
 
 include $(TOOLDIR)/make/defines.make
-include $(MFDIR)/rules.make
-
-### site-wide and local config files
-#   and include it to add or override make variables.
-
-RULES_FILE  = rules.make
-DIR_CONFIG  = config.make
-DIR_TARGETS = depends.make
-
-### Now include rules.make from BASEDIR   === BASEDIR/site?
-
-ifeq ($(shell [ -f $(BASEDIR)/$(RULES_FILE) ] || echo no),)
-     include $(BASEDIR)/$(RULES_FILE)
-endif
+include $(TOOLDIR)/make/rules.make
 
 ### If there's a local config.make, include that too.
-
-ifeq ($(shell [ -f $(DIR_CONFIG) ] || echo no),)
-     include $(MYPATH)/$(DIR_CONFIG)
+#	site/config.make, if present, is included in make/defines.make
+ifneq ($(wildcard config.make),)
+     include config.make
 endif
-#
-###
 
 ###### Targets ##########################################################
 
@@ -66,22 +53,54 @@ put:: 	all
 	rsync -a -z -v $(EXCLUDES) --delete $(RSYNC_FLAGS) \
 	      ./ $(HOST):$(DOTDOT)/$(MYNAME)
 
+### Cleanup
+
+.PHONY: texclean clean
+
+texclean::
+	-rm -f *.aux *.log *.toc *.dvi
+
+clean::
+	-rm -f *.CKP *.ln *.BAK *.bak *.o core errs  *~ *.a \
+		.emacs_* tags TAGS MakeOut *.odf *_ins.h \
+		*.aux *.log *.toc *.dvi
 
 ### Test - list important variables
 
 .PHONY: test
 V1 := BASEDIR MYNAME 
-V2 := HOST DOTDOT 
+V2 := BASEREL TOOLREL 
+V3 := HOST DOTDOT 
 test::
 	@echo $(foreach v,$(V1), $(v)=$($(v)) )
 	@echo $(foreach v,$(V2), $(v)=$($(v)) )
+	@echo $(foreach v,$(V3), $(v)=$($(v)) )
 	@echo FILES: $(FILES)
-	@echo git_dirs: $(GIT_DIRS)
+	@if [ "$(SUBDIRS)" != "" ]; then echo SUBDIRS: $(SUBDIRS); fi
+	@echo items: $(ITEMDIRS)
+	@echo colls: $(COLLDIRS)
+	@echo git: $(GIT_DIRS)
+
+
+### Setup
+
+
+### Fixup
+
+# link-makefile - link a Makefile from Tools.
+.PHONY: link-makefile
+link-makefile: 
+	if [ ! -L Makefile ]; then \
+	   if [ -f Makefile ]; then git rm -f Makefile; fi; \
+	   ln -s $(TOOLREL)/Makefile .; \
+	   git add Makefile; \
+	   git commit -m "Makefile linked from Tools"; \
+	fi
 
 ### Include local targets & depends from depends.make if present 
 #
-ifeq ($(shell [ -f $(DIR_TARGETS) ] || echo no),)
-     include $(MYPATH)/$(DIR_TARGETS)
+ifneq ($(wildcard depends.make),)
+     include depends.make
 endif
 #
 ###### End of Tools/Makefile.  Thanks for playing. ######
