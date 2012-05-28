@@ -1,4 +1,4 @@
-### Makefile for a concert.  
+#!/usr/bin/make  ### Makefile for a concert.  
 #	Designed to be "include"d after setting TITLE
 
 ### Parse directory tree to find Tools

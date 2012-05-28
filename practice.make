@@ -1,4 +1,4 @@
-### Makefile for a practice session.  Designed to be symlinked
+#!/usr/bin/make  ### Makefile for a practice session.  Designed to be symlinked
 #	$Id$
 
 ### Parse directory tree to find Tools

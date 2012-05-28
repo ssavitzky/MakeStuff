@@ -1,4 +1,4 @@
-### Makefile template for track directories
+#!/usr/bin/make  ### Makefile template for track directories
 #	$Id: track.make,v 1.3 2007-05-20 17:44:28 steve Exp $
 #
 #  This template is meant to be included in the Makefile of a "track" 

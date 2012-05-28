@@ -1,4 +1,4 @@
-### Makefile template for sound recordings
+#!/usr/bin/make  ### Makefile template for sound recordings
 #
 # This template is meant to be symlinked to the Makefile of an "album" 
 #   "concert", or "practice" directory.  It automagically searches

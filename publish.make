@@ -1,4 +1,4 @@
-### Makefile template for web publishing
+#!/usr/bin/make  ### Makefile template for web publishing
 #	$Id: publish.make,v 1.5 2010-10-14 06:48:15 steve Exp $
 #
 #  This template is meant to be included in the Makefile of a working

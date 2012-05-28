@@ -1,4 +1,4 @@
-### track-depends.make
+#!/usr/bin/make  ### track-depends.make
 #	$Id: track-depends.make,v 1.4 2010-10-14 06:48:15 steve Exp $
 #
 #	This file contains rules for things that depend on track data.

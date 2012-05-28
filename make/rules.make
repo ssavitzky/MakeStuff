@@ -1,4 +1,4 @@
-### rules.make - basic rule set for makefiles
+#!/usr/bin/make  ### rules.make - basic rule set for makefiles
 #
 # This file is meant to be included by Tools/Makefile, and defines a
 # generally-useful collection of rules that should cover most cases.

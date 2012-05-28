@@ -1,4 +1,4 @@
-### Makefile template for album directories
+#!/usr/bin/make  ### Makefile template for album directories
 #	$Id: album.make,v 1.17 2010-10-14 06:48:16 steve Exp $
 #
 #  This template is meant to be included in the Makefile of an "album" 

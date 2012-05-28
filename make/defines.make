@@ -1,4 +1,4 @@
-###### make/defines.make -- standard definitions for makefiles
+#!/usr/bin/make  ### make/defines.make -- standard definitions for makefiles
 
 # MFDIR is where the make include files live
 MFDIR	= $(TOOLDIR)/make
