@@ -40,7 +40,10 @@ COLLDIRS := $(shell ls -F | grep ^[A-Z] | grep / | grep -v CVS | sed s/\\///)
 ITEMDIRS := $(shell ls -F | grep ^[a-z] | grep / | sed s/\\///) 
 DATEDIRS := $(shell ls -F | grep ^[0-9] | grep / | sed s/\\///)
 
-GIT_DIRS := $(shell for d in $(SUBDIRS); do \
+# subdirs containing git repositories.  
+#    Note that a Makefile is not required for this.
+
+GIT_DIRS := $(shell for d in *; do \
 			if [ -d $$d/.git ]; then echo $$d; fi; done)
 #
 ###

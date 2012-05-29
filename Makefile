@@ -97,8 +97,9 @@ link-makefile:
 	   git commit -m "Makefile linked from Tools"; \
 	fi
 
-### Include local targets & depends from depends.make if present 
+### Include targets & depends from depends.make if present 
 #
+include $(MFDIR)/targets.make
 ifneq ($(wildcard depends.make),)
      include depends.make
 endif
