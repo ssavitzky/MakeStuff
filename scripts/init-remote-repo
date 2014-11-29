@@ -1,0 +1,18 @@
+#!/bin/sh
+
+if [ ! -z `git remote` ]; then echo `pwd` origin exists; exit; fi
+
+cwd=`pwd`
+name=`basename $cwd`
+site=savitzky.net
+
+parent=`dirname $cwd | sed -e 's/\/vv/git/'`
+path=$parent/$name.git
+
+url=$site:$path
+echo $url
+
+ssh $site "mkdir $path && cd $path && git init --bare"
+git remote add origin $url
+git push -f origin master
+git remote set-head origin master
