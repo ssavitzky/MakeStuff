@@ -1,0 +1,29 @@
+#!/bin/sh
+#  Convert a CVS-based directory to git.
+#
+
+root=`cat ../CVS/Root`
+repo=`cat ../CVS/Repository`
+x='$'
+tree=`perl -e "'$repo' =~ m|$root/(.*)|; print ${x}1"`
+echo repo=$root tree=$tree
+
+mkdir working
+cd working
+git cvsimport -d $root $tree
+
+cd ..; mv working/.git .; rm -rf working
+
+# can't just use "git cvsimport" in a cvs working directory
+# -> fails with "unknown error" if there are locally-modified files
+
+# remove all the irrelevant files
+
+    find . -depth -name CVS -exec rm -rf {} \;	     # same with put, etc.
+    find . -depth -name put -exec rm -rf {} \;
+    find . -depth -name put.\* -exec rm -rf {} \;
+    find . -depth -name '*~' -exec rm -f {} \; 
+
+cp ../Tools/.gitignore .
+git add .
+git commit -m "update after cvsimport"
