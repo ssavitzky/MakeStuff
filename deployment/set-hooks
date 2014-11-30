@@ -16,9 +16,12 @@ for repo in $*; do
 	    cd hooks
 	    d=../../Tools/deployment
 	    while [ ! -d $d ]; do d=../$d; done
+	    # Remove old hooks in case things have moved.
+	    for hook in $HOOKS; do rm -f $d/$hook;   done
 	    for hook in $HOOKS; do ln -s $d/$hook .; done
 	else
-	    echo Skipping: $dest does not exist.
+	    echo $dest does not exist.  Removing old hooks if any.
+	    for hook in $HOOKS; do rm -f $d/$hook;   done
 	fi
     )
 done

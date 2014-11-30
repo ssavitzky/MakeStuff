@@ -31,6 +31,7 @@ include $(TOOLDIR)/make/rules.make
 
 ### If there's a local config.make, include that too.
 #	site/config.make, if present, is included in make/defines.make
+#	It should not include targets -- those go in ./depends.make
 ifneq ($(wildcard config.make),)
      include config.make
 endif
@@ -46,7 +47,14 @@ endif
 .PHONY: all
 all:: $(FILES)
 
-### Greatly simplified put target, using rsync to put the whole subtree.
+### deploy -- deploy to the web server.
+#   
+
+.PHONY: deploy
+deploy:: all
+	git push origin master
+
+### DEPRECATED: Greatly simplified put target, using rsync to put the whole subtree.
 
 .PHONY: put
 put:: 	all
