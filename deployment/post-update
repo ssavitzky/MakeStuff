@@ -7,9 +7,13 @@ do
 	name=`basename $repo`
 	# This works because the .../vv and .../git trees have the same layout
 	dest=`dirname $repo | sed -e 'ss/\/git/vv/'`/$name
-	if [ -d $dest ]; then
+	if [ -d $dest ]; then (cd $dest
 	    echo Deploying master to $dest from $repo
-	    (cd $dest; git pull --ff-only $repo)
+	    git pull --ff-only $repo
+	    if [ -e config.make ] &&  {grep -q post-deployment config.make}; then
+		make post-deployment
+	    fi
+	    )
 	else 
 	    echo Not deploying because $dest does not exist.
 	fi
