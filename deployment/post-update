@@ -11,7 +11,7 @@ for ref in $*; do
 	if [ -d $dest ]; then (cd $dest
 	    echo Deploying master to $dest from $repo
 	    git pull --ff-only $repo
-	    if { grep -q post-deployment Makefile config.make site/config.make }; then
+	    if grep -q post-deployment Makefile config.make site/config.make; then
 		make post-deployment
 	    fi
 	    )
