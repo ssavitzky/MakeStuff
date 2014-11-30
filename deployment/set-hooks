@@ -7,9 +7,18 @@ HOOKS="post-update"
 
 for repo in $*; do
     (
-	cd $repo/hooks
-	d=../../Tools/deployment
-	while [ ! -d $d ]; do d=../$d; done
-	for hook in $HOOKS; do ln -s $d/$hook .; done
+	cd $repo
+	pwd=`pwd`
+	name=`basename $pwd .git`
+	dest=`dirname $pwd | sed -e 's/git/vv/'`/$name
+	if [ -d $dest ]; then
+	    echo Installing hooks in $pwd/hooks.
+	    cd hooks
+	    d=../../Tools/deployment
+	    while [ ! -d $d ]; do d=../$d; done
+	    for hook in $HOOKS; do ln -s $d/$hook .; done
+	else
+	    echo Skipping: $dest does not exist.
+	fi
     )
 done
