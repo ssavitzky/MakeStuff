@@ -6,7 +6,7 @@ for ref in $*; do
 	repo=`pwd`
 	name=`basename $repo`
 	# This works because the .../vv and .../git trees have the same layout
-	dest=`dirname $repo | sed -e 'ss/\/git/vv/'`/$name
+	dest=`dirname $repo | sed -e 's/\/git/vv/'`/$name
 	if [ -d $dest ]; then (cd $dest
 	    echo Deploying master to $dest from $repo
 	    git pull --ff-only $repo
