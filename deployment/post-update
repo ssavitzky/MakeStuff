@@ -1,4 +1,5 @@
 #!/bin/sh
+# Called once after update, with list of refs pushed in the arguments.
 for ref in $*; do
     if [[ $ref =~ .*/master$ ]]; then
 	unexport GIT_DIR
