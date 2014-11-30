@@ -24,13 +24,8 @@ cd ..; mv working/.git .; rm -rf working
 # can't just use "git cvsimport" in a cvs working directory
 # -> fails with "unknown error" if there are locally-modified files
 
-# remove all the irrelevant files
-if [ -d CVS ]; then
-    find . -depth -name CVS -exec rm -rf {} \;	     # same with put, etc.
-    find . -depth -name put -exec rm -rf {} \;
-    find . -depth -name put.\* -exec rm -rf {} \;
-    find . -depth -name '*~' -exec rm -f {} \; 
-fi
+# took out the cleanup because it's a bit risky
+echo you might want to run clean-up-old-files
 
 cp ../Tools/.gitignore .
 git add .
