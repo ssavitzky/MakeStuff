@@ -1,6 +1,5 @@
 #!/bin/sh
-while read oldrev newrev ref
-do
+for ref in $*; do
     if [[ $ref =~ .*/master$ ]]; then
 	unexport GIT_DIR
 	repo=`pwd`
