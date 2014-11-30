@@ -55,11 +55,7 @@ all:: $(FILES)
 #	The "| tee" prevents git push from reporting progress.
 
 .PHONY: deploy
-deploy: all pre-deployment
-	@if git remote | grep origin; then				\
-	   git commit -a -m "Deployed from `hostname` `date`"  &&	\
-	   git push origin | tee /dev/null;				\
-	fi
+deploy: all deploy-only
 
 ### Cleanup
 
