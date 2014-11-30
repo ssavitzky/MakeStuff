@@ -1,0 +1,19 @@
+#!/bin/sh
+while read oldrev newrev ref
+do
+    if [[ $ref =~ .*/master$ ]]; then
+	unexport GIT_DIR
+	repo=`pwd`
+	name=`basename $repo`
+	# This works because the .../vv and .../git trees have the same layout
+	dest=`dirname $repo | sed -e 'ss/\/git/vv/'`/$name
+	if [ -d $dest ]; then
+	    echo Deploying master to $dest from $repo
+	    (cd $dest; git pull --ff-only $repo)
+	else 
+	    echo Not deploying because $dest does not exist.
+	fi
+    else
+        echo "Ref $ref successfully received.  Not deploying because not master."
+    fi
+done
