@@ -14,6 +14,7 @@ for ref in $*; do
 	if [ -d $dest ]; then (cd $dest
 	    echo Deploying master to $dest from $repo
 	    git pull --ff-only $repo
+	    git update-server-info
 	    if grep -qs post-deployment: $PD_FILES; then
 		make post-deployment
 	    fi

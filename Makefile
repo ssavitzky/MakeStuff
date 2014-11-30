@@ -48,18 +48,18 @@ endif
 all:: $(FILES)
 
 ### deploy -- deploy to the web server.
-#   
+#	Differs from the existing "push" target in not being recursive.
+#	Sites that want recursion can add deploy-subdirs as a dependency
+#	of pre-deployment.
+#
+#	The "| tee" prevents git push from reporting progress.
 
 .PHONY: deploy
-deploy:: all
-	git push origin master
-
-### DEPRECATED: Greatly simplified put target, using rsync to put the whole subtree.
-
-.PHONY: put
-put:: 	all
-	rsync -a -z -v $(EXCLUDES) --delete $(RSYNC_FLAGS) \
-	      ./ $(HOST):$(DOTDOT)/$(MYNAME)
+deploy: all pre-deployment
+	@if git remote | grep origin; then				\
+	   git commit -a -m "Deployed from `hostname` `date`"  &&	\
+	   git push origin | tee /dev/null;				\
+	fi
 
 ### Cleanup
 
