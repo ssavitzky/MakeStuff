@@ -1,6 +1,9 @@
 #!/bin/sh
 # Called once after update, with list of refs pushed in the arguments.
 
+# Files to search for a post-deployment make target
+PD_FILES="Makefile config.make site/config.make"
+
 for ref in $*; do
     if [[ $ref =~ .*/master$ ]]; then
 	unset GIT_DIR; export GIT_DIR
@@ -11,7 +14,7 @@ for ref in $*; do
 	if [ -d $dest ]; then (cd $dest
 	    echo Deploying master to $dest from $repo
 	    git pull --ff-only $repo
-	    if grep -q post-deployment Makefile config.make site/config.make; then
+	    if grep -qs post-deployment: $PD_FILES; then
 		make post-deployment
 	    fi
 	    )
@@ -19,6 +22,6 @@ for ref in $*; do
 	    echo Not deploying because $dest does not exist.
 	fi
     else
-        echo "Ref $ref successfully received.  Not deploying because not master."
+        echo "Ref $ref received.  Not deploying because not master."
     fi
 done
