@@ -5,9 +5,9 @@ for ref in $*; do
     if [[ $ref =~ .*/master$ ]]; then
 	unexport GIT_DIR
 	repo=`pwd`
-	name=`basename $repo`
+	name=`basename $repo .git`
 	# This works because the .../vv and .../git trees have the same layout
-	dest=`dirname $repo | sed -e 's/\/git/vv/'`/$name
+	dest=`dirname $repo | sed -e 's/git/vv/'`/$name
 	if [ -d $dest ]; then (cd $dest
 	    echo Deploying master to $dest from $repo
 	    git pull --ff-only $repo
