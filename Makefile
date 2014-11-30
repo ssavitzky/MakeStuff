@@ -53,10 +53,6 @@ put:: 	all
 	rsync -a -z -v $(EXCLUDES) --delete $(RSYNC_FLAGS) \
 	      ./ $(HOST):$(DOTDOT)/$(MYNAME)
 
-.PHONY: post-deployment
-post-deployment::
-	echo deployed successfully
-
 ### Cleanup
 
 .PHONY: texclean clean
