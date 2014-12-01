@@ -17,6 +17,9 @@ pre-deployment::
 
 # deploy-only does a deployment (using git) but nothing else.
 #	DEPLOY_OPTS can be used to add, e.g., --allow-empty
+#	TODO:  determine whether a (git) deployment is really necessary.
+#	       this should not cause the target to fail, as there might
+#	       be additional dependencies, like rsync deployments.
 deploy-only::
 	@if git remote | grep -s origin; then					\
 	   git commit $(DEPLOY_OPTS) -a -m "Deployed from `hostname` `date`";  	\
@@ -25,16 +28,17 @@ deploy-only::
 
 # deploy-subdirs does pre-deployment and deploy-only in subdirectories.
 #	It uses pre-deployment and deploy-only to avoid recursively doing
-#	make all, which the top-level make deploy has already done.
+#	make all, which the top-level make deploy has already done, but
+#	blythely assumes that a deploy target implies their existance.
 deploy-subdirs::
 	@echo deploying subdirectories
-	@for d in $(SUBDIRS); do 					\
+	@for d in $(SUBDIRS); do grep -qs deploy: $$d/Makefile &&		\
 	     (cd $$d; @(MAKE) pre-deployment deploy-only) done
 
-### git-related targets
+### older git-related targets
 #	Note that there is currently no way to override the following
-#	targets with something from a local directory or tree.  If 
-#	necessary we can make all this conditional on a flag variable.
+#	targets with something from a local directory or tree.  Deploy
+#	is better than push for this reason.
 
 # push:  do the subdirectories first.  Try make before resorting to git
 #
@@ -47,7 +51,7 @@ push::
 	done
 
 # push:	 This target does a snapshot "commit -a" before pushing.
-
+#	 It doesn't push if the commit fails.
 push::  all
 	@if git remote | grep -s origin; then			\
 	   git commit -a -m "push from `hostname` `date`"  &&	\
