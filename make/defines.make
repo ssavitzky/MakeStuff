@@ -28,8 +28,8 @@ EXCLUDES = --exclude=Tracks --exclude=Master --exclude=Premaster \
 #	Note that $(SUBDIRS) only includes directories with a Makefile
 #
 FILES    = Makefile $(wildcard *.html *.ps *.pdf)
-SUBDIRS := $(shell for d in `ls -F`; do \
-		       if [ -e $${d}Makefile ]; then basename $$d; fi; done)
+SUBDIRS := $(shell for d in *; do \
+	     if [ -e $$d/Makefile -a ! -L $$d ]; then echo $$d; fi; done)
 
 ### Different types of subdirectories.
 #   Collection:  capitalized name
@@ -40,11 +40,11 @@ COLLDIRS := $(shell ls -F | grep ^[A-Z] | grep / | grep -v CVS | sed s/\\///)
 ITEMDIRS := $(shell ls -F | grep ^[a-z] | grep / | sed s/\\///) 
 DATEDIRS := $(shell ls -F | grep ^[0-9] | grep / | sed s/\\///)
 
-# subdirs containing git repositories.  
-#    Note that a Makefile is not required for this.
+# real (not linked) subdirs containing git repositories.
+#    Note that we do not require a Makefile, only .git.
 
 GIT_DIRS := $(shell for d in *; do \
-			if [ -d $$d/.git ]; then echo $$d; fi; done)
+		if [ -d $$d/.git -a ! -L $$d ]; then echo $$d; fi; done)
 #
 ###
 
