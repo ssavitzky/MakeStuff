@@ -16,10 +16,11 @@ pre-deployment::
 	@echo pre-deployment...
 
 # deploy-only does a deployment (using git) but nothing else.
+#	DEPLOY_OPTS can be used to add, e.g., --allow-empty
 deploy-only::
-	@if git remote | grep -s origin; then				\
-	   git commit -a -m "Deployed from `hostname` `date`";		\
-	   git push origin | tee /dev/null;				\
+	@if git remote | grep -s origin; then					\
+	   git commit $(DEPLOY_OPTS) -a -m "Deployed from `hostname` `date`";  	\
+	   git push origin | tee /dev/null;					\
 	fi
 
 # deploy-subdirs does pre-deployment and deploy-only in subdirectories.
