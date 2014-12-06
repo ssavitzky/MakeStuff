@@ -3,10 +3,11 @@
 #
 
 if [ -d CVS ]; then
-    root=`cat ../CVS/Root`
-    repo=`cat ../CVS/Repository`
-    x='$'
-    tree=`perl -e "'$repo' =~ m|$root/(.*)${x}|; print ${x}1"`
+    root=`cat CVS/Root`
+    repo=`cat CVS/Repository`
+    #x='$'
+    #tree=`perl -e "'$repo' =~ m|$root/(.*)${x}|; print ${x}1"`
+    tree=$repo
 else
     root=/home/starport/CvsRoot
     cwd=`pwd`
@@ -15,14 +16,18 @@ fi
 
 echo repo=$root tree=$tree
 
+# can't just use "git cvsimport" in a cvs working directory
+# -> fails with "unknown error" if there are locally-modified files
 mkdir working
 cd working
 git cvsimport -d $root $tree
 
 cd ..; mv working/.git .; rm -rf working
 
-# can't just use "git cvsimport" in a cvs working directory
-# -> fails with "unknown error" if there are locally-modified files
+if [ ! -d .git ]; then
+    echo "Sorry about that."
+    exit 1
+fi
 
 # took out the cleanup because it's a bit risky
 echo you might want to run clean-up-old-files

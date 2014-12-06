@@ -48,11 +48,9 @@ endif
 all:: $(FILES)
 
 ### deploy -- deploy to the web server.
-#	Differs from the existing "push" target in not being recursive.
+#	Differs from the original "push" target in not being recursive.
 #	Sites that want recursion can add deploy-subdirs as a dependency
 #	of pre-deployment.
-#
-#	The "| tee" prevents git push from reporting progress.
 
 .PHONY: deploy
 deploy: all deploy-only
@@ -65,41 +63,9 @@ texclean::
 	-rm -f *.aux *.log *.toc *.dvi
 
 clean::
-	-rm -f *.CKP *.ln *.BAK *.bak *.o core errs  *~ *.a \
-		.emacs_* tags TAGS MakeOut *.odf *_ins.h \
+	-rm -f *.CKP *.ln *.BAK *.bak *.o core errs  *~ *.a 	\
+		.emacs_* tags TAGS MakeOut *.odf *_ins.h 	\
 		*.aux *.log *.toc *.dvi
-
-### Test - list important variables
-
-.PHONY: test
-V1 := BASEDIR MYNAME 
-V2 := BASEREL TOOLREL 
-V3 := HOST DOTDOT 
-test::
-	@echo $(foreach v,$(V1), $(v)=$($(v)) )
-	@echo $(foreach v,$(V2), $(v)=$($(v)) )
-	@echo $(foreach v,$(V3), $(v)=$($(v)) )
-	@echo FILES: $(FILES)
-	@if [ "$(SUBDIRS)" != "" ]; then echo SUBDIRS: $(SUBDIRS); fi
-	@echo items: $(ITEMDIRS)
-	@echo colls: $(COLLDIRS)
-	@echo git: $(GIT_DIRS)
-
-
-### Setup
-
-
-### Fixup
-
-# link-makefile - link a Makefile from Tools.
-.PHONY: link-makefile
-link-makefile: 
-	if [ ! -L Makefile ]; then \
-	   if [ -f Makefile ]; then git rm -f Makefile; fi; \
-	   ln -s $(TOOLREL)/Makefile .; \
-	   git add Makefile; \
-	   git commit -m "Makefile linked from Tools"; \
-	fi
 
 ### Include targets & depends from depends.make if present 
 #

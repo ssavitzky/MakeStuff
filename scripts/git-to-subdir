@@ -1,0 +1,23 @@
+#!/bin/sh
+#  Prepare a git-based directory in preparation for merging as a subtree
+#
+
+usage="$0 -- convert git-based directory into a subdirectory of the same name"
+
+if [ ! -d .git ]; then
+    echo $usage
+    exit 1;
+fi
+
+pwd=`pwd`
+name=`basename ${pwd}`
+
+echo $name
+
+for f in .*ignore; do
+    echo removing $f
+    git rm $f
+done
+
+git add .
+git commit --allow-empty -m "preparing $name for subtree merging"

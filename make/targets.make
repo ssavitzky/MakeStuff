@@ -7,6 +7,7 @@
 
 
 ### deployment
+
 .PHONY: push pull pre-deployment deploy-only deploy-subdirs
 
 # pre-deployment does any necessary preparation for deployment.
@@ -80,5 +81,37 @@ put:: 	all
 
 sloc.log:: 
 	sloccount --addlang makefile . > $@
+
+
+### Test - list important variables
+
+.PHONY: test
+V1 := BASEDIR MYNAME 
+V2 := BASEREL TOOLREL 
+V3 := HOST DOTDOT 
+test::
+	@echo $(foreach v,$(V1), $(v)=$($(v)) )
+	@echo $(foreach v,$(V2), $(v)=$($(v)) )
+	@echo $(foreach v,$(V3), $(v)=$($(v)) )
+	@echo FILES: $(FILES)
+	@if [ "$(SUBDIRS)" != "" ]; then echo SUBDIRS: $(SUBDIRS); fi
+	@echo items: $(ITEMDIRS)
+	@echo colls: $(COLLDIRS)
+	@echo git: $(GIT_DIRS)
+
+### Setup
+
+
+### Fixup
+
+# link-makefile - link a Makefile from Tools.
+.PHONY: link-makefile
+link-makefile: 
+	if [ ! -L Makefile ]; then 				\
+	   if [ -f Makefile ]; then git rm -f Makefile; fi; 	\
+	   ln -s $(TOOLREL)/Makefile .; 			\
+	   git add Makefile; 					\
+	   git commit -m "Makefile linked from Tools"; 		\
+	fi
 
 ###### end of targets.make ######

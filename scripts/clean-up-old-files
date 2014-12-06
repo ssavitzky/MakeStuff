@@ -4,4 +4,5 @@
 find . -depth -name CVS -exec rm -rf {} \;	     # same with put, etc.
 find . -depth -name put -exec rm -rf {} \;
 find . -depth -name put.\* -exec rm -rf {} \;
+find . -depth -name mkdir.log -exec rm -rf {} \;
 find . -depth -name '*~' -exec rm -f {} \; 
