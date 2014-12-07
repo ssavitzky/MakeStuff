@@ -14,13 +14,16 @@ else
 endif
 
 ### Web upload location and excludes:
-#	DOTDOT is the path to this directory on $(HOST)
-#	either can be overridden if necessary in the local site.make
+#	DOTDOT is the path to this directory on $(HOST); it works because
+#	/vv is the parent of our whole deployment tree, and ~/vv exists on
+#	the web host.  This is not really a good assumption, and fails
+#	miserably when deploying from, e.g., a laptop.  Don't do that.
+#	Either can be overridden if necessary in the local config.make
 #
 DOTDOT  := .$(MYDIR)
 HOST	 = savitzky@savitzky.net
 EXCLUDES = --exclude=Tracks --exclude=Master --exclude=Premaster \
-	   --exclude=\*temp --exclude=.audacity\*
+	   --exclude=\*temp --exclude=.audacity\* --exclude=.git
 #
 ###
 
