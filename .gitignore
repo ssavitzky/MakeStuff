@@ -21,6 +21,7 @@ TAGS
 # *.Z *.elc *.ln core .svn/
 
 CVS
+.cvsignore
 
 *.a 
 *.olb 
