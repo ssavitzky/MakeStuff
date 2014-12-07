@@ -24,7 +24,7 @@ pre-deployment::
 deploy-only:: | $(BASEDIR)/.git
 	-@if git remote|grep -q origin && git branch|grep -q '* master'; then	\
 	   git commit $(DEPLOY_OPTS) -a -m "pre-deployment commit";		\
-	   if [ git status | head -2 | grep -q "branch is ahead of" ]; then	\
+	   if git status | head -2 | grep -q "branch is ahead of"; then		\
 	   	git tag -a -m "Deployed from `hostname` `date`";		\
 	   	git push origin | tee /dev/null;				\
 	   else echo "git deployment not needed: up to date";			\
