@@ -27,7 +27,7 @@ deploy-only:: | $(BASEDIR)/.git
 	   if git status | head -2 | grep -q "branch is ahead of"; then		\
 	   	git tag -a -m "Deployed from `hostname` `date`"			\
 		    deployed/`date -u +%Y%m%dT%h%m%sZ`;				\
-	   	git push --tags origin | tee /dev/null;				\
+	   	git push --tags origin master | tee /dev/null;			\
 	   else echo "git deployment not needed: up to date";			\
 	   fi									\
 	elif git remote|grep -q origin; then					\
