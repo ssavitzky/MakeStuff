@@ -26,7 +26,7 @@ deploy-only:: | $(BASEDIR)/.git
 	   git commit $(DEPLOY_OPTS) -a -m "pre-deployment commit";		\
 	   if git status | head -2 | grep -q "branch is ahead of"; then		\
 	   	git tag -a -m "Deployed from `hostname` `date`"			\
-		    deployed/`date -u +%Y%m%dT%h%m%sZ`;				\
+		    deployed/`date -u +%Y%m%dT%H%M%SZ`;				\
 	   	git push --tags origin master | tee /dev/null;			\
 	   else echo "git deployment not needed: up to date";			\
 	   fi									\
