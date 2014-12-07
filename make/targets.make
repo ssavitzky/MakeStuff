@@ -18,14 +18,19 @@ pre-deployment::
 
 # deploy-only does a deployment (using git) but nothing else.
 #	DEPLOY_OPTS can be used to add, e.g., --allow-empty
-#	Succeeds even if the commit fails and the push is not done:
-#	there may be additional dependencies, like rsync deployments.
+#	Succeeds even if the push is not done: there may be additional
+#	dependencies, such as rsync deployments.
 # FIXME:  this only works for Tools itself because .. is git-controlled.
 deploy-only:: | $(BASEDIR)/.git
-	-@if git remote | grep -s origin; then					\
-	   git commit $(DEPLOY_OPTS) -a -m "Deployed from `hostname` `date`" ||	\
-	   git status | grep -s "branch is ahead of";				\
-	   git push origin | tee /dev/null;					\
+	-@if git remote|grep -q origin && git branch|grep -q '* master'; then	\
+	   git commit $(DEPLOY_OPTS) -a -m "pre-deployment commit";		\
+	   if [ git status | head -2 | grep -q "branch is ahead of" ]; then	\
+	   	git tag -a -m "Deployed from `hostname` `date`";		\
+	   	git push origin | tee /dev/null;				\
+	   else echo "git deployment not needed: up to date";			\
+	   fi									\
+	elif git remote|grep -q origin; then					\
+	   echo "not on branch master; not deploying.";				\
 	fi
 
 # deploy-subdirs does pre-deployment and deploy-only in subdirectories.
