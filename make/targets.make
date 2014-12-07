@@ -18,12 +18,13 @@ pre-deployment::
 
 # deploy-only does a deployment (using git) but nothing else.
 #	DEPLOY_OPTS can be used to add, e.g., --allow-empty
-#	TODO:  determine whether a (git) deployment is really necessary.
-#	       this should not cause the target to fail, as there might
-#	       be additional dependencies, like rsync deployments.
-deploy-only::
-	@if git remote | grep -s origin; then					\
-	   git commit $(DEPLOY_OPTS) -a -m "Deployed from `hostname` `date`";  	\
+#	Succeeds even if the commit fails and the push is not done:
+#	there may be additional dependencies, like rsync deployments.
+# FIXME:  this only works for Tools itself because .. is git-controlled.
+deploy-only:: | $(BASEDIR)/.git
+	-@if git remote | grep -s origin; then					\
+	   git commit $(DEPLOY_OPTS) -a -m "Deployed from `hostname` `date`" ||	\
+	   git status | grep -s "branch is ahead of";				\
 	   git push origin | tee /dev/null;					\
 	fi
 
