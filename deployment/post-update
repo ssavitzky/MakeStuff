@@ -23,6 +23,6 @@ for ref in $*; do
 	    echo Not deploying because $dest does not exist.
 	fi
     else
-        echo "Ref $ref received.  Not deploying because not master."
+        echo "Ref $ref received."
     fi
 done
