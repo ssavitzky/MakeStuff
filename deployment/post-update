@@ -13,7 +13,7 @@ for ref in $*; do
 	dest=`dirname $repo | sed -e 's/git/vv/'`/$name
 	if [ -d $dest ]; then (cd $dest
 	    echo Deploying master to $dest from $repo
-	    git pull --ff-only $repo
+	    git pull --ff-only # was $repo master, but hopefully origin is configured
 	    git update-server-info
 	    if grep -qs post-deployment: $PD_FILES; then
 		make post-deployment
