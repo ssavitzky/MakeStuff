@@ -1,7 +1,7 @@
 			     to.do for WURM/Tools
-	       $Id: to.do,v 1.12 2010-10-14 06:48:15 steve Exp $
 
-
+NOTE (201412) WURM has largely been superceded, but Tools/Makefile is more or
+less alive and well.
 
 =========================================================================
 
