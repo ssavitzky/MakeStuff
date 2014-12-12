@@ -1,0 +1,21 @@
+#!/bin/sh
+#  Set up a remote deployment tree.  Executed from the local working tree.
+
+if [ -z `git remote` ]; then 
+    echo `pwd` origin missing:  run init-remote-repo first;
+    exit; 
+fi
+
+# This works only because our forest is rooted at /vv on nova.
+cwd=`pwd -P`
+name=`basename $cwd`
+site=savitzky.net
+
+parent=`dirname $cwd | sed -e 's/\/vv/git/'`
+path=$parent/$name.git
+
+deployTo=`dirname $cwd | sed -e 's/\///'`
+
+# Set up the remote working tree
+ssh $site "cd $deployTo; git clone ${HOME}${path}"
+ssh $site "cd $parent; ${HOME}/git/Tools/deployment/set-hooks $name.git"
