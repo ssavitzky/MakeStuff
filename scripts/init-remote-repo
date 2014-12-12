@@ -1,8 +1,10 @@
 #!/bin/sh
+#  Set up a remote repo.  Executed from the local working tree.
 
 if [ ! -z `git remote` ]; then echo `pwd` origin exists; exit; fi
 
-cwd=`pwd`
+# This works only because our forest is rooted at /vv on nova.
+cwd=`pwd -P`
 name=`basename $cwd`
 site=savitzky.net
 
@@ -13,6 +15,8 @@ url=$site:$path
 echo $url
 
 ssh $site "mkdir $path && cd $path && git init --bare"
-git remote add origin $url
+git remote add origin -m master $url
 git push -f origin master
+git branch --set-upstream master origin/master
+# The following may not be necessary
 git remote set-head origin master
