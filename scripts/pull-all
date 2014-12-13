@@ -1,0 +1,19 @@
+#!/bin/bash
+#  Recursively find all directories with git repos, and try to pull them.
+
+
+if [ "-h" = "$1" -o "--help" = "$1" ]; then
+    cat <<EOF
+$0 [flags]
+   Recursively find all directories with git repos, and try to pull them.
+   All flags except -h and --help are passed to git pull.
+   If anything fails, a reasonable next step would be pull --rebase.
+EOF
+    exit
+fi
+
+flags="${*:---ff-only}"
+
+for f in `find . -name .git -print`; do 
+    (cd `dirname $f`; echo -n $f " "; git pull $flags) 
+done
