@@ -17,5 +17,5 @@ path=$parent/$name.git
 deployTo=`dirname $cwd | sed -e 's/\///'`
 
 # Set up the remote working tree
-ssh $site "cd $deployTo; git clone ${HOME}${path}"
-ssh $site "cd $parent; ${HOME}/git/Tools/deployment/set-hooks $name.git"
+ssh -x $site "cd $deployTo; git clone \${HOME}/${path}"
+ssh -x $site "cd $parent; \${HOME}/git/Tools/deployment/set-hooks $name.git"
