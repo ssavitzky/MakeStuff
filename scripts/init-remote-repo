@@ -14,7 +14,7 @@ path=$parent/$name.git
 url=$site:$path
 echo $url
 
-ssh $site "mkdir $path && cd $path && git init --bare"
+ssh -x $site "mkdir $path && cd $path && git init --bare"
 git remote add origin -m master $url
 git push -f origin master
 git branch --set-upstream master origin/master

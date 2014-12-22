@@ -1,0 +1,12 @@
+#!/bin/sh
+#  Report on the status of all git-based subdirectories
+
+for f in $(find . -name .git -print | sort); do 
+    (   cd $(dirname $f)
+	status=$(git status | grep Your)
+	if [ "" != "$status" ] || [ ! -z "$(git status --short)" ]; then
+	    echo $(dirname $f) $status
+	    git status --short
+	fi
+    )
+done
