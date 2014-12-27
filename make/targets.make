@@ -33,13 +33,12 @@ deploy-this:: | $(BASEDIR)/.git
 	   echo "not on branch master; not deploying.";				\
 	fi
 
+# deploy-tag should be done explicitly in most cases.
 deploy-tag::
-	@if [ ! "$(GIT_COMMIT)" = "$(GIT_INITIAL_COMMIT)" ]; then		\
-	   echo "tagging"							\
-	   git tag -a -m "Deployed from `hostname` `date`"			\
-	       deployed/`date -u +%Y%m%dT%H%M%SZ`;				\
-	   git push --tags origin master | tee /dev/null;			\
-	fi
+	@echo tagging deployment
+	git tag -a -m "Deployed from `hostname` `date`"				\
+	       deployed/`date -u +%Y%m%dT%H%M%SZ`;
+	git push --tags | tee /dev/null
 
 # deploy-r does pre-deploy and deploy-this in subdirectories.
 #	It uses pre-deploy and deploy-this to avoid recursively doing
@@ -47,7 +46,7 @@ deploy-tag::
 #	blythely assumes that a deploy target implies their existance.
 deploy-r::
 	@echo deploying subdirectories
-	@for d in $(SUBDIRS); do grep -qs deploy: $$d/Makefile &&	\
+	@for d in $(SUBDIRS); do grep -qs deploy: $$d/Makefile &&		\
 	     (cd $$d; $(MAKE) pre-deploy deploy-this) done
 
 # push is essentially the same as (git-only) deploy except that
@@ -61,9 +60,9 @@ deploy-r::
 push:	all push-this push-r
 
 push-this:: | $(BASEDIR)/.git
-	-@if git remote|grep -q origin; then				\
-	   git commit -a -m "pre-push commit";				\
-	   git push | tee /dev/null;					\
+	-@if git remote|grep -q origin; then					\
+	   git commit -a  $(PUSH_OPTS) -m "Pushed from `hostname` `date`";	\
+	   git push | tee /dev/null;						\
 	fi
 
 push-r::
@@ -108,17 +107,18 @@ sloc.log::
 	sloccount --addlang makefile . > $@
 
 status:
-	echo git status for $(MYNAME)
+	echo git status for $(MYNAME) and subdirs
 	@$(TOOLDIR)/scripts/git-status-all
 
 
-### Test - list important variables
+### report-vars - list important make variables
 
-.PHONY: test
+.PHONY: report-vars
 V1 := BASEDIR MYNAME 
 V2 := BASEREL TOOLREL 
 V3 := HOST DOTDOT 
-test::
+report-vars::
+	@echo SHELL=$(SHELL)
 	@echo $(foreach v,$(V1), $(v)=$($(v)) )
 	@echo $(foreach v,$(V2), $(v)=$($(v)) )
 	@echo $(foreach v,$(V3), $(v)=$($(v)) )
@@ -131,12 +131,14 @@ test::
 
 ### Setup
 
-.PHONY: deployable
+.PHONY: deployable remote-repo
 
-deployable: | .git .git/refs/remotes/origin
+deployable: .git .git/refs/remotes/origin
 	$(TOOLDIR)/scripts/init-deployment
 
-.git/refs/remote/origin:
+remote-repo:  .git/refs/remotes/origin
+
+.git/refs/remotes/origin:
 	$(TOOLDIR)/scripts/init-remote-repo
 
 ### Fixup
