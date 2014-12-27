@@ -50,10 +50,10 @@ all:: $(FILES)
 ### deploy -- deploy to the web server.
 #	Differs from the original "push" target in not being recursive.
 #	Sites that want recursion can add deploy-subdirs as a dependency
-#	of pre-deployment.
+#	of pre-deploy
 
 .PHONY: deploy
-deploy: all deploy-only
+deploy: all pre-deploy deploy-this deploy-tag
 
 ### Cleanup
 

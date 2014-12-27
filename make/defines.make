@@ -27,12 +27,18 @@ EXCLUDES = --exclude=Tracks --exclude=Master --exclude=Premaster \
 #
 ###
 
-### Files and Subdirs:
-#	Note that $(SUBDIRS) only includes directories with a Makefile
+### Files and Subdirectories:
+#	Note that $(SUBDIRS) only includes real directories with a Makefile
 #
 FILES    = Makefile $(wildcard *.html *.ps *.pdf)
 SUBDIRS := $(shell for d in *; do \
 	     if [ -e $$d/Makefile -a ! -L $$d ]; then echo $$d; fi; done)
+
+# real (not linked) subdirs containing git repositories.
+#    Note that we do not require a Makefile, only .git.
+
+GITDIRS := $(shell for d in *; do \
+		if [ -d $$d/.git -a ! -L $$d ]; then echo $$d; fi; done)
 
 ### Different types of subdirectories.
 #   Collection:  capitalized name
@@ -43,11 +49,20 @@ COLLDIRS := $(shell ls -F | grep ^[A-Z] | grep / | grep -v CVS | sed s/\\///)
 ITEMDIRS := $(shell ls -F | grep ^[a-z] | grep / | sed s/\\///) 
 DATEDIRS := $(shell ls -F | grep ^[0-9] | grep / | sed s/\\///)
 
-# real (not linked) subdirs containing git repositories.
-#    Note that we do not require a Makefile, only .git.
+#
+###
 
-GIT_DIRS := $(shell for d in *; do \
-		if [ -d $$d/.git -a ! -L $$d ]; then echo $$d; fi; done)
+### git setup:
+#
+GIT_REPO := $(wildcard $(BASEDIR)/.git)
+ifneq  ($(GIT_REPO),)
+  GIT_COMMIT = $(git log --format=format:%H -n1)
+
+  # The commit when we started make.  We can use this to see whether we made a
+  # new commit as part of the deployment process.
+  GIT_INITIAL_COMMIT := $(GIT_COMMIT)
+endif
+
 #
 ###
 
