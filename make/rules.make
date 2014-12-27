@@ -26,5 +26,11 @@
 %.pdf:	%.ps
 	ps2pdf $*.ps $*.pdf
 
+%.eps: %.ps
+	rm -f $@
+	ps2eps $<
+
+%.pdf: %.eps
+	 ps2pdf $<
 
 ###### end of rules.make ######

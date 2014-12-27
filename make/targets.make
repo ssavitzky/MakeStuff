@@ -3,27 +3,24 @@
 # This file is meant to be included by Tools/Makefile, and defines a
 # generally-useful collection of targets.
 #
-# Note that targets in this file will not be found by bash autocomplete. 
 
-
-### deployment
+### deployment ###
 
 .PHONY: pre-deploy deploy-this deploy-r
 
 # pre-deploy does any necessary preparation for deployment.
-#	deploy depends on it after all.  a site's depends.make may
-#	add a dependency on deploy-subdirs to get a recursive deployment.
+#	deploy depends on it after all.  A site's config.make may add a
+#	dependency on deploy-r to get a recursive deployment.
 pre-deploy::
-	@echo pre-deploy...
+	@echo deploying $(MYNAME)...
 
 # deploy-this does a deployment (using git) but nothing else.
 #	DEPLOY_OPTS can be used to add, e.g., --allow-empty
 #	Succeeds even if the push is not done: there may be additional
 #	dependencies, such as rsync deployments.
-# FIXME:  this only works for Tools itself because .. is git-controlled.
 deploy-this:: | $(BASEDIR)/.git
 	-@if git remote|grep -q origin && git branch|grep -q '* master'; then	\
-	   git commit $(DEPLOY_OPTS) -a -m "Deployed from `hostname` `date`";	\
+	   git commit $(DEPLOY_OPTS) -a -m "Deployed $(COMMIT_MSG)";		\
 	   if git diff --quiet origin/master; then				\
 		echo "git deployment not needed: up to date";			\
 	   else									\
@@ -35,46 +32,53 @@ deploy-this:: | $(BASEDIR)/.git
 
 # deploy-tag should be done explicitly in most cases.
 deploy-tag::
-	@echo tagging deployment
-	git tag -a -m "Deployed from `hostname` `date`"				\
-	       deployed/`date -u +%Y%m%dT%H%M%SZ`;
+	git tag -a -m "Deployed $(COMMIT_MSG)" deployed/$(TIMESTAMP);
 	git push --tags | tee /dev/null
 
 # deploy-r does pre-deploy and deploy-this in subdirectories.
 #	It uses pre-deploy and deploy-this to avoid recursively doing
 #	make all, which the top-level make deploy has already done, but
-#	blythely assumes that a deploy target implies their existance.
+#	blythely assumes that a deploy target implies their existence.
 deploy-r::
-	@echo deploying subdirectories
-	@for d in $(SUBDIRS); do grep -qs deploy: $$d/Makefile &&		\
+	@echo deploying makeable subdirectories
+	@for d in $(SUBDIRS); do grep -qs deploy: $$d/Makefile &&	\
 	     (cd $$d; $(MAKE) pre-deploy deploy-this) done
 
+# deploy-rgit pushes subdirectories with .git and no deploy: target
+#	It uses Makefile in the parent directory to do push-this.
+#
+deploy-rgit::
+	@echo deploying git-only subdirectories
+	@for d in $(GITDIRS); do grep -qs deploy: $$d/Makefile ||	\
+	     (cd $$d; $(MAKE) -f ../Makefile push-this) done
+
 # push is essentially the same as (git-only) deploy except that
-#	* it does not create a tag, nor does it push them.
 #	* it doesn't verify that master is the current branch.
 #	* it recurses automatically into git-controled subdirectories,
-#	* ...but doesn't require a makefile there.
+#	* ...but doesn't require a makefile with a push target there.
 
 .PHONY: push push-this push-r
-
 push:	all push-this push-r
 
 push-this:: | $(BASEDIR)/.git
-	-@if git remote|grep -q origin; then					\
-	   git commit -a  $(PUSH_OPTS) -m "Pushed from `hostname` `date`";	\
-	   git push | tee /dev/null;						\
+	-@if git remote|grep -q origin; then				\
+	   git commit -a  $(PUSH_OPTS) -m "Pushed $(COMMIT_MSG)";	\
+	   git push | tee /dev/null;					\
 	fi
 
 push-r::
 	@for d in $(GITDIRS); do 					\
-	    if [ -d $$d/.git/refs/remotes/origin ]; then 		\
-		echo pushing in $$d;					\
-		(cd $$d; $(MAKE) push-this || git push|tee /dev/null);	\
+	    if [ -d $$d/.git/refs/remotes/origin ]; then (cd $$d;	\
+		 echo pushing in $$d;					\
+		 if grep -qs deploy: Makefile;				\
+		    then $(MAKE) push-this push-r			\
+		    else git push|tee /dev/null; fi)			\
 	    fi; 							\
 	done
 
 # pull does pull --rebase
-
+#	It's simpler than push because it doesn't do a build first.
+.PHONY: pull
 pull::
 	@if [ -d .git/refs/remotes/origin ]; then 		\
 	    git pull --rebase | tee /dev/null; 			\
@@ -83,21 +87,42 @@ pull::
 pull:: 
 	@for d in $(GITDIRS); do (cd $$d; 			\
 	    echo pulling into $$d;				\
-	    $(MAKE) pull || git pull --rebase | tee /dev/null); \
+	    if grep -qs deploy: Makefile;			\
+		then $(MAKE) pull				\
+		else git pull --rebase; fi)			\
 	done
 
 
-### DEPRECATED: Greatly simplified put target, using rsync to put the whole subtree.
+### rsync deployment ###
 
-.PHONY: put
-put:
-	@echo deprecated:  use deploy or rsync;	false
+.PHONY: put rsync rsync-this rsync-r
+put:	# put used to be the main deployment target; it is now deprecated.
+	@echo deprecated:  use deploy, push, or rsync; false
 
+# rsync does a full recursive rsync with --delete and --cvs-exclude
+#	.git and {Master,Premaster,Tracks} are also excluded
 rsync:
-	rsync -a -z -v $(EXCLUDES) --delete $(RSYNC_FLAGS) \
+	rsync -aC -z -v $(EXCLUDES) --delete $(RSYNC_FLAGS) 	\
 	      ./ $(HOST):$(DOTDOT)/$(MYNAME)
 
-### reporting
+# rsync-this syncs just the current directory, with no deletion.
+rsync-this:
+	rsync -lptC -z -v $(EXCLUDES) $(RSYNC_FLAGS) 		\
+	      ./ $(HOST):$(DOTDOT)/$(MYNAME)
+
+# rsync-r syncs recursively only the (files and) subdirectories in
+#	RSYNC_THESE, which must be defined in config.make
+ifneq ($(RSYNC_THESE),)
+rsync-r:
+	@echo recursive rsync of $(RSYNC_THESE):
+	rsync -aC -z -v $(EXCLUDES) $(RSYNC_FLAGS) 		\
+	      $(RSYNC_THESE) $(HOST):$(DOTDOT)/$(MYNAME)
+else
+rsync-r:
+	@echo rsync-r is a no-op unless RSYNC_THESE is defined.
+endif
+
+### reporting ###
 
 .PHONY: sloc-count status
 sloc-count: sloc.log
@@ -119,6 +144,7 @@ V2 := BASEREL TOOLREL
 V3 := HOST DOTDOT 
 report-vars::
 	@echo SHELL=$(SHELL)
+	@echo COMMIT_MSG=$(COMMIT_MSG)
 	@echo $(foreach v,$(V1), $(v)=$($(v)) )
 	@echo $(foreach v,$(V2), $(v)=$($(v)) )
 	@echo $(foreach v,$(V3), $(v)=$($(v)) )
@@ -129,7 +155,18 @@ report-vars::
 	@echo dates: $(DATEDIRS)
 	@echo items: $(ITEMDIRS)
 
-### Setup
+### Cleanup ###
+
+.PHONY: texclean clean
+
+texclean::
+	-rm -f *.aux *.log *.toc *.dvi
+
+clean::
+	-rm -f *.CKP *.ln *.BAK *.bak *.o core errs  *~ *.a 	\
+		.emacs_* tags TAGS MakeOut *.odf *_ins.h 	\
+		*.aux *.log *.toc *.dvi
+### Setup ###
 
 .PHONY: deployable remote-repo
 
@@ -141,14 +178,15 @@ remote-repo:  .git/refs/remotes/origin
 .git/refs/remotes/origin:
 	$(TOOLDIR)/scripts/init-remote-repo
 
-### Fixup
+### Fixup ###
 
 # makeable - link a Makefile from Tools.
 #	This will also fix a broken Makefile link
 .PHONY: makeable
 makeable: 
-	if [ ! -L Makefile -o ! -e Makefile ]; then 		\
+	@if [ ! -L Makefile -o ! -e Makefile ]; then 		\
 	   if [ -f Makefile ]; then git rm -f Makefile; fi; 	\
+	   echo linking to $(TOOLREL)/Makefile			\
 	   ln -s $(TOOLREL)/Makefile .; 			\
 	   git add Makefile; 					\
 	   git commit -m "Makefile linked from Tools"; 		\

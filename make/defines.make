@@ -63,6 +63,11 @@ ifneq  ($(GIT_REPO),)
   GIT_INITIAL_COMMIT := $(GIT_COMMIT)
 endif
 
+### deploy/push commit message:
+#	Can be overridden or appended to in config.make
+COMMIT_MSG := from $(shell hostname) $(shell date)
+TIMESTAMP= $(shell date -u +%Y%m%dT%H%M%SZ)
+
 #
 ###
 

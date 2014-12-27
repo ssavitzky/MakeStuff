@@ -22,6 +22,10 @@ BASEDIR:= $(shell d=$(MYPATH); 					\
 		  while [ ! -d $$d/Tools ] && [ ! $$d = / ]; do	\
 			d=`dirname $$d`;			\
 		  done; echo $$d)
+# Make sure we actually found Tools, because we can't proceed without it.
+ifeq ($(BASEDIR),/)
+     $(error Cannot find Tools directory.  Giving up.)
+endif
 TOOLDIR := $(BASEDIR)/Tools
 
 ### From this point we can start including stuff from TOOLDIR/make. 
@@ -38,9 +42,10 @@ endif
 
 ###### Targets ##########################################################
 
-# Note:  It's useful to be able to grep Makefile for targets, and bash 
-#	 completion also looks there.  So we want to have as many common 
-#	 targets as possible in the main Makefile.
+# Note:  It's useful to be able to grep Makefile for targets, so we put
+#	 the ones that we need or are likely to grep for here.  Bash 
+#	 completion used to only look here, but it now looks in the
+#	 include files as well, so that's no longer a consideration.
 
 ### all -- the default target; must come first or confusion reigns.
 
@@ -55,18 +60,8 @@ all:: $(FILES)
 
 .PHONY: deploy
 deploy: all pre-deploy deploy-this
+	@echo deployment complete
 
-### Cleanup
-
-.PHONY: texclean clean
-
-texclean::
-	-rm -f *.aux *.log *.toc *.dvi
-
-clean::
-	-rm -f *.CKP *.ln *.BAK *.bak *.o core errs  *~ *.a 	\
-		.emacs_* tags TAGS MakeOut *.odf *_ins.h 	\
-		*.aux *.log *.toc *.dvi
 
 ### Include targets & depends from depends.make if present 
 #
