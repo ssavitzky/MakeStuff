@@ -54,18 +54,26 @@ DATEDIRS := $(shell ls -F | grep ^[0-9] | grep / | sed s/\\///)
 
 ### git setup:
 #
-GIT_REPO := $(wildcard $(BASEDIR)/.git)
+
+# Find the git repo, if any.  Note that it can be anywhere between here and 
+#	BASEDIR (which, in turn, might not have one)
+GIT_REPO := $(shell d=$(MYPATH); 					\
+		  while [ ! -d $$d/.git ] && [ ! $$d = $(BASEDIR) ]; do	\
+			d=`dirname $$d`;				\
+		  done; [ -d $$d/.git ] && echo $$d/.git)
+
 ifneq  ($(GIT_REPO),)
   GIT_COMMIT = $(git log --format=format:%H -n1)
 
   # The commit when we started make.  We can use this to see whether we made a
-  # new commit as part of the deployment process.
+  #     new commit as part of the deployment process.
   GIT_INITIAL_COMMIT := $(GIT_COMMIT)
+
+  # deploy/push commit message:
+  #	Can be overridden or appended to in config.make
+  COMMIT_MSG := from $(shell hostname) $(shell date)
 endif
 
-### deploy/push commit message:
-#	Can be overridden or appended to in config.make
-COMMIT_MSG := from $(shell hostname) $(shell date)
 TIMESTAMP= $(shell date -u +%Y%m%dT%H%M%SZ)
 
 #
@@ -78,7 +86,7 @@ TIMESTAMP= $(shell date -u +%Y%m%dT%H%M%SZ)
 ifneq ($(wildcard $(BASEDIR)/site)),)
   SITEDIR = $(BASEDIR)/site
   ifneq ($(wildcard $(SITEDIR)/config.make),)
-    include $(wildcard $(SITEDIR)/config.make
+    include $(SITEDIR)/config.make
   endif
 endif
 

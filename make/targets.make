@@ -14,6 +14,8 @@
 pre-deploy::
 	@echo deploying $(MYNAME)...
 
+ifneq ($(GIT_REPO),)
+
 # deploy-this does a deployment (using git) but nothing else.
 #	DEPLOY_OPTS can be used to add, e.g., --allow-empty
 #	Succeeds even if the push is not done: there may be additional
@@ -34,6 +36,8 @@ deploy-this:: | $(BASEDIR)/.git
 deploy-tag::
 	git tag -a -m "Deployed $(COMMIT_MSG)" deployed/$(TIMESTAMP);
 	git push --tags | tee /dev/null
+
+endif
 
 # deploy-r does pre-deploy and deploy-this in subdirectories.
 #	It uses pre-deploy and deploy-this to avoid recursively doing
@@ -56,7 +60,7 @@ deploy-rgit::
 #	* it doesn't verify that master is the current branch.
 #	* it recurses automatically into git-controled subdirectories,
 #	* ...but doesn't require a makefile with a push target there.
-
+#
 .PHONY: push push-this push-r
 push:	all push-this push-r
 
@@ -66,29 +70,38 @@ push-this:: | $(BASEDIR)/.git
 	   git push | tee /dev/null;					\
 	fi
 
+# push-r recursively pushes in GITDIRS
+#	It uses "make push-this push-r" if possible, otherwise git push.
+#	Note the use of plain make rather than $(MAKE); this is necessary
+#	to prevent "make -n" from doing an actual push in the subdirs.
+#
 push-r::
 	@for d in $(GITDIRS); do 					\
 	    if [ -d $$d/.git/refs/remotes/origin ]; then (cd $$d;	\
 		 echo pushing in $$d;					\
 		 if grep -qs deploy: Makefile;				\
-		    then $(MAKE) push-this push-r			\
+		    then make push-this push-r				\
 		    else git push|tee /dev/null; fi)			\
 	    fi; 							\
 	done
 
 # pull does pull --rebase
 #	It's simpler than push because it doesn't do a build first.
-.PHONY: pull
-pull::
+#	It's still split up, so that you can run the pieces separately
+#
+.PHONY: pull pull-this pull-r
+pull: pull-this pull-r
+
+pull-this::
 	@if [ -d .git/refs/remotes/origin ]; then 		\
 	    git pull --rebase | tee /dev/null; 			\
 	fi
 
-pull:: 
+pull-r:: 
 	@for d in $(GITDIRS); do (cd $$d; 			\
 	    echo pulling into $$d;				\
 	    if grep -qs deploy: Makefile;			\
-		then $(MAKE) pull				\
+		then make pull					\
 		else git pull --rebase; fi)			\
 	done
 
@@ -141,16 +154,17 @@ status:
 .PHONY: report-vars
 V1 := BASEDIR MYNAME 
 V2 := BASEREL TOOLREL 
-V3 := HOST DOTDOT 
+V3 := HOST DOTDOT
 report-vars::
 	@echo SHELL=$(SHELL)
-	@echo COMMIT_MSG=$(COMMIT_MSG)
 	@echo $(foreach v,$(V1), $(v)=$($(v)) )
 	@echo $(foreach v,$(V2), $(v)=$($(v)) )
 	@echo $(foreach v,$(V3), $(v)=$($(v)) )
 	@echo FILES: $(FILES)
 	@if [ "$(SUBDIRS)" != "" ]; then echo SUBDIRS: $(SUBDIRS); fi
 	@if [ "$(GITDIRS)" != "" ]; then echo GITDIRS: $(GITDIRS); fi
+	@if [ ! -z "$(COMMIT_MSG)" ]; then echo COMMIT_MSG="\"$(COMMIT_MSG)\""; fi
+	@if [ ! -z "$(GIT_REPO)" ]; then echo GIT_REPO=$(GIT_REPO); fi
 	@echo Colls: $(COLLDIRS)
 	@echo dates: $(DATEDIRS)
 	@echo items: $(ITEMDIRS)
@@ -191,5 +205,16 @@ makeable:
 	   git add Makefile; 					\
 	   git commit -m "Makefile linked from Tools"; 		\
 	fi
+
+### site-wide targets and depends:
+
+ifdef SITEDIR
+  ifneq ($(wildcard $(SITEDIR)/targets.make),)
+    include $(SITEDIR)/targets.make
+  endif
+  ifneq ($(wildcard $(SITEDIR)/depends.make),)
+    include $(SITEDIR)/depends.make
+  endif
+endif
 
 ###### end of targets.make ######
