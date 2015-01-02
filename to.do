@@ -1,7 +1,10 @@
 			     to.do for WURM/Tools
 
 NOTE (201412) WURM has largely been superceded, but Tools/Makefile is more or
-less alive and well.
+     less alive and well.
+
+Many of the following items were pulled over from to.do in the 2014 year-end
+cleanup.  More ended up in wibnif.do, and should probably be consolidated here.
 
 =========================================================================
 
