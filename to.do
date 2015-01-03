@@ -21,16 +21,6 @@ uploading:
   o make sure we can handle multiple destinations.
   o upload to the fastest (e.g. dreamhost) and sync the others from there
 
-Uploading with pushmipullyu
-  o three targets:  put, rsync, push
-    put is conditional, and uses push if there's a pull.cgi in the right place
-    in the tree (first time, of course, we get it up using rsync)
-
-  o on the site, pull.cgi uses whichever of rsync, svn, or git is appropriate
-    probably best to grep the Makefile for a pull target.
-    could allow multiple sources (i.e. repos or working directories) taken
-    from a list (out of the tree) of authorized users and source URIs.
-
 makefile templates
   o need a good way to get a monochrome printable version of a web page
     html2ps, probably.
@@ -137,3 +127,15 @@ list-tracks
 =========================================================================
 Done:
 =====
+
+20150101
+
+Uploading with pushmipullyu
+  x three targets:  put, rsync, push
+    put is conditional, and uses push if there's a pull.cgi in the right place
+    in the tree (first time, of course, we get it up using rsync)
+
+  x on the site, pull.cgi uses whichever of rsync, svn, or git is appropriate
+    probably best to grep the Makefile for a pull target.
+    could allow multiple sources (i.e. repos or working directories) taken
+    from a list (out of the tree) of authorized users and source URIs.
