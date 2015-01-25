@@ -9,6 +9,18 @@ cleanup.  More ended up in wibnif.do, and should probably be consolidated here.
 =========================================================================
 
 
+WAV->FLAC
+  o Move to a workflow that uses flac instead of wav.  Audacity can export it,
+    and most of the tools can handle it.  cdrdao can't, but Master is generated from
+    Premaster/* by sox.  normalize-audio might not -- that's a problem.  But its
+    package recommends flac, and libaudiofile1 supports it, so maybe it does now.
+  o Premaster/WAV -> Premaster; make it all FLAC.
+    Tag the flac files in Premaster; hopefully it will be possible to transfer the tags
+    to the ogg and mp3 files.
+  o review make manual for VPATH and GPATH, which may do the right thing for building
+    in subdirectories like SONGS/*, *.rips, etc.
+  o upgrade makefiles in older record directories.
+
 album.make
   o TOC etc should be conditional off Master
     since they're meaningless without it.  Mainly for field recordings
