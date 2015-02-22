@@ -124,8 +124,8 @@ rsync-this:
 	      ./ $(HOST):$(DOTDOT)/$(MYNAME)
 
 # rsync-r syncs recursively only the (files and) subdirectories in
-#	RSYNC_THESE, which must be defined in config.make
-ifneq ($(RSYNC_THESE),)
+#	RSYNC_THESE, which should be defined in config.make
+ifdef RSYNC_THESE
 rsync-r:
 	@echo recursive rsync of $(RSYNC_THESE):
 	rsync -aC -z -v $(EXCLUDES) $(RSYNC_FLAGS) 		\
@@ -161,6 +161,7 @@ report-vars::
 	@echo $(foreach v,$(V2), $(v)=$($(v)) )
 	@echo $(foreach v,$(V3), $(v)=$($(v)) )
 	@echo FILES: $(FILES)
+	@if [ "$(ALLDIRS)" != "" ]; then echo ALLDIRS: $(ALLDIRS); fi
 	@if [ "$(SUBDIRS)" != "" ]; then echo SUBDIRS: $(SUBDIRS); fi
 	@if [ "$(GITDIRS)" != "" ]; then echo GITDIRS: $(GITDIRS); fi
 	@if [ ! -z "$(COMMIT_MSG)" ]; then echo COMMIT_MSG="\"$(COMMIT_MSG)\""; fi

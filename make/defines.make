@@ -31,24 +31,34 @@ EXCLUDES = --exclude=Tracks --exclude=Master --exclude=Premaster \
 #	Note that $(SUBDIRS) only includes real directories with a Makefile
 #
 FILES    = Makefile $(wildcard *.html *.ps *.pdf)
-SUBDIRS := $(shell for d in *; do \
+ALLDIRS  := $(shell ls -F | grep / | grep -v CVS | sed s/\\///)
+SUBDIRS  := $(shell for d in $(ALLDIRS); do \
 	     if [ -e $$d/Makefile -a ! -L $$d ]; then echo $$d; fi; done)
 
 # real (not linked) subdirs containing git repositories.
 #    Note that we do not require a Makefile, only .git.
 
-GITDIRS := $(shell for d in *; do \
+GITDIRS := $(shell for d in $(ALLDIRS); do \
 		if [ -d $$d/.git -a ! -L $$d ]; then echo $$d; fi; done)
 
 ### Different types of subdirectories.
 #   Collection:  capitalized name
 #   Item:	 lowercase name -- not always consistent
 #   Date:	 digit
+#
+COLLDIRS := $(shell for d in $(ALLDIRS); do echo $$d | grep ^[A-Z]; done) 
+ITEMDIRS := $(shell ls -d $(ALLDIRS) | grep ^[a-z]) 
+DATEDIRS := $(shell ls -d $(ALLDIRS) | grep ^[0-9])
+#
+###
 
-COLLDIRS := $(shell ls -F | grep ^[A-Z] | grep / | grep -v CVS | sed s/\\///) 
-ITEMDIRS := $(shell ls -F | grep ^[a-z] | grep / | sed s/\\///) 
-DATEDIRS := $(shell ls -F | grep ^[0-9] | grep / | sed s/\\///)
-
+### Paths for date-based file creation
+#
+DAYPATH   := $(shell date "+%Y/%m/%d")
+MONTHPATH := $(shell date "+%Y/%m")
+# Other time-based values
+TIME	  := $(shell date "+%H%M%S")
+TIMESTAMP := $(shell date -u +%Y%m%dT%H%M%SZ)
 #
 ###
 
@@ -62,7 +72,7 @@ GIT_REPO := $(shell d=$(MYPATH); 					\
 			d=`dirname $$d`;				\
 		  done; [ -d $$d/.git ] && echo $$d/.git)
 
-ifneq  ($(GIT_REPO),)
+ifdef GIT_REPO
   GIT_COMMIT = $(git log --format=format:%H -n1)
 
   # The commit when we started make.  We can use this to see whether we made a
@@ -73,9 +83,6 @@ ifneq  ($(GIT_REPO),)
   #	Can be overridden or appended to in config.make
   COMMIT_MSG := from $(shell hostname) $(shell date)
 endif
-
-TIMESTAMP= $(shell date -u +%Y%m%dT%H%M%SZ)
-
 #
 ###
 
