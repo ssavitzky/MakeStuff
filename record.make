@@ -455,7 +455,8 @@ list-times:
 			 ls -tr $$d/*.wav | tail -1;` ;	\
 	done
 
-## List, mainly for debugging, various make variables
+## List variables that refer to files.
+#  Useful for scripting as well as debugging.
 
 .PHONY:	list-files list-sources list-songs list-missing
 list-files: $(TRACKFILE)
@@ -466,6 +467,12 @@ list-sources:
 
 list-songs: 
 	@echo $(SONGS)
+
+list-lyrics: 
+	@echo $(SONGS)
+
+list-print:
+	@echo $(PRINT_FILES)
 
 list-missing:
 	@for f in $(SONGS); do \
@@ -495,7 +502,7 @@ print-lyrics: $(PRINT_FILES)
 	@for f in $(PRINT_FILES); do psselect -p1 $$f | lpr; done 
 
 print-songbook: $(PRINT_FILES)
-	lp $(PRINT_FILES)
+	@for f in $(PRINT_FILES); do echo $$f; lp $$f; done
 
 
 ### Update Premaster/WAV by importing track data
