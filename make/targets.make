@@ -160,10 +160,10 @@ report-vars::
 	@echo $(foreach v,$(V1), $(v)=$($(v)) )
 	@echo $(foreach v,$(V2), $(v)=$($(v)) )
 	@echo $(foreach v,$(V3), $(v)=$($(v)) )
-	@echo FILES: $(FILES)
-	@echo Colls: $(COLLDIRS)
-	@echo dates: $(DATEDIRS)
-	@echo items: $(ITEMDIRS)
+	@if [ "$(FILES)" != "" ]; then echo FILES: $(FILES); fi
+	@if [ "$(COLLDIRS)" != "" ]; then echo Colls: $(COLLDIRS); fi
+	@if [ ! -z "$(DATEDIRS)" ]; then echo dates: $(DATEDIRS); fi
+	@if [ ! -z "$(ITEMDIRS)" ]; then echo items: $(ITEMDIRS); fi
 	@if [ "$(ALLDIRS)" != "" ]; then echo ALLDIRS: $(ALLDIRS); fi
 	@if [ "$(SUBDIRS)" != "" ]; then echo SUBDIRS: $(SUBDIRS); fi
 	@if [ "$(GITDIRS)" != "" ]; then echo GITDIRS: $(GITDIRS); fi

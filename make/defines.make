@@ -18,6 +18,8 @@ endif
 #	/vv is the parent of our whole deployment tree, and ~/vv exists on
 #	the web host.  This is not really a good assumption, and fails
 #	miserably when deploying from, e.g., a laptop.  Don't do that.
+#	DOTDOT is only used for rsync uploads, not git.
+#
 #	Either can be overridden if necessary in the local config.make
 #
 DOTDOT  := .$(MYDIR)
@@ -29,8 +31,8 @@ EXCLUDES = --exclude=Tracks --exclude=Master --exclude=Premaster \
 
 ### Files and Subdirectories:
 #	Note that $(SUBDIRS) only includes real directories with a Makefile
-#
-FILES    = Makefile $(wildcard *.html *.ps *.pdf)
+#	It looks like FILES is only used in a recipe for all, and it's wrong.
+FILES    := Makefile $(wildcard *.html *.ps *.pdf)
 ALLDIRS  := $(shell ls -F | grep / | grep -v CVS | sed s/\\///)
 SUBDIRS  := $(shell for d in $(ALLDIRS); do \
 	     if [ -e $$d/Makefile -a ! -L $$d ]; then echo $$d; fi; done)
@@ -47,8 +49,8 @@ GITDIRS := $(shell for d in $(ALLDIRS); do \
 #   Date:	 digit
 #
 COLLDIRS = $(shell for d in $(ALLDIRS); do echo $$d | grep ^[A-Z]; done) 
-ITEMDIRS = $(shell ls -d $(ALLDIRS) | grep ^[a-z]) 
-DATEDIRS = $(shell ls -d $(ALLDIRS) | grep ^[0-9])
+ITEMDIRS = $(shell for d in $(ALLDIRS); do echo $$d | grep ^[a-z]; done)
+DATEDIRS = $(shell for d in $(ALLDIRS); do echo $$d | grep ^[0-9]; done)
 #
 ###
 
