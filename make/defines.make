@@ -46,19 +46,24 @@ GITDIRS := $(shell for d in $(ALLDIRS); do \
 #   Item:	 lowercase name -- not always consistent
 #   Date:	 digit
 #
-COLLDIRS := $(shell for d in $(ALLDIRS); do echo $$d | grep ^[A-Z]; done) 
-ITEMDIRS := $(shell ls -d $(ALLDIRS) | grep ^[a-z]) 
-DATEDIRS := $(shell ls -d $(ALLDIRS) | grep ^[0-9])
+COLLDIRS = $(shell for d in $(ALLDIRS); do echo $$d | grep ^[A-Z]; done) 
+ITEMDIRS = $(shell ls -d $(ALLDIRS) | grep ^[a-z]) 
+DATEDIRS = $(shell ls -d $(ALLDIRS) | grep ^[0-9])
 #
 ###
 
 ### Paths for date-based file creation
+#   Defined using "=" for efficiency.
 #
-DAYPATH   := $(shell date "+%Y/%m/%d")
-MONTHPATH := $(shell date "+%Y/%m")
-# Other time-based values
-TIME	  := $(shell date "+%H%M%S")
-TIMESTAMP := $(shell date -u +%Y%m%dT%H%M%SZ)
+DAYPATH   = $(shell date "+%Y/%m/%d")
+MONTHPATH = $(shell date "+%Y/%m")
+MMDDPATH  = $(shell date "+%Y/%m%d")
+#
+# Timestamps
+#
+TIME	  = $(shell date "+%H%M%S")
+HRTIME	  = $(shell date "+%H:%M")
+TIMESTAMP = $(shell date -u +%Y%m%dT%H%M%SZ)
 #
 ###
 

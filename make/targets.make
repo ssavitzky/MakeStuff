@@ -161,14 +161,14 @@ report-vars::
 	@echo $(foreach v,$(V2), $(v)=$($(v)) )
 	@echo $(foreach v,$(V3), $(v)=$($(v)) )
 	@echo FILES: $(FILES)
-	@if [ "$(ALLDIRS)" != "" ]; then echo ALLDIRS: $(ALLDIRS); fi
-	@if [ "$(SUBDIRS)" != "" ]; then echo SUBDIRS: $(SUBDIRS); fi
-	@if [ "$(GITDIRS)" != "" ]; then echo GITDIRS: $(GITDIRS); fi
-	@if [ ! -z "$(COMMIT_MSG)" ]; then echo COMMIT_MSG="\"$(COMMIT_MSG)\""; fi
-	@if [ ! -z "$(GIT_REPO)" ]; then echo GIT_REPO=$(GIT_REPO); fi
 	@echo Colls: $(COLLDIRS)
 	@echo dates: $(DATEDIRS)
 	@echo items: $(ITEMDIRS)
+	@if [ "$(ALLDIRS)" != "" ]; then echo ALLDIRS: $(ALLDIRS); fi
+	@if [ "$(SUBDIRS)" != "" ]; then echo SUBDIRS: $(SUBDIRS); fi
+	@if [ "$(GITDIRS)" != "" ]; then echo GITDIRS: $(GITDIRS); fi
+	@if [ ! -z "$(GIT_REPO)" ]; then echo GIT_REPO=$(GIT_REPO); fi
+	@if [ ! -z "$(COMMIT_MSG)" ]; then echo COMMIT_MSG="\"$(COMMIT_MSG)\""; fi
 
 ### Cleanup ###
 
