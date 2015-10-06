@@ -1,29 +1,29 @@
 ### Makefile for Journals/River
 #
 
-DAYPATH   := $(shell date "+%Y/%m/%d")
-MONTHPATH := $(shell date "+%Y/%m")
 ENTRY     := $(DAYPATH)--$(name).html
 
 HELP  := make entry name=<shortname> [title="<title>"]
 
-.PHONY: all entry
+.PHONY: all entry name-required
 
 all:: 
 	@echo you probably want '$(HELP)'
 
-entry:  $(ENTRY) .draft
+entry:  name-required $(ENTRY) .draft
 
 # make an entry for today
 #	The commit gives us a record of the starting time.
 #	the subject is, by default, today's date.
 #
 $(ENTRY)::
-	@if [ -z $(name) ]; then \
-	   echo '$$(name) not defined.  Use name="..."'; false; \
-	fi
 	mkdir -p $(MONTHPATH)
 	echo "$$TEMPLATE" $@
+
+name-required::
+	@if [ -z $(name) ]; then \
+	   echo '$$(name) not defined.  Use "$(HELP)"'; false; \
+	fi
 
 commit:
 	git add $(ENTRY)
