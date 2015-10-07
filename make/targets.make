@@ -20,7 +20,7 @@ ifneq ($(GIT_REPO),)
 #	DEPLOY_OPTS can be used to add, e.g., --allow-empty
 #	Succeeds even if the push is not done: there may be additional
 #	dependencies, such as rsync deployments.
-deploy-this:: | $(BASEDIR)/.git
+deploy-this:: | $(GIT_REPO)
 	-@if git remote|grep -q origin && git branch|grep -q '* master'; then	\
 	   git commit $(DEPLOY_OPTS) -a -m "Deployed $(COMMIT_MSG)";		\
 	   if git diff --quiet origin/master; then				\
@@ -64,7 +64,7 @@ deploy-rgit::
 .PHONY: push push-this push-r
 push:	all push-this push-r
 
-push-this:: | $(BASEDIR)/.git
+push-this:: | $(GIT_REPO)
 	-@if git remote|grep -q origin; then				\
 	   git commit -a  $(PUSH_OPTS) -m "Pushed $(COMMIT_MSG)";	\
 	   git push | tee /dev/null;					\
