@@ -66,7 +66,7 @@ endif
 
 # Now look for Lyrics, which has all the .flk (metadata) files in it.
 
-ifeq ($(shell [ -d ./Lyrics ] && echo Lyrics), Lyrics)
+ifeq ($(wildcard Lyrics), Lyrics)
   LYRICDIR := ./Lyrics
 else
   LYRICDIR := $(shell d=$(MYDIR); 					\
@@ -718,7 +718,7 @@ put: all
 V1 := BASEDIR LYRICDIR MYNAME 
 V2 := LONGNAME TITLE
 V3 := HOST DOTDOT 
-test::
+report-vars::
 	@echo $(foreach v,$(V1), $(v)=$($(v)) )
 	@echo $(foreach v,$(V2), $(v)=$($(v)) )
 	@echo $(foreach v,$(V3), $(v)=$($(v)) )
