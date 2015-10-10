@@ -1,0 +1,84 @@
+<h2><a href="../../">*.Savitzky.net</a>
+  / <a href="../">Tools</a> / <a href="./" >music</a></h2>
+<p> <a href="../">[..]</a>
+    <a href="#files">[files]</a>
+</p>
+
+<p> This directory contains makefile templates, include files, and scripts
+    related to music -- lyrics, recordings, and so on.  The
+    templates (capitalized) are meant to be symlinked as
+    <code>Makefile</code>s; the include files (lower case) are meant to be
+    included.  The generic include files in <a href="../make" >../make</a>
+    were a later development, but will be used in the future.
+</p>
+<p> Note that everything here has been moved from <a href="../" >Tools/</a>;
+    it will take a while before they all get moved here and converted to the
+    new Makefile system.  In the mean time, symlinks have been left in place.
+</p>
+
+<h2>Annotated Contents</h2>
+<h3>Templates</h3>
+<dl>
+  <dt> <a href="Record.make" >Record.make</a>
+  <dd> The most recent symlinkable Makefile; it can handle concerts, practice
+       sessions, and albums.  It will eventually be deprecated in favor of the
+       standard Makefile and <code>record.make</code>
+  <dt> <a href="Album.make" ><del>Album.make</del></a> (deprecated)
+  <dd> The old album makefile.  Can't simply be replaced with Record because
+       of some differences in directory layout.
+  <dt> <a href="Concert.make" ><del>Concert.make</del></a> (deprecated)
+  <dd> The old concert makefile.  Can't simply be replaced with Record because
+       of some differences in directory layout.
+  <dt> <a href="Practice.make" ><del>Practice.make</del></a> (deprecated)
+  <dd> The old practice session makefile.  Can't simply be replaced with
+       Record because of some differences in directory layout.
+</dl>
+<p> The deprecated templates will be removed once the directories that use
+    them have been tracked down and converted.
+</p>
+
+<h3>Include Files</h3>
+<dl>
+  <!--
+  <dt> <a href=".make" >.make</a>
+  <dd>
+    -->
+  <dt> <a href="lyrcs.make" >lyrics.make</a>
+  <dd> Replacement for */Lyrics/Makefile.  None of these are symlinked; they
+       have subtle differences that will make conversion a bit challenging.
+       In addition, future plans require multiple lyrics directories, to allow
+       songbooks with appropriate rights to be distributed via public git
+       repositories. 
+  <dt> <a href="record.make" >record.make</a>
+  <dd> Replacement for Record.make (which in turn is symlinked from
+       ../record.make) meant to be included from a <code>config.make</code>
+  <dt> <a href="songs.make" >songs.make</a> (WIP)
+  <dd> Include for */Songs.  Currently only users/steve has a Songs
+       directory. 
+  <dt> <a href="track-depends.make" >track-depends.make</a>
+  <dd> Rules for use in a Tracks subdirectory; the makefile there is
+       auto-generated. 
+</dl>
+
+<h3>Scripts</h3>
+<dl>
+  <dt> <a href="trackinfo" >trackinfo</a>
+  <dd> Get information about a track, and print it on STDOUT in a wide variety
+       of formats.  Should really be broken up into parsing and display
+       modules. 
+  <dt> <a href="list-tracks" >list-tracks</a>
+  <dd> List a Tracks subdirectory in a format useful when recording an album.
+  <dt> <a href="transpose" >transpose</a>
+  <dd> Transpose chords in a <code>.flk</code> file (or any other file with
+       chord symbols in []).
+  <dd> <a href="flktran" >flktran</a> (WIP)
+  <dt> Convert a <code>.flk</code> file to plain text or html.
+</dl>
+<p> Note that, for historical reasons, much of the code that formats or
+    otherwise works with lyrics is located in <a href="../TeX"
+    ><code>../TeX</code></a>.
+</p>
+
+<hr>
+<b>Copyright &copy; HyperSpace Express</b><br>
+<a name="files"><hr></a>

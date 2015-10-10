@@ -1,7 +1,8 @@
 ### Tools/Makefile
 #
-#   This is not only the Makefile for the Tools directory, but is written so 
-#   that it can be symlinked into almost any directory in the "vv/..." tree.
+# This is not only the Makefile for the Tools directory, but is written so 
+# that it can be symlinked into almost any directory in a tree containing
+# multiple resource and website directories.
 #
 ###
 
@@ -36,6 +37,7 @@ include $(TOOLDIR)/make/rules.make
 ### If there's a local config.make, include that too.
 #	site/config.make, if present, is included in make/defines.make
 #	It should not include targets -- those go in ./depends.make
+#	Rules can go in either place.
 ifneq ($(wildcard config.make),)
      include config.make
 endif
