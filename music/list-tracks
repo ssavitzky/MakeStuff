@@ -1,0 +1,73 @@
+#!/bin/bash
+#	List number of .aup and .wav files in track directories
+#	Now lists the last line in */notes that starts with a nonblank in
+#	column 1; this should normally be something about the most recent
+#	semi-useable take.
+#
+# options:
+#	-i  print key, meter, tempo, style info instead of track note.
+#
+# flags:
+#	-  empty directory
+#	n  "*/notes" present
+#	N  "*/notes" has key: field (one hopes also style:, tempo:, meter:)
+#	!  "*/OK" present
+
+### Open Source/Free Software license notice:
+ # The contents of this file may be used under the terms of the GNU
+ # General Public License Version 2 or later (the "GPL").  The text
+ # of this license can be found on this software's distribution media,
+ # or obtained from  www.gnu.org/copyleft/gpl.html	
+###						    :end license notice	###
+
+if [ "$1" = "-i" ]; then
+    i=1
+    shift
+else
+    i=''
+fi
+
+if [ -d Tracks ]; then
+    cd Tracks
+elif ([ -d test ] && [ "`ls test | grep .aup `" = "" ]); then
+    true
+else 
+    cd $HOME/Tracks
+fi
+
+
+if [ "$1" = "" ]; then tracks="*"; else tracks="$*"; fi
+for d in $tracks; do
+    if [ -d $d ] && [ "`ls $d`" = "" ]; then
+	echo "  0  0 - 	$d"
+    elif [ $d = "test" ]; then
+	# Skip test/ even though it may have tracks in it.
+	true
+    elif [ -d $d ]; then
+	len=`echo -n $d | wc -c`
+	if [ $len -lt 8 ]; then sep="	"; else sep=""; fi
+	echo -n " " `(cd $d; ls | grep .aup$ | wc -l)` 
+	echo -n "  `(cd $d; ls | grep .wav$ | wc -l)` " 
+	if [ -e $d/notes ]; then 
+	    if grep -q '^key:' $d/notes; then echo -n "N"; else echo -n "n"; fi
+	    info=`grep '^key:' $d/notes | sed 's/key://'`" "
+	    info="$info	"`grep '^meter:' $d/notes | sed 's/meter: //'`
+	    info="$info	"`grep '^style:' $d/notes | sed 's/style: //'`
+	    info="$info	"`grep '^tempo' $d/notes | sed 's/tempo: //'`
+	else
+	    echo -n " "; 
+	    info=''
+	fi
+	if [ -e $d/OK ]; then 
+	    echo -n "!`cat $d/OK`"; else echo  -n " "; fi
+	echo -n "	$d$sep " 
+	if [ "$i" = '1' ]; then
+	    echo "$info"
+	else
+	    if [ -e $d/notes ]; then grep '^\w' $d/notes | tail -1;
+	    else echo; fi
+	fi
+    elif [ ! -e $d ]; then
+	echo "  -  - -	$d"	
+    fi
+done
