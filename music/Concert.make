@@ -66,7 +66,7 @@ TRACKLIST_FLAGS  =
 #	It's better to look for $(SRCDIR)/WURM.cf then $(MF_DIR), since
 #	at some point MF_DIR and TOOLDIR may get merged.
 
-include $(TOOLDIR)/album.make
+include $(TOOLDIR)/music/Album.make
 
 all:: 
 	@echo $(DATE) $(EVNAME)
