@@ -148,28 +148,6 @@ status:
 	echo git status for $(MYNAME) and subdirs
 	@$(TOOLDIR)/scripts/git-status-all
 
-
-### report-vars - list important make variables
-
-.PHONY: report-vars
-V1 := BASEDIR MYNAME 
-V2 := BASEREL TOOLREL 
-V3 := HOST DOTDOT
-report-vars::
-	@echo SHELL=$(SHELL)
-	@echo $(foreach v,$(V1), $(v)=$($(v)) )
-	@echo $(foreach v,$(V2), $(v)=$($(v)) )
-	@echo $(foreach v,$(V3), $(v)=$($(v)) )
-	@if [ "$(FILES)" != "" ]; then echo FILES: $(FILES); fi
-	@if [ "$(COLLDIRS)" != "" ]; then echo Colls: $(COLLDIRS); fi
-	@if [ ! -z "$(DATEDIRS)" ]; then echo dates: $(DATEDIRS); fi
-	@if [ ! -z "$(ITEMDIRS)" ]; then echo items: $(ITEMDIRS); fi
-	@if [ "$(ALLDIRS)" != "" ]; then echo ALLDIRS: $(ALLDIRS); fi
-	@if [ "$(SUBDIRS)" != "" ]; then echo SUBDIRS: $(SUBDIRS); fi
-	@if [ "$(GITDIRS)" != "" ]; then echo GITDIRS: $(GITDIRS); fi
-	@if [ ! -z "$(GIT_REPO)" ]; then echo GIT_REPO=$(GIT_REPO); fi
-	@if [ ! -z "$(COMMIT_MSG)" ]; then echo COMMIT_MSG="\"$(COMMIT_MSG)\""; fi
-
 ### Cleanup ###
 
 .PHONY: texclean clean
@@ -217,5 +195,25 @@ ifdef SITEDIR
     include $(SITEDIR)/depends.make
   endif
 endif
+
+### music specific ###
+
+ifdef MUSIC_D
+  musicIncludes = $(addprefix $(MUSIC_D)/,$(MUSIC_D_INCLUDES))
+  -include $(musicIncludes)
+endif
+
+### report-vars - list important make variables
+#   Down at the end in case any of the lists needs to get appended to.
+
+.PHONY: report-vars
+filteredVars := $(foreach v, $(reportVars), $(if $($(v)), $(v)))
+filteredStrs := $(foreach v, $(reportStrs), $(if $($(v)), $(v)))
+
+report-vars::
+	@echo "" $(foreach v,$(varsLine1), $(v)=$($(v)) )
+	@echo "" $(foreach v,$(varsLine2), $(v)=$($(v)) )
+	@echo -n "" $(foreach v,$(filteredVars),$(v)=$($(v)) "\n")
+	@echo "" $(foreach v,$(filteredStrs),$(v)=\"$($(v))\" "\n")
 
 ###### end of targets.make ######

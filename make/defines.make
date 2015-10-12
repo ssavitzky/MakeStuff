@@ -24,15 +24,17 @@ endif
 #
 DOTDOT  := .$(MYDIR)
 HOST	 = savitzky@savitzky.net
-EXCLUDES = --exclude=Tracks --exclude=Master --exclude=Premaster \
-	   --exclude=\*temp --exclude=.audacity\* --exclude=.git
+
+#	Note that we exclude git repositories -- those should be
+#	synchronized using git.  It is possible to use both git
+#	and rsync to push a tree containing large files.
+EXCLUDES := --exclude=Tracks --exclude=Master --exclude=Premaster \
+	    --exclude=\*temp --exclude=.audacity\* --exclude=.git
 #
 ###
 
-### Files and Subdirectories:
+### Subdirectories:
 #	Note that $(SUBDIRS) only includes real directories with a Makefile
-#	It looks like FILES is only used in a recipe for all, and it's wrong.
-FILES    := Makefile $(wildcard *.html *.ps *.pdf)
 ALLDIRS  := $(shell ls -F | grep / | grep -v CVS | sed s/\\///)
 SUBDIRS  := $(shell for d in $(ALLDIRS); do \
 	     if [ -e $$d/Makefile -a ! -L $$d ]; then echo $$d; fi; done)
@@ -48,6 +50,8 @@ GITDIRS := $(shell for d in $(ALLDIRS); do \
 #   Item:	 lowercase name -- not always consistent
 #   Date:	 digit
 #
+#   Defined using "=" for efficiency -- they are expanded only if used.
+#
 COLLDIRS = $(shell for d in $(ALLDIRS); do echo $$d | grep ^[A-Z]; done) 
 ITEMDIRS = $(shell for d in $(ALLDIRS); do echo $$d | grep ^[a-z]; done)
 DATEDIRS = $(shell for d in $(ALLDIRS); do echo $$d | grep ^[0-9]; done)
@@ -55,7 +59,7 @@ DATEDIRS = $(shell for d in $(ALLDIRS); do echo $$d | grep ^[0-9]; done)
 ###
 
 ### Paths for date-based file creation
-#   Defined using "=" for efficiency.
+#   Defined using "=" for efficiency -- they are expanded only if used.
 #
 DAYPATH   = $(shell date "+%Y/%m/%d")
 MONTHPATH = $(shell date "+%Y/%m")
@@ -104,4 +108,31 @@ ifneq ($(wildcard $(BASEDIR)/site)),)
   endif
 endif
 
+### Music-related directory types.
+#	These are used to conditionally include definitions and rules from
+#	MUSIC_D = Tools/music.  If MUSIC_D is defined, the files named by
+#	the specific "hasX" variables should be included from it.
+#
+#	hasTracks is defined if a directory contains audio; the source for it
+#	lives in a subdirectory called Tracks.
+#	Detecting a directory that hasTracks is a little tricky, and may want
+#	to be revised.  For the moment, look for Tracks or one or the other of
+#	*.songs or *.tracks (the latter indicating an album's recording directory)
+#
+hasLyrics = $(if $(findstring /Lyrics,$(MYPATH)),lyrics.make)
+hasSongs  = $(if $(findstring /Songs,$(MYPATH)),songs.make)
+hasTracks = $(if $(wildcard *songs *.tracks Tracks),tracks.make)
+# Note that MUSIC_D may need to be changed later.
+MUSIC_D := $(if $(hasSongs)$(hasLyrics)$(hasTracks),$(TOOLDIR)/music)
+MUSIC_D_INCLUDES := $(hasLyrics) $(hasSongs) $(hasTracks)
 
+
+### Variable lists for report-vars.
+#	The lists are defined here so that they can be appended to 
+varsLine1 := SHELL MYNAME HOST
+varsLine2 := BASEREL TOOLREL
+reportVars :=  BASEDIR DOTDOT ALLDIRS SUBDIRS \
+			COLLDIRS DATEDIRS ITEMDIRS \
+	   		GITDIRS GIT_REPO hasLyrics hasSongs hasTracks  MUSIC_D \
+			MUSIC_D_INCLUDES
+reportStrs := COMMIT_MSG

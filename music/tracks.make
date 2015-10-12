@@ -1,4 +1,4 @@
-#!/usr/bin/make  ### Makefile template for sound recordings
+#!/usr/bin/make  ### include file for a directory that hasTracks
 #
 # This template is meant to be symlinked to the Makefile of an "album" 
 #   "concert", or "practice" directory.  It automagically searches
@@ -36,34 +36,6 @@
 #	try-cdr		does a fake burn.  Recommended to test TOC integrity.
 #	archive		make a local copy of all track data (.wav) files
 
-### Site-dependent variables:
-
-
-### Figure out where we are:
-
-MYPATH := $(shell pwd -P)
-MYNAME := $(shell basename $(MYPATH))
-MYDIR  := $(shell dirname  $(MYPATH))
-
-# Look up the directory tree until we find Tools.  That's TOOLDIR.
-# Its parent is BASEDIR.
-
-BASEDIR := $(shell d=$(MYDIR); 					\
-		  while [ ! -d $$d/Tools ] && [ ! $$d = / ]; do	\
-			d=`dirname $$d`;			\
-		  done; echo $$d)
-
-TOOLDIR := $(BASEDIR)/Tools
-
-# Make sure we actually found Tools, because we can't proceed without it.
-
-ifeq ($(BASEDIR),/)
-     $(error Cannot find Tools)
-endif
-
-### At this point, we could move all the default-finding stuff, rules,
-#   and so on into separate include files.
-
 # Now look for Lyrics, which has all the .flk (metadata) files in it.
 
 ifeq ($(wildcard Lyrics), Lyrics)
@@ -77,6 +49,8 @@ endif
 ifeq ($(shell [ -d $(LYRICDIR) ] || echo notfound),notfound)
      $(error Cannot find Lyrics)
 endif
+
+reportVars += LYRICDIR
 
 # Figure out the default type and title from the path:
 #
@@ -689,44 +663,10 @@ $(DEFAULT_SONGFILE):
 
 endif
 
-######################################################################
-
-### Web upload location and excludes:
-#	Eventually HOST ought to be in an include file, e.g. WURM.cf
-
-HOST	 = savitzky@savitzky.net
-EXCLUDES = --exclude=Tracks --exclude=Master --exclude=Premaster
-
-# DOTDOT is the path to this directory on $(HOST)
-#   === for now, fake it knowing that /vv -> ~/vv on savitzky.net
-
-DOTDOT = .$(MYDIR)
-
-### Greatly simplified put target because we're using rsync to put the
-#	whole subtree.  
-
-.phony: put
-put: all
-	rsync -a -z -v $(EXCLUDES) --delete ./ $(HOST):$(DOTDOT)/$(MYNAME)
-
-
 #######################################################################
 
 ### Test - list important variables
 
-.phony: test
-V1 := BASEDIR LYRICDIR MYNAME 
-V2 := LONGNAME TITLE
-V3 := HOST DOTDOT 
-report-vars::
-	@echo $(foreach v,$(V1), $(v)=$($(v)) )
-	@echo $(foreach v,$(V2), $(v)=$($(v)) )
-	@echo $(foreach v,$(V3), $(v)=$($(v)) )
-	@echo SONGFILES: $(SONGFILES)
-	@echo PRINTFILES: $(PRINT_FILES)
-	@echo SONGS: $(SONGS)
-	@echo TITLE: $(TITLE)
-	@echo TYPE:  $(TYPE)
-	@echo DATE:  $(DATE)
-	@echo EVNAME: "($(EVNAME))"  MYNAME: "($(MYNAME))"
-	@echo DEFAULT_SONGFILE: $(DEFAULT_SONGFILE)
+reportVars += LONGNAME TITLE TYPE DATE SONGS SONGFILES PRINT_FILES DEFAULT_SONGFILE
+reportStrs += TITLE EVNAME
+

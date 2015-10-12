@@ -64,7 +64,7 @@ all:: setup
 
 else
 #	There's a "songs" file, so go ahead and include album.make, etc.
-  include $(TOOLDIR)/album.make
+  include $(TOOLDIR)/music/Album.make
 #  include $(TOOLDIR)/publish.make
 endif
 

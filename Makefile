@@ -35,12 +35,12 @@ include $(TOOLDIR)/make/defines.make
 include $(TOOLDIR)/make/rules.make
 
 ### If there's a local config.make, include that too.
-#	site/config.make, if present, is included in make/defines.make
-#	It should not include targets -- those go in ./depends.make
-#	Rules can go in either place.
-ifneq ($(wildcard config.make),)
-     include config.make
-endif
+#	site/config.make, if present, was included in make/defines.make
+#	config.make should not include targets -- those go in ./depends.make
+#	Rules can go in either place.  Note that we can now use .config.make
+#	which can be useful for both directory organization and, with a
+#	suitable .htaccess, website access control.
+-include .config.make config.make
 
 ###### Targets ##########################################################
 
@@ -50,26 +50,29 @@ endif
 #	 include files as well, so that's no longer a consideration.
 
 ### all -- the default target; must come first or confusion reigns.
+#	(actually, that's not entirely true:  we could set the default
+#	 target explicitly, and then it wouldn't matter.)
 
 .PHONY: all
-all:: $(FILES)
+all::
 
 ### deploy -- deploy to the web server.
 #	Differs from the original "push" target in not being recursive.
 #	Sites that want recursion can add deploy-r as a dependency of
 #	pre-deploy.  Sites that want a tag can add deploy-tag as a
 #	dependency of deploy-this
+#
+#	"deploy:" is what we grep for if we want to test whether a
+#	directory can be deployed using the standard targets.
 
 .PHONY: deploy
 deploy: all pre-deploy deploy-this
 	@echo deployment complete
 
 
-### Include targets & depends from depends.make if present 
+### Include standard targets and local dependencies if present.
 #
 include $(MFDIR)/targets.make
-ifneq ($(wildcard depends.make),)
-     include depends.make
-endif
+-include .depends.make depends.make
 #
 ###### End of Tools/Makefile.  Thanks for playing. ######
