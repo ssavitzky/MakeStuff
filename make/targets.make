@@ -80,7 +80,7 @@ push-r::
 	    if [ -d $$d/.git/refs/remotes/origin ]; then (cd $$d;	\
 		 echo pushing in $$d;					\
 		 if grep -qs deploy: Makefile;				\
-		    then make push-this push-r				\
+		    then make push-this push-r;				\
 		    else git push|tee /dev/null; fi)			\
 	    fi; 							\
 	done
@@ -101,7 +101,7 @@ pull-r::
 	@for d in $(GITDIRS); do (cd $$d; 			\
 	    echo pulling into $$d;				\
 	    if grep -qs deploy: Makefile;			\
-		then make pull					\
+		then make pull;					\
 		else git pull --rebase; fi)			\
 	done
 
