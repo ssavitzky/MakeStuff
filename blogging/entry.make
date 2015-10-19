@@ -18,7 +18,7 @@ entry:  name-required $(ENTRY) .draft
 #
 $(ENTRY)::
 	mkdir -p $(MONTHPATH)
-	echo "$$TEMPLATE" $@
+	@echo "$$TEMPLATE" > $@
 
 name-required::
 	@if [ -z $(name) ]; then \
