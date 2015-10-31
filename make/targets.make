@@ -163,12 +163,12 @@ clean::
 
 .PHONY: deployable remote-repo
 
-deployable: .git .git/refs/remotes/origin
+deployable: .git .git/refs/remotes/origin/master
 	$(TOOLDIR)/scripts/init-deployment
 
-remote-repo:  .git/refs/remotes/origin
+remote-repo:  .git/refs/remotes/origin/master
 
-.git/refs/remotes/origin:
+.git/refs/remotes/origin/master:
 	$(TOOLDIR)/scripts/init-remote-repo
 
 ### Fixup ###
