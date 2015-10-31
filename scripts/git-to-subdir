@@ -1,23 +1,37 @@
 #!/bin/sh
-#  Prepare a git-based directory in preparation for merging as a subtree
+#  Move a git-based directory with all of its history into a subdirectory,
+#  in preparation for merging as a subtree.
 #
 
-usage="$0 -- convert git-based directory into a subdirectory of the same name"
+usage="Usage: $0 [-h|--help] [subtree]\n
+    Move files and git history into a subtree.  If no name is given on the\n
+    command line, the subtree will have the same name as the current directory.
+"
 
-if [ ! -d .git ]; then
+if [ "-h" = "$1" ] || [ "--help" = "$1" ]; then
+    echo $usage
+    exit 0;
+elif [ ! -d .git ] ; then
+    echo "not a git repository"
     echo $usage
     exit 1;
 fi
 
-pwd=`pwd`
-name=`basename ${pwd}`
+if [ ! -z "$1" ]; then
+    dir="$1"
+else
+    pwd=`pwd`
+    dir=`basename ${pwd}`
+fi
 
-echo $name
-
-for f in .*ignore; do
-    echo removing $f
-    git rm $f
-done
+echo "moving repo into subtree $dir"
 
 git add .
-git commit --allow-empty -m "preparing $name for subtree merging"
+git commit --allow-empty -m "moving repo into subtree $dir"
+
+
+#  http://stackoverflow.com/questions/4042816/how-can-i-rewrite-history-so-that-all-files-except-the-ones-i-already-moved-ar
+git filter-branch --prune-empty --tree-filter "
+    if [ ! -e $dir ]; then mkdir -p $dir;
+	    git ls-tree --name-only \$GIT_COMMIT | xargs -I files mv files $dir;
+    fi"

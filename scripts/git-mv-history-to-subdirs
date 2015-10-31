@@ -1,0 +1,45 @@
+#!/usr/bin/perl
+# git-history-to-subdirs subdir...
+#   Go back through git's history and make it look like the present contents
+#   of the given directories have always been there.
+
+# Do this in perl because bash's variable substitution isn't up to the task.
+
+use strict;
+
+opendir DOT, ".";
+my @files = (readdir DOT); closedir DOT;
+my @dirs = ();
+my %dir_lists;
+
+foreach my $f (@files) {
+    if (-d $f && ! -l $f && $f !~ /^\./) {
+	push(@dirs, $f);
+    }
+}
+
+foreach my $d (@dirs) {
+    $dir_lists{$d} = list_directory($d);
+}
+
+my $filter_cmd = "git filter-branch --prune-empty --tree-filter '";
+for my $d (keys %dir_lists) {
+    $filter_cmd .= ("for f in " . join(" ", @{$dir_lists{$d}}) .
+		    "; do if [ -f \$f ]; then mkdir -p $d; " .
+		    "mv -f \$f $d; fi done;\n");
+}
+$filter_cmd .= "'\n";
+system $filter_cmd;
+
+sub list_directory {
+    my ($d) = @_;
+    opendir DIR, $d;
+    my @list = readdir(DIR);
+    closedir(DIR);
+    my @filtered_list = ();
+    for my $f (@list) {
+	push @filtered_list, $f unless ($f =~ /^\./);
+    }
+    return \@filtered_list;
+}
+	
