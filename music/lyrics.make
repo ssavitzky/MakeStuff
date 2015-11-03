@@ -167,7 +167,9 @@ ECHO=/bin/echo
 
 # flk to tex:
 #	Strictly speaking this isn't necessary; you shouldn't rebuild
-#	foo.tex every time foo.flk changes.  But it's much simpler.
+#	foo.tex every time foo.flk changes.  But it reduces clutter in
+#	the working directory and keeps filename completion from stopping
+#	to ask whether I meant .flk or .tex.
 .flk.tex:	
 	@$(ECHO) \\'documentstyle[$(SIZE)song,twocolumns,zongbook]{article}' > $@
 	@$(ECHO) \\'special{papersize=8.5in,11in}'	>> $@
