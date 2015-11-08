@@ -66,7 +66,7 @@ push:	all push-this push-r
 
 push-this:: | $(GIT_REPO)
 	-@if git remote|grep -q origin; then				\
-	   git commit -a  $(PUSH_OPTS) -m "Pushed $(COMMIT_MSG)";	\
+	   git commit -a -m "Pushed $(COMMIT_MSG)" $(COMMIT_OPTS);	\
 	   git push | tee /dev/null;					\
 	fi
 
