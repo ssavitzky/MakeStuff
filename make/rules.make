@@ -13,8 +13,9 @@
 
 %.dvi:	%.tex
 	echo q | latex $*
-	@if [ -f $*.aux ] && [ `wc -l $*.aux` -gt 1 ]; then \
-	    echo q | latex $*; fi
+	if [ -f $*.aux ] && [ `wc -l $*.aux | cut -d " " -f 1` -gt 0 ];\
+		then echo q|latex $*; fi
+	if [ -e $*.aux ] || [ -e $*.log ]; then rm -f $*.aux $*.log; fi
 
 # dvi to ps
 
