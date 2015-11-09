@@ -136,3 +136,22 @@ reportVars :=  BASEDIR DOTDOT ALLDIRS SUBDIRS \
 	   		GITDIRS GIT_REPO hasLyrics hasSongs hasTracks  MUSIC_D \
 			MUSIC_D_INCLUDES
 reportStrs := COMMIT_MSG
+
+### Templates
+
+define TO_DO
+= to.do: =
+
+
+==============================================================================
+Work Log:
+========
+
+
+==============================================================================
+Local Variables:
+    fill-column:90
+End:
+
+endef
+export TO_DO

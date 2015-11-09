@@ -171,6 +171,11 @@ remote-repo:  .git/refs/remotes/origin/master
 .git/refs/remotes/origin/master:
 	$(TOOLDIR)/scripts/init-remote-repo
 
+## Template expansions:
+
+to.do:
+	echo "$$TO_DO" > $@
+
 ### Fixup ###
 
 # makeable - link a Makefile from Tools.
