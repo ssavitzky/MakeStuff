@@ -18,7 +18,7 @@ elif [ "-t" = "$1" ]; then
     time=$1
     shift
 else
-    time=6
+    time=0
 fi
 
 flags="${*:---ff-only}"
