@@ -61,12 +61,15 @@ deploy-rgit::
 #	* it recurses automatically into git-controled subdirectories,
 #	* ...but doesn't require a makefile with a push target there.
 #
-.PHONY: push push-this push-r
+.PHONY: push push-this push-r commit
 push:	all push-this push-r
+
+commit:: | $(GIT_REPO)
+	-git commit -a -m "on $(COMMIT_MSG)" $(COMMIT_OPTS)
 
 push-this:: | $(GIT_REPO)
 	-@if git remote|grep -q origin; then				\
-	   git commit -a -m "Pushed $(COMMIT_MSG)" $(COMMIT_OPTS);	\
+	   git commit -a -m "Pushed from $(COMMIT_MSG)" $(COMMIT_OPTS);	\
 	   git push | tee /dev/null;					\
 	fi
 

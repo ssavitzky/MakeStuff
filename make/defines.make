@@ -92,7 +92,7 @@ ifdef GIT_REPO
 
   # deploy/push commit message:
   #	Can be overridden or appended to in config.make
-  COMMIT_MSG := from $(shell hostname) $(shell date)
+  COMMIT_MSG := $(shell hostname) $(shell date)
 endif
 #
 ###
