@@ -13,21 +13,23 @@ else
       BASEREL:= $(dir $(TOOLREL))
 endif
 
-### Web upload location and excludes:
-#	DOTDOT is the path to this directory on $(HOST); it works because
-#	/vv is the parent of our whole deployment tree, and ~/vv exists on
-#	the web host.  This is not really a good assumption, and fails
-#	miserably when deploying from, e.g., a laptop.  Don't do that.
-#	DOTDOT is only used for rsync uploads, not git.
-#
-#	Either can be overridden if necessary in the local config.make
-#
-DOTDOT  := .$(MYDIR)
-HOST	 = savitzky@savitzky.net
+### Rsync upload: DOTDOT is the path to this directory on $(HOST).
+#	Either can -- and should -- be overridden in the local config.make
 
-#	Note that we exclude git repositories -- those should be
-#	synchronized using git.  It is possible to use both git
-#	and rsync to push a tree containing large files.
+#	This hack works because /vv is the parent of our whole deployment tree,
+#	and ~/vv exists on the web host.  This is not really a good assumption,
+#	and fails miserably when deploying with rsync from, e.g., a laptop.
+DOTDOT  := .$(MYDIR)
+
+#	HOST is computed on the assumption that we're deploying to the same host
+#	that we're getting Tools from, which, as they say, works on my machine
+#	but is otherwise a bad assumption.
+HOST	 = $(shell cd $(TOOLDIR); git remote -v|grep origin|head -1 \
+		  |cut -d ":" -f 1|cut -f 2)
+
+#	Note that we exclude git repositories -- those should be synchronized
+#	using git.  It is possible to use both git and rsync to push a tree
+#	containing large files.
 EXCLUDES := --exclude=Tracks --exclude=Master --exclude=Premaster \
 	    --exclude=\*temp --exclude=.audacity\* --exclude=.git
 #
@@ -108,6 +110,7 @@ ifneq ($(wildcard $(BASEDIR)/site)),)
   endif
 endif
 
+
 ### Music-related directory types.
 #	These are used to conditionally include definitions and rules from
 #	MUSIC_D = Tools/music.  If MUSIC_D is defined, the files named by
@@ -129,13 +132,14 @@ MUSIC_D_INCLUDES := $(hasLyrics) $(hasSongs) $(hasTracks)
 
 ### Variable lists for report-vars.
 #	The lists are defined here so that they can be appended to 
-varsLine1 := SHELL MYNAME HOST
-varsLine2 := BASEREL TOOLREL
-reportVars :=  BASEDIR DOTDOT ALLDIRS SUBDIRS \
+varsLine1  := SHELL MYNAME HOST
+varsLine2  := BASEREL TOOLREL
+reportVars := BASEDIR DOTDOT ALLDIRS SUBDIRS \
 			COLLDIRS DATEDIRS ITEMDIRS \
 	   		GITDIRS GIT_REPO hasLyrics hasSongs hasTracks  MUSIC_D \
 			MUSIC_D_INCLUDES
 reportStrs := COMMIT_MSG
+
 
 ### Templates
 
