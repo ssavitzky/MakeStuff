@@ -1,4 +1,4 @@
-# Makefile for Songs
+# Makefile includes for song directories
 #	$Id: Makefile,v 1.35 2008-06-29 14:42:15 steve Exp $
 #
 # Targets:  === needs update ===
@@ -7,15 +7,6 @@
 #	text:		*.flk -> *.txt  (using flktran)
 #	1song:		older way to print a song or group
 #	zongbook:	the whole songbook
-#	put		push to the web
-
-### Web upload location and excludes:
-#	Eventually HOST ought to be in an include file, e.g. WURM.cf
-
-HOST=savitzky@savitzky.net
-EXCLUDES=--exclude=Tracks --exclude=Master --exclude=Premaster
-DOTDOT = vv/users/steve
-MYNAME :=$(shell basename `/bin/pwd`)
 
 # Songs is the web directory; each song is in an individual subdirectory
 #   At the moment, [song]/lyrics.{html,pdf,txt} are built from ../Lyrics;
@@ -71,20 +62,6 @@ WEBLYRICS= $(patsubst %,../Lyrics/%,$(WEBSONGS))
 #	0Index* are the web-safe versions of the index files
 WEBINDICES = 0Index.html 0IndexTable.html 0IndexShort.html  # 0IndexLong.html
 
-# === no longer making .htaccess -- dangerous
-
-# PUBDIR and everything associated with it have been removed
-#	 We now "publish" by rsyncing the entire subtree to the server;
-#	 this is faster and more efficient than recursive make.  Sharing
-#	 is done via symlinks, with alternative index.html files where 
-#	 applicable.
-
-# Where it ends up on the website
-#WEBSITE  = http://thestarport.com
-#WEBDIR   = /Steve_Savitzky/Songs
-WEBSITE  = http://Steve.Savitzky.net
-WEBDIR   = /Songs
-
 # What to publish on the web:
 PUBFILES = $(WEBHTML) $(WEBPS) $(WEBPDF) $(WEBINDICES) $(DOCS) 
 
@@ -92,28 +69,11 @@ PUBFILES = $(WEBHTML) $(WEBPS) $(WEBPDF) $(WEBINDICES) $(DOCS)
 FLKTRAN  = ../Tools/TeX/flktran.pl
 INDEX    = ../Tools/TeX/index.pl
 TRACKINFO = ../Tools/TrackInfo.pl
-RTEMPLATE = ../Tools/replace-template-file.pl
 
 ########################################################################
 ###
 ### Rules:
 ###
-
-.SUFFIXES: .tex .dvi .flk .txt .lj .ps .pdf .html .ogg
-
-# tex to dvi:
-# 	the "echo q" bit quits out of the error dialog if necessary;
-# 	running latex twice makes sure the auxiliary files are up to date.
-.tex.dvi:
-	echo q | latex $*
-	if [ -f $*.toc ]; then echo q | latex $*; fi
-	rm -f $*.log $*.aux
-
-.dvi.lj:
-	dvilj $*.dvi 
-
-.dvi.ps:
-	dvips -o $*.ps $*.dvi 
 
 # Rules to make song directories and their contents
 
@@ -134,10 +94,10 @@ RTEMPLATE = ../Tools/replace-template-file.pl
 #
 
 %/lyrics.html: ../Lyrics/%.flk
-	WEBSITE=$(WEBSITE) WEBDIR=$(WEBDIR) $(FLKTRAN) $< $@
+	WEBSITE=$(WEBSITE) WEBDIR=$(MYNAME) $(FLKTRAN) $< $@
 
 %/lyrics.txt: ../Lyrics/%.flk
-	WEBSITE=$(WEBSITE) WEBDIR=$(WEBDIR) $(FLKTRAN) $< $@
+	WEBSITE=$(WEBSITE) WEBDIR=$(MYNAME) $(FLKTRAN) $< $@
 
 # === Eventually we want to be able to make the index.html file.
 #	This is currently a symlink to lyrics.html, but if we don't
@@ -232,13 +192,6 @@ pubclean::
 
 htmlclean::
 	-rm -f $(ALLHTML)
-
-### Greatly simplified put target because we're using rsync to put the
-#	whole subtree.
-
-put:: all
-	rsync -a -z -v $(EXCLUDES) --delete ./ $(HOST):$(DOTDOT)/$(MYNAME)
-#	date > put
 
 ### Setup:
 
