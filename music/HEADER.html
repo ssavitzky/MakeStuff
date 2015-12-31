@@ -19,10 +19,6 @@
 <h2>Annotated Contents</h2>
 <h3>Templates</h3>
 <dl>
-  <dt> <a href="Record.make" >Record.make</a>
-  <dd> The most recent symlinkable Makefile; it can handle concerts, practice
-       sessions, and albums.  It will eventually be deprecated in favor of the
-       standard Makefile and <code>record.make</code>
   <dt> <a href="Album.make" ><del>Album.make</del></a> (deprecated)
   <dd> The old album makefile.  Can't simply be replaced with Record because
        of some differences in directory layout.
@@ -34,7 +30,8 @@
        Record because of some differences in directory layout.
 </dl>
 <p> The deprecated templates will be removed once the directories that use
-    them have been tracked down and converted.
+    them have been tracked down and converted.  Record.make has already been
+    replaced. 
 </p>
 
 <h3>Include Files</h3>
@@ -52,12 +49,13 @@
   <dt> <a href="record.make" >record.make</a>
   <dd> Replacement for Record.make (which in turn is symlinked from
        ../record.make) meant to be included from a <code>config.make</code>
-  <dt> <a href="songs.make" >songs.make</a> (WIP)
+  <dt> <a href="songs.make" >songs.make</a>
   <dd> Include for */Songs.  Currently only users/steve has a Songs
        directory. 
   <dt> <a href="track-depends.make" >track-depends.make</a>
   <dd> Rules for use in a Tracks subdirectory; the makefile there is
-       auto-generated. 
+       auto-generated.  This could be replaced with a Makefile symlink
+       and an auto-generated .depends.make, at this point.
 </dl>
 
 <h3>Scripts</h3>
