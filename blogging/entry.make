@@ -25,10 +25,6 @@ name-required::
 	   echo '$$(name) not defined.  Use "$(HELP)"'; false; \
 	fi
 
-commit:
-	git add $(ENTRY)
-	git commit -m "$(ENTRY) started" $(ENTRY)
-
 # make .draft point to today's entry
 .draft:: $(ENTRY)
 	if [ -L $@ ]; then rm $@; else true; fi
