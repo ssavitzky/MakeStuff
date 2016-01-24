@@ -20,7 +20,7 @@
 # dvi to ps
 
 %.ps:	%.dvi
-	dvips -o $*.ps $*.dvi 
+	dvips -q -o $*.ps $*.dvi 
 
 # ps to pdf
 
