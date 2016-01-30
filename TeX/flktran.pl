@@ -156,6 +156,8 @@ if ($html) {
     $NP  = "<hr />\n";
     $SP  = "&nbsp;";
     $AMP = "&amp;";
+    $BVERSE = ($tables)? "<table><tr>\n" : "<pre>\n";
+    $EVERSE = ($tables)? "</tr></table>\n" : "</pre>\n";
     $FLKTRAN = "<a href='/Tools/TeX/flktran.html'><code>flktran</code></a>";
     # Creative Commons copyright notice
     $SomeRightsReserved =
@@ -190,6 +192,8 @@ Attribution-Noncommercial-Share Alike 3.0 United States License</a>. ';
     $NP  = "\f";
     $SP  = " ";
     $AMP = "&";
+    $BVERSE = "\n";
+    $EVERSE = "\n";
     $FLKTRAN = "flktran";
     $SomeRightsReserved = "Some Rights Reserved:  CC by-nc-sa/3.0/us";
     $CCnotice = 'This work is licensed under a Creative Commons
@@ -227,7 +231,7 @@ while (<STDIN>) {
 
     elsif (/\\begin\{refrain/)	{ begRefrain(); } # Refrain
     elsif (/\\end\{refrain/)	{ endRefrain(); }
-    elsif (/\\begin\{bridge/)	{ begBridge(); } # Bridhg
+    elsif (/\\begin\{bridge/)	{ begBridge(); } # Bridge
     elsif (/\\end\{bridge/)	{ endBridge(); }
     elsif (/\\begin\{note/)	{ begNote(); } 	  # Note
     elsif (/\\end\{note/)	{ endNote(); }
@@ -265,12 +269,13 @@ while (<STDIN>) {
 
 ### Separate verses.
 sub sepVerse {
-    if ($vlines) { endVerse(); }
+    if ($vlines) { endVerse(); $vlines = 0; }
+    if ($tables) { print "<br/>\n"; }
 }
 
 ### Handle a blank line.
 sub blankLine {
-    if ($vlines) { endVerse(); }
+    if ($vlines) { endVerse(); $vlines = 0; }
     if ($plain) {
 	print "\n";
 	$plines = 0;
@@ -323,9 +328,7 @@ sub endSong {
 ### Begin a verse:
 ###	Called before processing the first line in the new verse.
 sub begVerse {
-    if ($verse) { print "\n"; }	# separate the verses
-    if ($html) { print "<pre>\n"; }
-
+    print $BVERSE;
     $verse ++;			# bump the verse count.
     $vlines = 0;
 }
@@ -333,13 +336,14 @@ sub begVerse {
 ### End a verse:
 ###	Only called if there are actually lines in it.
 sub endVerse {
-    if ($html) { print "</pre>\n"; }
+    print $EVERSE;
     $vlines = 0;
 }
 
 ### Begin a refrain:
 sub begRefrain {
     if ($vlines) { endVerse(); }
+    if ($html) { print "<blockquote>\n" if ($tables); }
     $indent += $TABSTOP;
     # Note that begVerse will get called when the first line appears,
     # so we don't have to deal with verse count, line count, or <pre>.
@@ -347,7 +351,10 @@ sub begRefrain {
 
 ### End a refrain:
 sub endRefrain {
-    if ($html) { print "</pre>"; }
+    if ($html) { 
+	endVerse(); 
+	print "</blockquote>\n" if ($tables);
+    }
     print "\n"; 
     $vlines = 0;
     $indent -= $TABSTOP;
@@ -355,18 +362,20 @@ sub endRefrain {
 
 ### Begin a bridge:
 sub begBridge {
-    if ($vlines) { endVerse(); }
-    $indent += $TABSTOP * 2;
+    begRefrain();
+    if ($html) { print "<blockquote>\n" if ($tables); }
+    $indent += $TABSTOP;
     # Note that begVerse will get called when the first line appears,
     # so we don't have to deal with verse count, line count, or <pre>.
 }
 
 ### End a bridge:
 sub endBridge {
-    if ($html) { print "</pre>"; }
+    if ($html) { print "</blockquote>\n" if ($tables); }
+    endRefrain();
     print "\n"; 
     $vlines = 0;
-    $indent -= $TABSTOP * 2;
+    $indent -= $TABSTOP;
 }
 
 ### Begin a note:
@@ -550,7 +559,51 @@ sub chordLine {
 ###   When using tables, each line becomes a separate table.
 ###   This, in turn, becomes a row in a table containing the verse.
 sub tableLine {
+    my ($line) = @_;		# input line
+    my $cline = "";		# chord line
+    my $dline = "";		# dest. (text) line
+    my ($scol, $ccol, $dcol, $inchord, $inmacro) = ($indent, 0, 0, 0, 0);
+    my $c = '';			# current character
+    my $p = 0;			# current position
 
+    $line = deTeX($line);
+
+    $line =~ s/^[ \t]*//;
+    $line =~ s/\\sus/sus/g;
+    $line =~ s/\\min/m/g;
+
+    $cline .= "<tr><td>";
+    $dline .= "<tr><td>";
+
+    for ($p = 0; $p < length($line); $p++) {
+	$c = substr($line, $p, 1); 
+	if    ($c eq "\n" || $c eq "\r") { break; }
+	if    ($c eq '[') {
+	    $inchord ++;
+	    $cline .= "<td> ";
+	    $dline .= "<td> ";
+	}
+	elsif ($c eq ']') { $inchord --; }
+	elsif ($c eq ' ') { if (!$inchord) { $scol ++; } }
+	elsif ($c eq "\t") {
+	    if (!$inchord) { do {$scol ++; } while ($scol % 8); } }
+	else {
+	    if ($inchord) {
+		while ($ccol < $scol) { $cline .= ' '; $ccol ++ }
+		$cline .= $c;
+		$ccol ++;
+	    } else {
+		while ($dcol < $scol) { $dline .= ' '; $dcol ++ }
+		$dline .= $c;
+		$dcol ++;
+		$scol++;
+	    }
+	}
+    }
+    $cline .= "</tr>";
+    $dline .= "</tr></table>";
+    # The result has a newline appended to it.
+    return "<table>" . (($chords)? $cline . "\n" . $dline : $dline);
 }
 
 ### Convert a line to XML
