@@ -86,7 +86,7 @@ while ($ARGV[0] =~ /^\-/) {
     elsif ($ARGV[0] eq "-opt") { shift; $opt = shift; }
     elsif ($ARGV[0] eq "-h" || $ARGV[0] eq "-html") { shift; $html = 1; }
     elsif ($ARGV[0] eq "-t"|| $ARGV[0] eq "-tables") { 
-	shift; $tables = 1; $chords=1; }
+	shift; $tables = 1; $chords = 1; $html = 1; }
     elsif ($ARGV[0] eq "-v"|| $ARGV[0] eq "-verbose") { shift; $verbose = 1; }
     elsif ($ARGV[0] eq "-c"|| $ARGV[0] eq "-chords") { shift; $chords = 1; }
     else { usage; die "unrecognized option $1\n"; }
@@ -157,7 +157,7 @@ if ($html) {
     $SP  = "&nbsp;";
     $AMP = "&amp;";
     # it might be more sensible to use the cellpadding to space the verses.
-    $BVERSE = ($tables)? "<table cellpadding=0 cellspacing=0><tr>\n" : "<pre>\n";
+    $BVERSE = ($tables)? "<table cellpadding=0 cellspacing=0>\n<tr>" : "<pre>\n";
     $EVERSE = ($tables)? "</tr></table>\n" : "</pre>\n";
     $FLKTRAN = "<a href='/Tools/TeX/flktran.html'><code>flktran</code></a>";
     # Creative Commons copyright notice
@@ -242,18 +242,19 @@ while (<STDIN>) {
     elsif (/\\begin\{song/)	{ begSong($_); }  # Song
     elsif (/\\end\{song/)	{ endSong(); }
 
-    elsif (/\\inset/)		{ sepVerse();  
-				  if ($html) { print "<pre><i>\n"; }
+    elsif (/\\inset/)		{ endVerse();
+				  if ($html) { print "<blockquote><i>\n"; }
 				  indentLine(getContent($_, $TABSTOP) . "\n",
 					     $TABSTOP);
-				  if ($html) { print "</i></pre>\n"; }
+				  if ($html) { print "</i></blockquote>\n"; }
 			        }
-    elsif (/\\tailnote/)	{ sepVerse(); 
-				  indentLine(getContent($_, 0) . "\n"); }
+    elsif (/\\tailnote/)	{ endVerse(); 
+				  indentLine(getContent($_, 0) . "\n");
+                                }
 
     # Ignorable TeX macros:
     elsif (/\\(small|footnotesize|advance|vfill|vfiller|vbox)/) {}
-    elsif (/\\(begin|end)\{/)	{}
+    elsif (/\\(begin|end)\{/)	{} # other environments get ignored
     elsif (/\\ignore/)		{ getContent($_); }
 
     # Default:
@@ -268,21 +269,6 @@ while (<STDIN>) {
 ###
 ###	Each of the following routines handles a LaTeX macro.
 ###
-
-### Separate verses.
-sub sepVerse {
-    if ($vlines) { endVerse(); $vlines = 0; }
-    if ($tables) { print "<br/>\n"; }
-}
-
-### Handle a blank line.
-sub blankLine {
-    if ($vlines) { endVerse(); $vlines = 0; }
-    if ($plain) {
-	print "\n";
-	$plines = 0;
-    }
-}
 
 ### Begin a song:
 ###	Stash the title, put out the header.
@@ -342,6 +328,21 @@ sub endVerse {
     $vlines = 0;
 }
 
+### Separate verses.
+sub sepVerse {
+    if ($vlines) { endVerse(); $vlines = 0; }
+    if ($tables) { print "<br/>\n"; }
+}
+
+### Handle a blank line.
+sub blankLine {
+    if ($vlines) { endVerse(); $vlines = 0; }
+    if ($plain) {
+	print "\n";
+	$plines = 0;
+    }
+}
+
 ### Begin a refrain:
 sub begRefrain {
     if ($vlines) { endVerse(); }
@@ -355,12 +356,12 @@ sub begRefrain {
 sub endRefrain {
     if ($html) { 
 	endVerse(); 
-	print "</blockquote>\n" if ($tables);
+	print "</blockquote>" if ($tables);
     }
     print "\n"; 
     $vlines = 0;
     $indent -= $TABSTOP;
-}
+ }
 
 ### Begin a bridge:
 sub begBridge {
@@ -373,8 +374,8 @@ sub begBridge {
 
 ### End a bridge:
 sub endBridge {
-    if ($html) { print "</blockquote>\n" if ($tables); }
     endRefrain();
+    if ($html) { print "</blockquote>" if ($tables); }
     print "\n"; 
     $vlines = 0;
     $indent -= $TABSTOP;
@@ -390,7 +391,7 @@ sub begNote {
 
 ### End a note:
 sub endNote {
-    if ($html) { print "</small>"; }
+    if ($html) { print "</small>\n"; }
     $plines = 0;
     $plain --;
 }
@@ -575,9 +576,10 @@ sub tableLine {
     $line =~ s/^[ \t]*//;
     $line =~ s/\\sus/sus/g;
     $line =~ s/\\min/m/g;
+    $line =~ s/[\n\r]//g;
 
-    $cline .= "<tr><td>";
-    $dline .= "<tr><td>";
+    $cline .= "  <tr><td>";
+    $dline .= "  <tr><td>";
 
     for ($p = 0; $p < length($line); $p++) {
 	$c = substr($line, $p, 1); 
@@ -606,17 +608,12 @@ sub tableLine {
 	    }
 	}
     }
-    $cline .= "</tr>";
-    $dline .= "</tr></table>";
+    $cline .= "</tr>\n";
+    $dline .= "</tr></table>\n";
     # The result has a newline appended to it.
     # cellpadding=0 cellspacing=0 only when the chord appears inside a word.
     # alternatively, use &nbsp; for a space before a chord.  Probably cleaner.
-    return "<table cellpadding=0 cellspacing=0>" . (($chords)? $cline . "\n" . $dline : $dline);
-}
-
-### Convert a line to XML
-sub xmlLine {
-
+    return "<table cellpadding=0 cellspacing=0>\n" . (($chords)? $cline . $dline : $dline);
 }
 
 ### Remove LaTeX constructs.
