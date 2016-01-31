@@ -94,7 +94,7 @@ TRACKINFO = ../Tools/TrackInfo.pl
 #
 
 %/lyrics.html: ../Lyrics/%.flk
-	WEBSITE=$(WEBSITE) WEBDIR=$(MYNAME) $(FLKTRAN) $< $@
+	WEBSITE=$(WEBSITE) WEBDIR=$(MYNAME) $(FLKTRAN) -t $< $@
 
 %/lyrics.txt: ../Lyrics/%.flk
 	WEBSITE=$(WEBSITE) WEBDIR=$(MYNAME) $(FLKTRAN) $< $@
