@@ -125,15 +125,6 @@ TRACKINFO = ../Tools/TrackInfo.pl
 
 all::	$(INDICES) $(WEBINDICES) 
 
-# not clear we can make these here $(WEBHTML) $(WEBPDF) $(WEBTEXT)
-
-# something in here causes trouble.  Fortunately we don't use them.
-#.PHONY: dirs html text
-#dirs: 	$(ALLDIRS)
-#html: 	$(FLKTRAN) $(HTML)
-#text:	$(FLKTRAN) $(TEXT)
-#pubfiles: $(PUBFILES)
-
 .PHONY: indices webindices
 indices: $(INDICES) $(WEBINDICES) 
 webindices: $(WEBINDICES)
@@ -150,7 +141,6 @@ list-allsongs:
 	@echo $(ALLSONGS)
 list-websongs: 
 	@echo $(WEBSONGS)
-
 
 ### Songbook:  Just my stuff and public domain.  
 #	Note that the Songbook doesn't have a proper index -- use the 

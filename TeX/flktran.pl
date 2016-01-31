@@ -222,17 +222,18 @@ while (<STDIN>) {
     elsif (/\\timing/)  	{ $timing = getContent($_); }
     elsif (/\\created/)  	{ $created = getContent($_); }
     elsif (/\\notice/)  	{ $notice = getContent($_); }
-    elsif (/\\cvsid/)		{ $cvsid = getContent($_); }
+    elsif (/\\cvsid/)		{ $cvsid = getContent($_); } # deprecated
     elsif (/\\music/)		{ $music = getContent($_); }
     elsif (/\\lyrics/)		{ $lyrics = getContent($_); }
     elsif (/\\arranger/)	{ $arranger = getContent($_); }
     elsif (/\\description/)	{ $description = getContent($_); }
+    elsif (/\\ttto/)            { $ttto = getContent($_); }
 
     # Environments: 
 
     elsif (/\\begin\{refrain/)	{ begRefrain(); } # Refrain
     elsif (/\\end\{refrain/)	{ endRefrain(); }
-    elsif (/\\begin\{bridge/)	{ begBridge(); } # Bridge
+    elsif (/\\begin\{bridge/)	{ begBridge(); }  # Bridge
     elsif (/\\end\{bridge/)	{ endBridge(); }
     elsif (/\\begin\{note/)	{ begNote(); } 	  # Note
     elsif (/\\end\{note/)	{ endNote(); }
@@ -382,12 +383,14 @@ sub endBridge {
 ### Begin a note:
 sub begNote {
     if ($vlines) { endVerse(); }
+    if ($html) { print "<small>"; }
     $plines = 0;
     $plain ++;
 }
 
 ### End a note:
 sub endNote {
+    if ($html) { print "</small>"; }
     $plines = 0;
     $plain --;
 }

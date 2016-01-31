@@ -155,10 +155,10 @@ TRACKINFO = $(TOOLDIR)/TrackInfo.pl
 #	Note that there are still serious problems with these.
 #
 ../Songs/%/lyrics.html: %.flk
-	WEBSITE=$(WEBSITE) WEBDIR=$(WEBDIR) $(FLKTRAN) $< $@
+	cd ../Songs; $(MAKE) %/lyrics.html
 
 ../Songs/%/lyrics.txt: %.flk 
-	WEBSITE=$(WEBSITE) WEBDIR=$(WEBDIR) $(FLKTRAN) $< $@
+	cd ../Songs; $(MAKE) %/lyrics.txt
 
 .flk.txt:	
 	chord < $*.flk > $@
