@@ -156,7 +156,8 @@ if ($html) {
     $NP  = "<hr />\n";
     $SP  = "&nbsp;";
     $AMP = "&amp;";
-    $BVERSE = ($tables)? "<table><tr>\n" : "<pre>\n";
+    # it might be more sensible to use the cellpadding to space the verses.
+    $BVERSE = ($tables)? "<table cellpadding=0 cellspacing=0><tr>\n" : "<pre>\n";
     $EVERSE = ($tables)? "</tr></table>\n" : "</pre>\n";
     $FLKTRAN = "<a href='/Tools/TeX/flktran.html'><code>flktran</code></a>";
     # Creative Commons copyright notice
@@ -562,7 +563,7 @@ sub tableLine {
     my ($line) = @_;		# input line
     my $cline = "";		# chord line
     my $dline = "";		# dest. (text) line
-    my ($scol, $ccol, $dcol, $inchord, $inmacro) = ($indent, 0, 0, 0, 0);
+    my ($scol, $ccol, $dcol, $inword, $inchord, $inmacro) = ($indent, 0, 0, 0, 0, 0);
     my $c = '';			# current character
     my $p = 0;			# current position
 
@@ -579,14 +580,15 @@ sub tableLine {
 	$c = substr($line, $p, 1); 
 	if    ($c eq "\n" || $c eq "\r") { break; }
 	if    ($c eq '[') {
+	    if (! $inword) { $dline .= "\&nbsp;"; }
 	    $inchord ++;
 	    $cline .= "<td> ";
 	    $dline .= "<td> ";
 	}
 	elsif ($c eq ']') { $inchord --; }
-	elsif ($c eq ' ') { if (!$inchord) { $scol ++; } }
+	elsif ($c eq ' ') { if (!$inchord) { $scol ++; $inword = 0; } }
 	elsif ($c eq "\t") {
-	    if (!$inchord) { do {$scol ++; } while ($scol % 8); } }
+	    if (!$inchord) { do {$scol ++; } while ($scol % 8); $inword = 0; } }
 	else {
 	    if ($inchord) {
 		while ($ccol < $scol) { $cline .= ' '; $ccol ++ }
@@ -595,6 +597,7 @@ sub tableLine {
 	    } else {
 		while ($dcol < $scol) { $dline .= ' '; $dcol ++ }
 		$dline .= $c;
+		$inword = 1;
 		$dcol ++;
 		$scol++;
 	    }
@@ -603,7 +606,9 @@ sub tableLine {
     $cline .= "</tr>";
     $dline .= "</tr></table>";
     # The result has a newline appended to it.
-    return "<table>" . (($chords)? $cline . "\n" . $dline : $dline);
+    # cellpadding=0 cellspacing=0 only when the chord appears inside a word.
+    # alternatively, use &nbsp; for a space before a chord.  Probably cleaner.
+    return "<table cellpadding=0 cellspacing=0>" . (($chords)? $cline . "\n" . $dline : $dline);
 }
 
 ### Convert a line to XML
