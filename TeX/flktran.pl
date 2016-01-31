@@ -13,16 +13,14 @@
 ### Print usage info:
 sub usage {
     print "$0 [options] infile[.flk] [outfile].ext\n";
-    print "	-t	use tables\n";
-    print "	-h	output html\n";
+    print "	-b	bare lyrics -- no headings\n";
     print "	-c	output chords\n";
+    print "	-h	output html\n";
+    print "	-t	use tables (implies -h -c)\n";
     print "	-v	verbose\n";
-    print "	-dtd fn	specify DTD\n";
-    print "	-opt xx	specify style options (LaTeX)\n";
     print " Formats (extensions): \n";
     print "	flk	FlkTeX	(input; default)\n";
     print "	html	HTML\n";
-    print "	fxml	FLK-XML\n";
     print "	tex	LaTeX -- sources .flk file\n";
     print "	txt	plain text (default)\n";
 }
@@ -64,6 +62,7 @@ $plines  = 0;			# the number of lines in the current
 $header  = 0;			# true after header done.
 
 ### Variables set from song macros:
+$bare = "";
 $title = "";
 $subtitle = "";
 $notice = "";
@@ -82,13 +81,13 @@ $arranger = "";
 
 
 while ($ARGV[0] =~ /^\-/) {
-    if ($ARGV[0] eq "-dtd") { shift; $dtd = shift; }
-    elsif ($ARGV[0] eq "-opt") { shift; $opt = shift; }
+    if ($ARGV[0] eq "-opt") { shift; $opt = shift; }
+    elsif ($ARGV[0] eq "-b" || $ARGV[0] eq "-bare") { shift; $bare = 1; }
+    elsif ($ARGV[0] eq "-c"|| $ARGV[0] eq "-chords") { shift; $chords = 1; }
     elsif ($ARGV[0] eq "-h" || $ARGV[0] eq "-html") { shift; $html = 1; }
     elsif ($ARGV[0] eq "-t"|| $ARGV[0] eq "-tables") { 
 	shift; $tables = 1; $chords = 1; $html = 1; }
     elsif ($ARGV[0] eq "-v"|| $ARGV[0] eq "-verbose") { shift; $verbose = 1; }
-    elsif ($ARGV[0] eq "-c"|| $ARGV[0] eq "-chords") { shift; $chords = 1; }
     else { usage; die "unrecognized option $1\n"; }
 }
 
@@ -242,15 +241,8 @@ while (<STDIN>) {
     elsif (/\\begin\{song/)	{ begSong($_); }  # Song
     elsif (/\\end\{song/)	{ endSong(); }
 
-    elsif (/\\inset/)		{ endVerse();
-				  if ($html) { print "<blockquote><i>\n"; }
-				  indentLine(getContent($_, $TABSTOP) . "\n",
-					     $TABSTOP);
-				  if ($html) { print "</i></blockquote>\n"; }
-			        }
-    elsif (/\\tailnote/)	{ endVerse(); 
-				  indentLine(getContent($_, 0) . "\n");
-                                }
+    elsif (/\\inset/)		{ doInset(); }
+    elsif (/\\tailnote/)	{ doTailnote(); }
 
     # Ignorable TeX macros:
     elsif (/\\(small|footnotesize|advance|vfill|vfiller|vbox)/) {}
@@ -261,7 +253,6 @@ while (<STDIN>) {
 
     else  { doLine(); }		# Verse or plaintext line
 }
-
 
 ########################################################################
 ###
@@ -276,6 +267,7 @@ sub begSong {
     my ($line) = @_;		# input line
     $line =~ s/^.*song\}//;
     $title = getContent($line);	
+    if ($bare) { return; }
     if ($html) {
 	my $alinks = " <a href='lyrics.pdf'>[pdf]</a>";
 	$alinks .= " <a href='$filebase.ogg'>[ogg]</a>" 
@@ -297,6 +289,7 @@ sub begSong {
 ### End a song:
 ###	End the file.
 sub endSong {
+    if ($bare) { return; }
     if ($html) {
 	print "<hr>";
 	print "<p><small><code><a href='./'>$WEBSITE$WEBDIR/</a>$htmlfile";
@@ -341,6 +334,21 @@ sub blankLine {
 	print "\n";
 	$plines = 0;
     }
+}
+
+### Handle an inset
+sub doInset {
+    endVerse();
+    if ($html) { print "<blockquote><i>\n"; }
+    indentLine(getContent($_, $TABSTOP) . "\n", $TABSTOP);
+    if ($html) { print "</i></blockquote>\n"; }
+}
+
+### Handle a tailnote
+sub doTailnote {
+    endVerse(); 
+    if ($html) { print "<p>\n"; }
+    indentLine(getContent($_, 0) . "\n");
 }
 
 ### Begin a refrain:
@@ -423,9 +431,10 @@ sub endQuote {
 ###
 
 sub doHeader {
+    $header ++;
+    if ($bare)  { return; }
     if ($html)	{ htmlHeader(); }
     else	{ textHeader(); }
-    $header ++;
 }
 
 sub center {
