@@ -31,7 +31,11 @@
         N the New version, that doesn't quite fit.
         O is the Op'rating system we buy, and
         P is the Patch to make our programs fly.
-\\
+\begin{bridge}
+If this was a real song
+This would be a bridge
+But this is a test.
+\end{bridge}
         Q is for QWERTY, of typewriter lore,
         R is the RAM that we used to call core.
         S is the Standard we'll follow some day, and
@@ -49,7 +53,8 @@
 \inset{no chorus after last verse}
 
 \begin{note}
-This is actually derived from \link{../songs/alphabet.html}{../songs/alphabet}.
+This is actually derived from
+\link{../songs/alphabet.html}{../songs/alphabet}.
 \end{note}
 \tailnote{Loosely inspired by various sailors' alphabet songs.}
 \end{song}
