@@ -27,6 +27,7 @@ draft:	name-required $(DRAFT)
 $(ENTRY):
 	mkdir -p $(MONTHPATH)
 	@echo "$$TEMPLATE" > $@
+	git commit -m "$(MYNAME): started entry $(ENTRY)" $@
 
 # make a draft in the top level.  No link is needed.
 #	post with "make post name=<filename>"
