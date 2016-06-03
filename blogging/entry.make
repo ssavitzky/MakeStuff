@@ -27,12 +27,15 @@ draft:	name-required $(DRAFT)
 $(ENTRY):
 	mkdir -p $(MONTHPATH)
 	@echo "$$TEMPLATE" > $@
+	git add $@
 	git commit -m "$(MYNAME): started entry $(ENTRY)" $@
 
 # make a draft in the top level.  No link is needed.
 #	post with "make post name=<filename>"
 $(DRAFT):
 	@echo "$$TEMPLATE" > $@
+	git add $@
+	git commit -m "$(MYNAME): started entry $(ENTRY)" $@
 
 name-required:
 	@if [ -z $(name) ]; then \
@@ -45,12 +48,13 @@ draft-required:
 	fi
 
 # Record a post.
-#	The double use of sed is to ensure that 
+#	The double use of sed is to ensure that there's only one
+#	Posted: header.  Don't need "git add" because it's already
+#	been done in the recipe for either draft or entry.
 post:	name-required draft-required
 	if [ -f $(DRAFT) ]; then git mv $(DRAFT) $(ENTRY); fi
 	sed -i -e '1,/^$$/ { /^Posted:/ d }' $(ENTRY);
 	sed -i -e '1,/^$$/ s/^$$/Posted:  $(POSTED)\n/' $(ENTRY);
-	git add $(ENTRY)
 	git commit -m "posted $(ENTRY)" $(ENTRY)
 
 .PHONY: entry draft post name-required draft-required
@@ -69,12 +73,8 @@ Access: public
 Posted: 
 
 <!-- notes: (removed from post)
-  * $(ENTRY)
+  * started: $(ENTRY)
 -->
-
-<lj-cut text="raw notes">
-<pre></pre>
-</lj-cut>
 
 <p> 
 </p>
