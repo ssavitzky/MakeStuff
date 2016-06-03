@@ -49,10 +49,10 @@ draft-required:
 
 # Record a post.
 #	The double use of sed is to ensure that there's only one
-#	Posted: header.  Don't need "git add" because it's already
-#	been done in the recipe for either draft or entry.
+#	Posted: header.  Note that git mv automatically adds.
 post:	name-required draft-required
-	if [ -f $(DRAFT) ]; then git mv $(DRAFT) $(ENTRY); fi
+	if [ -f $(DRAFT) ]; then git mv $(DRAFT) $(ENTRY); \
+			    else git add $(ENTRY) fi
 	sed -i -e '1,/^$$/ { /^Posted:/ d }' $(ENTRY);
 	sed -i -e '1,/^$$/ s/^$$/Posted:  $(POSTED)\n/' $(ENTRY);
 	git commit -m "posted $(ENTRY)" $(ENTRY)
