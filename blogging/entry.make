@@ -48,13 +48,13 @@ draft-required:
 	fi
 
 # Record a post.
-#	The double use of sed is to ensure that there's only one
-#	Posted: header.  Note that git mv automatically adds.
-post:	name-required draft-required
+#	The double use of sed deletes an empty	Posted: header.
+#	Note that git mv automatically adds.
+posted:	name-required draft-required
 	if [ -f $(DRAFT) ]; then git mv $(DRAFT) $(ENTRY); \
 			    else git add $(ENTRY); fi
-	sed -i -e '1,/^$$/ { /^Posted:/ d }' $(ENTRY);
-	sed -i -e '1,/^$$/ s/^$$/Posted:  $(POSTED)\n/' $(ENTRY);
+	sed -i -e '1,/^$$/ { /^Posted: *$$/ d }' $(ENTRY);
+	sed -i -e '1,/^$$/ s/^$$/Posted:  $(POSTED)\n/'
 	git commit -m "posted $(ENTRY)" $(ENTRY)
 
 .PHONY: entry draft post name-required draft-required
