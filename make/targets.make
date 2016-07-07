@@ -69,8 +69,8 @@ commit:: | $(GIT_REPO)
 
 push-this:: | $(GIT_REPO)
 	-@if git remote|grep -q origin; then					\
-	   [ -z "`git status --porcelain`" ]				\
-	    ||git commit -a -m "Pushed from $(COMMIT_MSG)" $(COMMIT_OPTS);	\
+	   [ -z "`git status --porcelain`" ]					\
+	     || git commit -a -m "Pushed from $(COMMIT_MSG)" $(COMMIT_OPTS);	\
 	   git push | tee /dev/null;						\
 	fi
 
