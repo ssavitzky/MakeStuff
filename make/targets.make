@@ -68,9 +68,10 @@ commit:: | $(GIT_REPO)
 	-git commit -a -m "on $(COMMIT_MSG)" $(COMMIT_OPTS)
 
 push-this:: | $(GIT_REPO)
-	-@if git remote|grep -q origin; then				\
-	   git commit -a -m "Pushed from $(COMMIT_MSG)" $(COMMIT_OPTS);	\
-	   git push | tee /dev/null;					\
+	-@if git remote|grep -q origin; then					\
+	   [ -z "`git status --porcelain`" ]				\
+	    ||git commit -a -m "Pushed from $(COMMIT_MSG)" $(COMMIT_OPTS);	\
+	   git push | tee /dev/null;						\
 	fi
 
 # push-r recursively pushes in GITDIRS
