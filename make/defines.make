@@ -100,14 +100,11 @@ endif
 ###
 
 ### site configuration directory:
-#	SITEDIR is defined as $(BASEDIR)/site iff it exists.
+#	SITEDIR is defined as $(BASEDIR)/.?site iff it exists.
 #	Note the use of wildcard to test for existence.
-
-ifneq ($(wildcard $(BASEDIR)/site)),)
-  SITEDIR = $(BASEDIR)/site
-  ifneq ($(wildcard $(SITEDIR)/config.make),)
-    include $(SITEDIR)/config.make
-  endif
+SITEDIR = $(firstword $(wildcard  $(BASEDIR)/.site $(BASEDIR)/site))
+ifneq ($(SITEDIR),)
+    -include $(SITEDIR)/config.make
 endif
 
 
@@ -134,7 +131,7 @@ MUSIC_D_INCLUDES := $(hasLyrics) $(hasSongs) $(hasTracks)
 #	The lists are defined here so that they can be appended to 
 varsLine1  := SHELL MYNAME HOST
 varsLine2  := BASEREL TOOLREL
-reportVars := BASEDIR DOTDOT ALLDIRS SUBDIRS \
+reportVars := BASEDIR DOTDOT SITEDIR ALLDIRS SUBDIRS \
 			COLLDIRS DATEDIRS ITEMDIRS \
 	   		GITDIRS GIT_REPO hasLyrics hasSongs hasTracks  MUSIC_D \
 			MUSIC_D_INCLUDES

@@ -21,9 +21,11 @@ WAV->FLAC
     in subdirectories like SONGS/*, *.rips, etc.
   o upgrade makefiles in older record directories.
 
-album.make
+tracks.make (was album.make)
   o TOC etc should be conditional off Master
     since they're meaningless without it.  Mainly for field recordings
+  o Master/* should be order-only prerequisites -- should not remake them.
+    Master should be all you need to make album.rips.
 
 tags
   o hierarchical: fmt.long, lic.cc, pub.{no,web}
@@ -121,17 +123,6 @@ Should have a track.make template for track directories
   o use Makefile in Tracks to cons up the Makefile, HEADER.html, notes, etc.
   o move ogg generation into track directories.
 
-publish.make to split out the web and publish-to-web functionality (?)
-  * currently used in Concerts and Concerts/Worldcon-2006
-  o if PUBDIR/shortname is a symlink, publishing isn't needed
-    we can upload directly from the working directory.  
-
-webdir.make
-  o put in a subdirectory needs to go up far enough in the hierarchy
-    to hit other directories that need to be made simultaneously, e.g.
-    Coffee_Computers_and_Song when publishing Albums/coffee
-  o this also lets us update changelogs and RSS feeds.
-
 list-tracks
   o make check-times to list .aup files that are newer than newest .wav
 
@@ -140,7 +131,10 @@ list-tracks
 Done:
 =====
 
-20150101
+2015
+====
+
+0101
 
 Uploading with pushmipullyu
   x three targets:  put, rsync, push
@@ -151,3 +145,22 @@ Uploading with pushmipullyu
     probably best to grep the Makefile for a pull target.
     could allow multiple sources (i.e. repos or working directories) taken
     from a list (out of the tree) of authorized users and source URIs.
+
+2016
+====
+
+0723Sa
+  * allow .site, .config.make, .depends.make
+
+0731Su
+publish.make to split out the web and publish-to-web functionality (?)
+  * currently used in Concerts and Concerts/Worldcon-2006
+  ~ if PUBDIR/shortname is a symlink, publishing isn't needed
+    we can upload directly from the working directory.  
+
+  * cleanup:
+webdir.make -> superceded by git
+  ~ put in a subdirectory needs to go up far enough in the hierarchy
+    to hit other directories that need to be made simultaneously, e.g.
+    Coffee_Computers_and_Song when publishing Albums/coffee
+  ~ this also lets us update changelogs and RSS feeds.

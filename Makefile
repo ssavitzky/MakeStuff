@@ -51,7 +51,9 @@ include $(TOOLDIR)/make/rules.make
 
 ### all -- the default target; must come first or confusion reigns.
 #	(actually, that's not entirely true:  we could set the default
-#	 target explicitly, and then it wouldn't matter.)
+#	 target explicitly, and then it wouldn't matter.  That, however,
+#	 could confuse things for subdirectories that get this by
+#	 inclusion rather than symlinking. So we don't.)
 
 .PHONY: all
 all::
