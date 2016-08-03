@@ -1,7 +1,4 @@
-			     to.do for WURM/Tools
-
-NOTE (201412) WURM has largely been superceded, but Tools/Makefile is more or
-     less alive and well.
+			     to.do for Tools
 
 Many of the following items were pulled over from to.do in the 2014 year-end
 cleanup.  More ended up in wibnif.do, and should probably be consolidated here.
@@ -20,6 +17,13 @@ WAV->FLAC
   o review make manual for VPATH and GPATH, which may do the right thing for building
     in subdirectories like SONGS/*, *.rips, etc.
   o upgrade makefiles in older record directories.
+
+TeX->YAML headers
+  o Move the format to one with YAML (i.e., email-type) headers instead of
+    LaTeX macros.  That would make them extensible.  Instead of concatenating
+    with a constant TeX header, simply translate foo.flk -> foo.tex.  This
+    should also make it easier to experiment with different macro packages,
+    LaTeX 2e, etc.
 
 tracks.make (was album.make)
   o TOC etc should be conditional off Master
@@ -111,12 +115,6 @@ Songs/ needs songlist files -- see $(TRACKS) in album.make
     this allows long, informative filenames
     handle, e.g., shortname.ogg with a redirect rather than a symlink
 
-  o when Songs gets moved, the way ogg files get built will have to change
-    o make the ogg file in the track directory (track.make)
-    o "make published" to copy to Steve_Savitzky/Tracks/*. $(PUBDIR)/...
-    ~ Expedient way is to make a link to the _real_ track directory, but that
-      would break "make put".
-
   o per-song directories would allow multiple sound files.
 
 Should have a track.make template for track directories
@@ -164,3 +162,8 @@ webdir.make -> superceded by git
     to hit other directories that need to be made simultaneously, e.g.
     Coffee_Computers_and_Song when publishing Albums/coffee
   ~ this also lets us update changelogs and RSS feeds.
+  ~ when Songs gets moved, the way ogg files get built will have to change
+    o make the ogg file in the track directory (track.make)
+    o "make published" to copy to Steve_Savitzky/Tracks/*. $(PUBDIR)/...
+    ~ Expedient way is to make a link to the _real_ track directory, but that
+      would break "make put".
