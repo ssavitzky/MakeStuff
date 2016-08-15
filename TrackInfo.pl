@@ -3,13 +3,6 @@
 # TrackInfo [options] infile... 
 #	<title>extract track info</title>
 
-### Open Source/Free Software license notice:
- # The contents of this file may be used under the terms of the GNU
- # General Public License Version 2 or later (the "GPL").  The text
- # of this license can be found on this software's distribution media,
- # or obtained from  www.gnu.org/copyleft/gpl.html	
-###						    :end license notice	###
-
 ### Extracts information about a track from song (.flk) files, track 
 #	notes, or local (album) notes (with a name like trackname.notes)
 #	The local name may have an optional numeric prefix.

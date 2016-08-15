@@ -9,13 +9,6 @@
 #	replaced by the contents of the template.  Usually the template
 #	is an HTML <div> element with a distinctive id or class attribute.
 
-### Open Source/Free Software license notice:
- # The contents of this file may be used under the terms of the GNU
- # General Public License Version 2 or later (the "GPL").  The text
- # of this license can be found on this software's distribution media,
- # or obtained from  www.gnu.org/copyleft/gpl.html	
-###						    :end license notice	###
-
 if (! @ARGV) {
     print "Usage:  $0 template file...\n";
     exit 0;

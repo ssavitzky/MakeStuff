@@ -157,13 +157,18 @@ publish.make to split out the web and publish-to-web functionality (?)
     we can upload directly from the working directory.  
 
   * cleanup:
-webdir.make -> superceded by git
-  ~ put in a subdirectory needs to go up far enough in the hierarchy
-    to hit other directories that need to be made simultaneously, e.g.
-    Coffee_Computers_and_Song when publishing Albums/coffee
-  ~ this also lets us update changelogs and RSS feeds.
-  ~ when Songs gets moved, the way ogg files get built will have to change
-    o make the ogg file in the track directory (track.make)
-    o "make published" to copy to Steve_Savitzky/Tracks/*. $(PUBDIR)/...
-    ~ Expedient way is to make a link to the _real_ track directory, but that
-      would break "make put".
+    webdir.make -> superceded by git
+      ~ put in a subdirectory needs to go up far enough in the hierarchy
+	to hit other directories that need to be made simultaneously, e.g.
+	Coffee_Computers_and_Song when publishing Albums/coffee
+      ~ this also lets us update changelogs and RSS feeds.
+      ~ when Songs gets moved, the way ogg files get built will have to change
+	o make the ogg file in the track directory (track.make)
+	o "make published" to copy to Steve_Savitzky/Tracks/*. $(PUBDIR)/...
+	~ Expedient way is to make a link to the _real_ track directory, but that
+	  would break "make put".
+
+0814Su
+  * Remove license boilerplate from all files.  It's not consistent, and it's
+    far from clear whether LGPL/GPL are best.  At this point I'm leaning
+    toward BSD or MIT.

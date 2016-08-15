@@ -12,13 +12,6 @@
 #   .songs file.  (Unlike its predecessors, it does not allow a default
 #   "songs" file; this avoids having to make duplicate rules for it.)
 
-### Open Source/Free Software license notice:
- # The contents of this file may be used under the terms of the GNU
- # Lesser General Public License Version 2 or later (the "LGPL").  The text
- # of this license can be found on this software's distribution media, or
- # obtained from  www.gnu.org/copyleft/lesser.html	
-###						    :end license notice	###
-
 ### Usage:
 #
 #   Variables: (use make.config to override the defaults)

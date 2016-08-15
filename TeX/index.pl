@@ -3,13 +3,6 @@
 # index [options] infile... 
 #	Perform indexing operations on filksong files
 
-### Open Source/Free Software license notice:
- # The contents of this file may be used under the terms of the GNU
- # General Public License Version 2 or later (the "GPL").  The text
- # of this license can be found on this software's distribution media,
- # or obtained from  www.gnu.org/copyleft/gpl.html	
-###						    :end license notice	###
-
 ### Print usage info:
 sub usage {
     print "$0 [options] infile[.flk] [outfile].ext\n";
