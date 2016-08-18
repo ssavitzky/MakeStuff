@@ -172,3 +172,11 @@ publish.make to split out the web and publish-to-web functionality (?)
   * Remove license boilerplate from all files.  It's not consistent, and it's
     far from clear whether LGPL/GPL are best.  At this point I'm leaning
     toward BSD or MIT.
+  -> MIT.  Simple, well-known; one of GitHub's recommended licenses.
+     * fetch MIT license file.
+
+0817We
+     * remove the LGPL and GPL license files, or maybe move them -> Archive
+     * add license reference to top-level README
+     * Tag as license-change
+

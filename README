@@ -2,3 +2,7 @@
 
 (As mentioned above, if you have a README or README.html file in a directory,
 Apache will put it below the index.  Very handy.)
+
+LICENSE:
+	Software in this working tree is licensed under the MIT license -- see
+	MIT-LICENSE.txt in this directory.
