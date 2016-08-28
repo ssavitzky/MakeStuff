@@ -184,7 +184,12 @@ publish.make to split out the web and publish-to-web functionality (?)
   ^ Still mulling name change.  So far I think MakeStuff is winning -- it's not
     pretentious, and it's pretty descriptive. (Note new tag: ^ for meta.  Not as
     applicable here as in my main to.do, and I'm not going to go back and re-tag old
-    entries. 
+    entries.
+
+0827Sa
+  * push to github:  https://github.com/ssavitzky/MakeStuff.git
+  o next it needs README.md
+    -> install pandoc; pandoc -o README.md HEADER.html easy.  Will want a little editing.
 
 =now====Tools/to.do=====================================================================>|
 

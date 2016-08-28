@@ -59,23 +59,35 @@
 </dl>
 
 <h3>Scripts</h3>
+
 <dl>
-  <dt> <a href="trackinfo" >trackinfo</a>
-  <dd> Get information about a track, and print it on STDOUT in a wide variety
-       of formats.  Should really be broken up into parsing and display
-       modules. 
-  <dt> <a href="list-tracks" >list-tracks</a>
-  <dd> List a Tracks subdirectory in a format useful when recording an album.
-  <dt> <a href="transpose" >transpose</a>
-  <dd> Transpose chords in a <code>.flk</code> file (or any other file with
-       chord symbols in []).
-  <dd> <a href="flktran" >flktran</a> (WIP)
-  <dt> Convert a <code>.flk</code> file to plain text or html.
+  <dt> <a href="TrackInfo.pl"><code>TrackInfo.pl</code></a>
+  </dt>
+  <dd> Extract and format track information.  Gets song metadata from the
+       appropriate <code>.flk</code> files (basically LaTeX with a lot of
+       custom macros), and track metadata from whichever <code>.wav</code>
+       file is most appropriate.
+  </dd>
+  <dt> <a href="list-tracks"><code>list-tracks</code></a>
+  </dt>
+  <dd> List either all known tracks, or a specific set of tracks (e.g. the
+       ones in an album's track list), in a format that makes it easy to
+       keep (cough) <em>track</em> of recording progress.  Most of the
+       information comes out of a file called <code>notes</code> in the
+       track directory.  With the "<code>-i</code>" option, it lists key,
+       meter, tempo, and style; these are useful when you're trying not to
+       put excessively-similar tracks together.  Otherwise it appends the
+       last line of <code>notes</code> that starts in column 1; by
+       convention this describes the most recent useable take.  In a very
+       real sense, this command produces a compact "status/to-do" list for
+       an album.
+  </dd>
+  <dt> <a href="transpose"><code>transpose</code></a>
+  </dt>
+  <dd> Transpose a file that contains chord symbols in square brackets:
+       ChordPro, FlkTran, etc.
+  </dd>
 </dl>
-<p> Note that, for historical reasons, much of the code that formats or
-    otherwise works with lyrics is located in <a href="../TeX"
-    ><code>../TeX</code></a>.
-</p>
 
 <hr>
 <b>Copyright &copy; HyperSpace Express</b><br>
