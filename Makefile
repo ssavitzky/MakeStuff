@@ -1,26 +1,31 @@
-### Tools/Makefile
+### MakeStuff/Makefile
 #
-# This is not only the Makefile for the Tools directory, but is written so 
-# that it can be symlinked into almost any directory in a tree containing
+# This is not only the Makefile for the MakeStuff directory, but is written
+# so that it can be symlinked into almost any directory in a tree containing
 # multiple resource and website directories.
 #
 ###
 
-### Tools:  Figure out where we are and where the Tools directory is: 
-#   BASEDIR is the directory that contains Tools, possibly as a symlink.
+### MakeStuff:  Figure out where we are and where the MakeStuff is: 
+#   BASEDIR is the directory that contains it, possibly as a symlink.
+#   Note that the former name of MakeStuff was Tools, and most of the
+#   tree still refers to it that way.
 #
 MYPATH := $(shell pwd -P)
 MYNAME := $(notdir $(MYPATH))
 MYDIR  := $(dir $(MYPATH))
-BASEDIR:= $(shell d=$(MYPATH); 					\
-		  while [ ! -d $$d/Tools ] && [ ! $$d = / ]; do	\
-			d=`dirname $$d`;			\
+BASEDIR:= $(shell d=$(MYPATH); 						\
+		  while [ ! -d $$d/MakeStuff ] && [ ! -d $$d/Tools ] && \
+			[ ! $$d = / ]; do				\
+			d=`dirname $$d`;				\
 		  done; echo $$d)
 # Make sure we actually found Tools, because we can't proceed without it.
 ifeq ($(BASEDIR),/)
      $(error Cannot find Tools directory.  Giving up.)
 endif
-TOOLDIR := $(BASEDIR)/Tools
+
+TOOLDIR := $(BASEDIR)/$(shell if [ -d $(BASEDIR)/MakeStuff ]; then	\
+				 echo MakeStuff; else echo Tools; fi	)
 
 ### From this point we can start including stuff from TOOLDIR/make. 
 

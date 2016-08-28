@@ -4,13 +4,20 @@
 MFDIR	= $(TOOLDIR)/make
 
 # Compute relative paths to BASEDIR and TOOLDIR
-TOOLREL:= $(shell if [ -e Tools ]; then echo Tools; \
-		  else d=""; while [ ! -d $$d/Tools ]; do d=../$$d; done; \
-		       echo $${d}Tools; fi)
+TOOLREL:= $(shell if [ -e MakeStuff ]; then echo MakeStuff; 	\
+		  elif [ -e Tools ]; then echo Tools;		\
+		  else d=""; while [ ! -d $$d/MakeStuff ] && [ ! -d $$d/Tools ]; \
+				do d=../$$d; done; 				\
+		       if [ -d  $$d/MakeStuff ]; then echo $${d}MakeStuff;	\
+						 else echo $${d}Tools; fi fi	)
+ifeq ($(TOOLREL),MakeStuff)
+      BASEREL:= ./
+else
 ifeq ($(TOOLREL),Tools)
       BASEREL:= ./
 else
       BASEREL:= $(dir $(TOOLREL))
+endif
 endif
 
 ### Rsync upload: DOTDOT is the path to this directory on $(HOST).
@@ -131,7 +138,7 @@ MUSIC_D_INCLUDES := $(hasLyrics) $(hasSongs) $(hasTracks)
 #	The lists are defined here so that they can be appended to 
 varsLine1  := SHELL MYNAME HOST
 varsLine2  := BASEREL TOOLREL
-reportVars := BASEDIR DOTDOT SITEDIR ALLDIRS SUBDIRS \
+reportVars := BASEDIR TOOLDIR DOTDOT SITEDIR ALLDIRS SUBDIRS \
 			COLLDIRS DATEDIRS ITEMDIRS \
 	   		GITDIRS GIT_REPO hasLyrics hasSongs hasTracks  MUSIC_D \
 			MUSIC_D_INCLUDES
