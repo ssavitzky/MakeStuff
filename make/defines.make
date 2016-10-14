@@ -101,7 +101,17 @@ ifdef GIT_REPO
 
   # deploy/push commit message:
   #	Can be overridden or appended to in config.make
+  #	if overriding on the command line use "message=..."
+ifdef message
+  COMMIT_MSG := $(message)
+endif
+ifdef COMMIT_MSG
+  # If the message isn't overridden, we may prefix it with "push from" or "on"
+  commit_msg_overridden = true
+else
+  commit_msg_overridden = false
   COMMIT_MSG := $(shell hostname) $(shell date)
+endif
 endif
 #
 ###
