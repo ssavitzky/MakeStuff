@@ -1,0 +1,4 @@
+#.gitignore for test directory
+
+# assume that all uppercase subdirectories are transient
+[A-Z]*/

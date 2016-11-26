@@ -1,12 +1,5 @@
 # Makefile includes for song directories
-#	$Id: Makefile,v 1.35 2008-06-29 14:42:15 steve Exp $
 #
-# Targets:  === needs update ===
-#	postscript:	*.flk -> *.ps
-#	html:   	*.flk -> *.html	(using flktran)
-#	text:		*.flk -> *.txt  (using flktran)
-#	1song:		older way to print a song or group
-#	zongbook:	the whole songbook
 
 # Songs is the web directory; each song is in an individual subdirectory
 #   At the moment, [song]/lyrics.{html,pdf,txt} are built from ../Lyrics;
@@ -14,25 +7,27 @@
 
 ### Song lists:  (All made via (cd ../Lyrics; make list-*)
 #
-#   SONGS    -- stuff that's OK to put in a songbook: mine and PD
+#   SONGS    -- stuff that's OK to put in a songbook: mine/ours and PD
 #   MYSONGS  -- just mine, not PD or ok-to-publish
 #   WEBSONGS -- Adds $(OK) to get stuff that's OK to put on the web
 #   ALLSONGS -- everything but in-progress songs
 #
 
-SONGS    := $(shell cd ../Lyrics; make list-songs)
-MYSONGS  := $(shell cd ../Lyrics; make list-mysongs)
-ALLSONGS := $(shell cd ../Lyrics; make list-allsongs)
-WEBSONGS := $(shell cd ../Lyrics; make list-websongs)
+# Directories containing lyrics (virtual path for dependencies):
+LPATH := $(filter-out %WIP, $(wildcard $(BASEREL)/Lyrics*))
+VPATH = $(LPATH)
+
+SONGS    := $(shell for d in $(LPATH); do cd $$d; make list-songs; done | sort)
+ALLSONGS := $(shell for d in $(LPATH); do cd $$d; make list-allsongs; done | sort)
+WEBSONGS := $(shell for d in $(LPATH); do cd $$d; make list-websongs; done | sort)
 
 # SONGS are what we can put in a songbook or compilation CDROM
 # 	The derived lists are PS, PDF, HTML, TEXT, and NAMES
-NAMES = $(subst .flk,,$(SONGS))
+NAMES = $(filter-out %--% %.orig.%, $(subst .flk,,$(SONGS)))
 DIRS  = $(NAMES)
 PDF   = $(patsubst %,%/lyrics.pdf,$(NAMES))
 HTML  = $(patsubst %,%/lyrics.html,$(NAMES))
 TEXT  = $(patsubst %,%/lyrics.txt,$(NAMES))
-LYRICS= $(patsubst %,../Lyrics/%,$(SONGS))
 
 # Indices: all
 # 	1Index.html is the index web page, 1IndexTable.html is just the
@@ -66,9 +61,9 @@ WEBINDICES = 0Index.html 0IndexTable.html 0IndexShort.html  # 0IndexLong.html
 PUBFILES = $(WEBHTML) $(WEBPS) $(WEBPDF) $(WEBINDICES) $(DOCS) 
 
 # Utility programs:
-FLKTRAN  = ../Tools/TeX/flktran.pl
-INDEX    = ../Tools/TeX/index.pl
-TRACKINFO = ../Tools/TrackInfo.pl
+FLKTRAN  = $(TOOLDIR)/TeX/flktran.pl
+INDEX    = $(TOOLDIR)/TeX/index.pl
+TRACKINFO = $(TOOLDIR)/TrackInfo.pl
 
 ########################################################################
 ###
@@ -77,23 +72,26 @@ TRACKINFO = ../Tools/TrackInfo.pl
 
 # Rules to make song directories and their contents
 
-%: ../Lyrics/%.flk
+%: %.flk
 	[ -d $@ ] || mkdir $@
 	touch $@
 
-# lyrics.pdf
+%.ps: %.flk
+	d=`pwd`; cd `dirname $<`; $(MAKE) $@; cp $@ $$d
 
-%/lyrics.pdf: ../Lyrics/%.ps
+%.pdf: %.ps
 	ps2pdf $< $@
 
-../Lyrics/%.ps: ../Lyrics/%.flk
-	cd ../Lyrics; make `basename $@`
+# lyrics.pdf
+#	It would be better if we could make foo/foo.pdf.  Unfortunately
+#	that would require a rule with two %'s on the left, and make
+#	can't handle it.  What we _can_ do is cd into each song directory
+#	and make -f ../Makefile.	
 
-# flk to HTML, Text.
-#	Note that there are still serious problems with these.
-#
+%/lyrics.pdf: %.ps
+	ps2pdf $< $@
 
-%/lyrics.html: ../Lyrics/%.flk
+%/lyrics.html: %.flk
 	WEBSITE=$(WEBSITE) WEBDIR=$(MYNAME) $(FLKTRAN) -t $< $@
 
 %/lyrics.txt: ../Lyrics/%.flk
@@ -135,8 +133,8 @@ list-songs:
 	@echo $(SONGS)
 list-names:
 	@echo $(NAMES)
-list-mysongs: 
-	@echo $(MYSONGS)
+list-oursongs: 
+	@echo $(OURSONGS)
 list-allsongs: 
 	@echo $(ALLSONGS)
 list-websongs: 
@@ -158,7 +156,6 @@ longbook: $(PS)
 
 # "zongbook.ps" -- everything in a single .ps file, with index
 
-1song.dvi: song.sty $(SONGS)
 zongbook.dvi: song.sty zongbook.sty $(SONGS)
 zongbook: zongbook.ps
 
@@ -185,11 +182,19 @@ htmlclean::
 
 ### Setup:
 
+reportVars := SONGS $(reportVars)
+
 ### Website indices:
 
-# === These really need to be done using templates
+# We used to generate complete HTML files, but that's not nearly versatile
+# enough.  What we do now is generate HTML fragments that get included in
+# the real index.html and other pages.
 
-0List.html: $(WEBLYRICS) ../Lyrics/zongbook.tex ../Lyrics/Makefile $(INDEX)
+# Also, we now generate the indices from the directory listing, rather than
+# trying to generate lists in the lyrics directory.  That gives us better
+# control over what's included.
+
+0List.html: $(WEBLYRICS) | $(INDEX)
 	@echo building $@ from WEBLYRICS
 	@echo '<html>' 					>  $@
 	@echo '<head>'					>> $@
@@ -203,7 +208,7 @@ htmlclean::
 	@echo '</body>'					>> $@
 	@echo '</html>' 				>> $@
 
-0Index.html: $(WEBLYRICS) ../Lyrics/zongbook.tex ../Lyrics/Makefile $(INDEX)
+0Index.html: $(WEBLYRICS) | $(INDEX)
 	@echo building $@ from WEBLYRICS
 	@echo '<html>' 					>  $@
 	@echo '<head>'					>> $@
@@ -217,13 +222,13 @@ htmlclean::
 	@echo '</body>'					>> $@
 	@echo '</html>' 				>> $@
 
-0IndexTable.html: $(WEBLYRICS) ../Lyrics/zongbook.tex ../Lyrics/Makefile $(INDEX)
+0IndexTable.html: $(WEBLYRICS) | $(INDEX)
 	@echo building $@ from WEBLYRICS
 	@echo '<!-- begin $@ -->'			>  $@
 	@$(INDEX) -t -h $(WEBLYRICS)			>> $@
 	@echo '<!-- end $@ -->'				>> $@
 
-0IndexShort.html: $(WEBNAMES) ../Lyrics/Makefile
+0IndexShort.html: $(WEBNAMES)
 	@echo building $@ from WEBNAMES
 	@echo '<!-- begin $@ -->'			>  $@
 	@for f in `echo $(WEBNAMES) | tr ' ' "\n" | sort | uniq`; do \
@@ -231,10 +236,10 @@ htmlclean::
 	done
 	@echo '<!-- end $@ -->'				>> $@
 
-0IndexLong.html: $(WEBNAMES) ../Lyrics/Makefile
+0IndexLong.html: $(WEBNAMES) 
 	$(TRACKINFO) --long --credits --sound -t format=list.html $(WEBNAMES) > $@
 
-1Index.html: $(ALLLYRICS) ../Lyrics/zongbook.tex ../Lyrics/Makefile $(INDEX)
+1Index.html: $(ALLLYRICS) | $(INDEX)
 	@echo building $@ from ALLLYRICS
 	@echo '<html>' 					>  $@
 	@echo '<head>'					>> $@
@@ -248,13 +253,13 @@ htmlclean::
 	@echo '</body>'					>> $@
 	@echo '</html>' 				>> $@
 
-1IndexTable.html: $(ALLLYRICS) ../Lyrics/zongbook.tex ../Lyrics/Makefile $(INDEX)
+1IndexTable.html: $(ALLLYRICS) | $(INDEX)
 	@echo building $@ from ALLLYRICS
 	@echo '<!-- begin $@ -->'			>  $@
 	@$(INDEX) -t -h $(ALLLYRICS)			>> $@
 	@echo '<!-- end $@ -->'				>> $@
 
-1IndexShort.html: $(ALLNAMES) ../Lyrics/Makefile
+1IndexShort.html: $(ALLNAMES)
 	@echo building $@ 
 	@echo '<!-- begin $@ -->'			>  $@
 	@for f in `echo $(ALLNAMES) | tr ' ' "\n" | sort | uniq`; do \
@@ -262,5 +267,5 @@ htmlclean::
 	done
 	@echo '<!-- end $@ -->'				>> $@
 
-1IndexLong.html: $(ALLNAMES) ../Lyrics/Makefile
+1IndexLong.html: $(ALLNAMES) | $(TRACKINFO)
 	$(TRACKINFO) --long --sound --credits -t format=list.html $(ALLNAMES) > $@

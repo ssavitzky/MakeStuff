@@ -230,7 +230,7 @@ reportVars += NAMES
 
 ### Songbook:  Just my stuff and public domain.  
 #   Longbook:  same, but with notes.
-#	Note that the Songbook doesn't have a proper index -- use the 
+
 #	public HTML index file for that.
 
 # Songbook: a songbook with just the lyrics and chords, not the notes
@@ -271,7 +271,7 @@ htmlclean::
 
 # Imports (for LaTeX)
 
-IMPORTS= song.sty twocolumns.sty
+IMPORTS= song.sty twocolumns.sty zongbook.sty
 
 imports: $(IMPORTS)
 
@@ -280,6 +280,9 @@ song.sty: $(TOOLDIR)/TeX/song.sty
 
 twocolumns.sty: $(TOOLDIR)/TeX/twocolumns.sty
 	ln -s $(TOOLDIR)/TeX/twocolumns.sty .
+
+zongbook.sty: $(TOOLDIR)/TeX/zongbook.sty
+	ln -s $(TOOLDIR)/TeX/zongbook.sty .
 
 ### Website indices:
 

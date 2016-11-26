@@ -1,0 +1,54 @@
+### Test suite for music  -*-Makefile-*-
+
+SUITE = music
+TESTS = 
+
+all::
+	echo available test suites: $(TESTS)
+
+.PHONY: run setup teardown
+
+run:: setup
+	@echo running tests for $(SUITE).tests
+
+TEST_DIRS = Lyrics Lyrics-1 Songs
+TEST_FILES =  $(addsuffix /Makefile, $(TEST_DIRS)) 	\
+		Lyrics/alphabet.flk Lyrics-1/alpha.flk
+
+### Tests
+
+run::
+	cd Lyrics; make alphabet.ps
+	@echo Lyrics/alphabet.ps should exist
+	test -f Lyrics/alphabet.ps
+
+### Files needed for setup
+
+%/alphabet.flk %/alpha.flk:
+	cp ../TeX/alphabet.flk $@
+
+imports:
+	for d in Lyrics*; do (cd $$d; make imports); done
+
+### boilerplate
+
+%/Makefile:
+	cd `dirname $@`; ln -s ../Makefile .
+
+setup::
+	@echo setting up $(SUITE).tests
+
+setup:: | $(TEST_DIRS) $(TEST_FILES)
+	echo $(TEST_FILES)
+
+setup:: imports
+
+teardown::
+	@echo tearing down $(SUITE).tests
+
+teardown::
+	rm -rf $(TEST_DIRS)
+
+$(TEST_DIRS):
+	mkdir $@
+

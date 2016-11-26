@@ -14,7 +14,7 @@ WAV->FLAC
   o Premaster/WAV -> Premaster; make it all FLAC.
     Tag the flac files in Premaster; hopefully it will be possible to transfer the tags
     to the ogg and mp3 files.
-  o review make manual for VPATH and GPATH, which may do the right thing for building
+  * review make manual for VPATH and GPATH, which may do the right thing for building
     in subdirectories like SONGS/*, *.rips, etc.
   o upgrade makefiles in older record directories.
 
@@ -51,9 +51,18 @@ flktran
   o link on .txt output is broken
   o all links in breadcrumbs should be fully-qualified for cut&paste
 
-Songs/Makefile
+songs.make - make plugin for Songs directories
+  * 20161125 VPATH made from ../Lyrics*, omitting WIP.
+  o %/index.html should #include lyrics.html, and only if we have rights.
+    generate, which lets it include directly-linked audio files.  Put body text in an
+    editable include file which is generated only if missing (e.g. text.html)
+  o header should be #included and auto-generated; most should come
   o header/footer boilerplate should come from a template file
   o use songlist files instead of passing list on the command line
+    (Can make all.songs from listing)
+
+songbook.make - make plugin for Songbook directories
+  o makes html songbook in a subdirectory can .gitignore [a-z]*.html
 
 index.pl, flktran.pl; Songs/Makefile
   o (?)move index.pl and flktran.pl into Tools from TeX; adjust paths.
