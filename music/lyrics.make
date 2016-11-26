@@ -1,25 +1,8 @@
 ### Makefile include for Lyrics directories
 #
-# Hacked from users/steve/Lyrics/Makefile.  
-
-# By default the HTML, and text files are built in ../Songs/*/lyrics.[ext]
-#   Postscript files are built here, and PDF files are built in both.
-#   This meahs that it's easy to edit and print in this directory, while
-#   all the web stuff ends up in ../Songs.
-#
-#   Eventually we ought to rejigger things so that we actually build
-#   the individual song directories from Songs; that would make it possible
-#   to have multiple export directories, possibly on different websites.
-
-# The main difference between this and the original in users/steve is that
-#   it (finally) uses tags (originally category, but I'd already started 
-#   using it as a tags field) to define the song lists rather than requiring
-#   them to be in the Makefile.
-
-#   In the original, a tag of "long" indicates a song that needs to be printed
-#   on multiple pages.  we don't bother here -- almost everything is long and
-#   we don't have extraneous notes anyway -- it's all stuff we need for
-#   performances and in-group discussions.
+#   A Lyrics directory is mainly intended for making a printed songbook, so
+#   we build Postscript files here.  HTML, text, and PDF files are built in
+#   a Songs directory (see songs.make)
 
 # 12pt is too big for: crypto.flk stuff.flk
 SIZE = 12pt,
@@ -38,8 +21,20 @@ SIZE = 12pt,
 # === need to drop the .flk and, ideally, generate the lists from metadata
 # === need to drop zongbook.tex and generate that from metadata, too.
 
+# ASONGS is just the song files, alphabetical by filename.
+#   This works in lgf and tg because we're not using Steve's
+#   cryptic shortnames.
+#   Note that template files start with a digit, so the wildcard skips them
+ASONGS := $(filter-out %--%, $(wildcard [a-z]*.flk))
+
 # WIP = work in progress
-WIP := $(shell grep -le '^\\tags.*\Wwip\W' *.flk)
+#	Note that we have to guard against the possibility that there are no
+#	.flk files in the directory; that would make grep read from STDIN
+#	if we let things get that far.
+WIP := $(shell [ -z "$(ASONGS)" ] || grep -le '^\\tags.*\Wwip\W' $(ASONGS))
+
+# ALLSONGS is the songs minus work in progress, which is usually what we want.
+ALLSONGS := $(filter-out $(WIP), $(ASONGS))
 
 # PD contains songs that aren't ours, but where both words and lyrics are
 #   in the public domain, so we don't have to worry about rights.  Note that
@@ -48,46 +43,38 @@ WIP := $(shell grep -le '^\\tags.*\Wwip\W' *.flk)
 #   which I have no IP except as arranger, and hence that don't belong
 #   in /Steve_Savitzky/* or other publicly-accessible collections.
 #
-PD := $(shell grep -le '^\\tags.*\Wpd\W' *.flk)
+PD := $(shell [ -z "$(ALLSONGS)" ] || grep -le '^\\tags.*\Wpd\W' $(ALLSONGS))
 
 # OURS contains songs in which a band member has sufficient rights to
 #   allow us to publish the lyrics on the web.
 #
-OURS := $(shell grep -le '^\\tags.*\Wours\W' *.flk)
+OURS := $(shell [ -z "$(ALLSONGS)" ] || grep -le '^\\tags.*\Wours\W' $(ALLSONGS))
 
 # MINE contains songs ganked from one bandmember or another, typically
 #   Steve.  Add it to OURS
 #
-MINE := $(shell grep -le '^\\tags.*\Wmine\W' *.flk)
+MINE := $(shell [ -z "$(ALLSONGS)" ] || grep -le '^\\tags.*\Wmine\W'  $(ALLSONGS))
 
 # WEB_OK contains songs that aren't PD, and aren't "ours", but which by 
 #   one means or another we have acquired permission to post on the site.
 #
-WEB_OK :=$(shell grep -le '^\\tags.*\Wweb-ok\W' *.flk)
+WEB_OK :=$(shell [ -z "$(ALLSONGS)" ] || grep -le '^\\tags.*\Wweb-ok\W'  $(ALLSONGS))
 
-
-# ASONGS is just the song files, alphabetical by filename.
-#   This works in lgf and tg because we're not using Steve's
-#   cryptic shortnames.
-#   Note that template files start with a digit, so the wildcard skips them
-ASONGS := $(shell ls [-a-z]*.flk | grep -ve '--' )
-
-# Compute the song lists by filtering out work in progress
-#   SONGS    -- stuff that's OK to put in a songbook
+# Songlists:
+#   SONGBOOK -- stuff that's OK to put in a songbook
 #   OURSONGS -- just ours, not PD or ok-to-publish
 #   WEBSONGS -- Adds $(WEB_OK) to get stuff that's OK to put on the web
 #   ALLSONGS -- everything but work in progress
-SONGS    := $(filter-out $(WIP), $(shell ls $(OURS) $(MINE) $(PD)))
-OURSONGS := $(filter-out $(WIP), $(OURS) $(MINE))
-WEBSONGS := $(filter-out $(WIP), $(shell ls $(OURS)  $(MINE) $(WEB_OK) $(PD)))
-ALLSONGS := $(filter-out $(WIP), $(ASONGS))
+SONGBOOK := $(OURS) $(MINE) $(PD)
+OURSONGS := $(OURS) $(MINE)
+WEBSONGS := $(OURS) $(MINE) $(WEB_OK) $(PD)
 
 # SONGS are what we can put in a songbook or compilation CDROM
 # 	The derived lists are PS, PDF, HTML, TEXT, and NAMES
-PS    = $(subst .flk,.ps,$(SONGS))
-PDF   = $(subst .flk,.pdf,$(SONGS))
-NAMES = $(subst .flk,,$(SONGS))
-HTML  = $(subst .flk,.html,$(SONGS))
+PS    = $(subst .flk,.ps,$(SONGBOOK))
+PDF   = $(subst .flk,.pdf,$(SONGBOOK))
+NAMES = $(subst .flk,,$(SONGBOOK))
+HTML  = $(subst .flk,.html,$(SONGBOOK))
 PRINT = $(PS)
 
 #	OGGS is also derived from SONGS, but only _includes_ what's here
@@ -129,39 +116,14 @@ WEBDIR   = /Songs
 PUBFILES = $(WEBHTML) $(WEBPS) $(WEBPDF) $(WEBINDICES)
 
 # Utility programs:
-FLKTRAN  = $(TOOLDIR)/TeX/flktran.pl
-INDEX    = $(TOOLDIR)/TeX/index.pl
+FLKTRAN   = $(TOOLDIR)/TeX/flktran.pl
+INDEX     = $(TOOLDIR)/TeX/index.pl
 TRACKINFO = $(TOOLDIR)/TrackInfo.pl
 
 ########################################################################
 ###
 ### Rules:
 ###
-
-.SUFFIXES: .tex .dvi .flk .txt .lj .ps .pdf .html .ogg
-
-# should decide whether to make the symlink based on whether I have rights
-# to the song; if I don't we make a dummy web page instead, to allow the
-# pdf and txt versions of the lyrics to go forward.
-#
-../Songs/%/index.html:
-	[ -d `dirname $@` ] || mkdir `dirname $@`
-	cd `dirname $@`; [ -e lyrics.html ] && ln -s lyrics.html index.html
-
-../Songs/%/lyrics.pdf: %.ps
-	ps2pdf $< $@
-
-# flk to HTML, Text.
-#	Note that there are still serious problems with these.
-#
-../Songs/%/lyrics.html: %.flk
-	cd ../Songs; $(MAKE) %/lyrics.html
-
-../Songs/%/lyrics.txt: %.flk 
-	cd ../Songs; $(MAKE) %/lyrics.txt
-
-.flk.txt:	
-	chord < $*.flk > $@
 
 ECHO=/bin/echo
 
@@ -170,7 +132,7 @@ ECHO=/bin/echo
 #	foo.tex every time foo.flk changes.  But it reduces clutter in
 #	the working directory and keeps filename completion from stopping
 #	to ask whether I meant .flk or .tex.
-.flk.tex:	
+%.tex:	%.flk	
 	@$(ECHO) \\'documentstyle[$(SIZE)song,twocolumns,zongbook]{article}' > $@
 	@$(ECHO) \\'special{papersize=8.5in,11in}'	>> $@
 	@$(ECHO) \\'begin{document}'			>> $@
@@ -218,7 +180,7 @@ pubfiles: $(PUBFILES)
 list-names:
 	@echo $(NAMES)
 list-songs: 
-	@echo $(SONGS)
+	@echo $(SONGBOOK)
 list-allsongs: 
 	@echo $(ALLSONGS)
 list-oursongs: 
@@ -226,7 +188,7 @@ list-oursongs:
 list-websongs: 
 	@echo $(WEBSONGS)
 
-reportVars += NAMES
+reportVars += NAMES ALLNAMES WEBNAMES
 
 ### Songbook:  Just my stuff and public domain.  
 #   Longbook:  same, but with notes.

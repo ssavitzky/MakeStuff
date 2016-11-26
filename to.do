@@ -7,6 +7,8 @@ cleanup.  More ended up in wibnif.do, and should probably be consolidated here.
 
 
 WAV->FLAC
+  * review make manual for VPATH and GPATH, which may do the right thing for building
+    in subdirectories like SONGS/*, *.rips, etc.
   o Move to a workflow that uses flac instead of wav.  Audacity can export it,
     and most of the tools can handle it.  cdrdao can't, but Master is generated from
     Premaster/* by sox.  normalize-audio might not -- that's a problem.  But its
@@ -14,8 +16,6 @@ WAV->FLAC
   o Premaster/WAV -> Premaster; make it all FLAC.
     Tag the flac files in Premaster; hopefully it will be possible to transfer the tags
     to the ogg and mp3 files.
-  * review make manual for VPATH and GPATH, which may do the right thing for building
-    in subdirectories like SONGS/*, *.rips, etc.
   o upgrade makefiles in older record directories.
 
 TeX->YAML headers
@@ -53,6 +53,7 @@ flktran
 
 songs.make - make plugin for Songs directories
   * 20161125 VPATH made from ../Lyrics*, omitting WIP.
+  * 20161125 test framework for MakeStuff; testing music stuff.
   o %/index.html should #include lyrics.html, and only if we have rights.
     generate, which lets it include directly-linked audio files.  Put body text in an
     editable include file which is generated only if missing (e.g. text.html)
@@ -202,6 +203,11 @@ publish.make to split out the web and publish-to-web functionality (?)
   * next step:  reconfigure Makefile to find MakeStuff as well as Tools.  Should also be
     able to find it in site/, but that's going to be harder
 
+1125Fr
+  * much fixing in songs.make -- can now handle multiple lyrics directories.  On its way
+    to being able to generate files in song subdirectories.
+  * test framework in MakeStuff; music.test started with proof-of-concept for lyrics.
+  
 =now====Tools/to.do=====================================================================>|
 
 Local Variables:

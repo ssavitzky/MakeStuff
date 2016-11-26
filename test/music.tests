@@ -12,23 +12,60 @@ run:: setup
 	@echo running tests for $(SUITE).tests
 
 TEST_DIRS = Lyrics Lyrics-1 Songs
-TEST_FILES =  $(addsuffix /Makefile, $(TEST_DIRS)) 	\
-		Lyrics/alphabet.flk Lyrics-1/alpha.flk
+LYRICS_DIRS = Lyrics Lyrics-1
+TEST_DIR_CONTENTS = $(addsuffix /Makefile, $(TEST_DIRS))
+TEST_FILES = $(TEST_DIR_CONTENTS)		 	\
+		$(addsuffix /song.sty, $(LYRICS_DIRS))  \
+		Lyrics/alphabet.flk Lyrics-1/alpha.flk  \
+		Lyrics/song.sty
 
 ### Tests
 
 run::
+	@echo testing basic functionality in Lyrics
 	cd Lyrics; make alphabet.ps
 	@echo Lyrics/alphabet.ps should exist
 	test -f Lyrics/alphabet.ps
+
+run::
+	@echo testing report-vars in Lyrics
+	cd Lyrics; make report-vars
+
+run::
+	@echo testing make all in Lyrics
+	cd Lyrics; make
+	@echo indices should exist
+	@for f in 1Index 1IndexShort 1IndexTable; do 				\
+		test -f Lyrics/$$f.html || (echo $$f.html not found; false) 	\
+	done
+
+run::
+	@echo testing report-vars in Songs
+	cd Songs; make report-vars
+
+expected_subdirs = alpha alphabet
+expected_files = lyrics.html lyrics.pdf
+
+run::
+	@echo testing make all in Songs
+	cd Songs; make
+	@echo Songs should have subdirs with lyrics.html and lyrics.pdf
+	@for d in $(addprefix Songs/, $(expected_subdirs)); do			\
+		test -d $$d || (echo $$d not found; false);			\
+		for f in $(expected_files); do					\
+			test -f $$d/$$f || (echo $$d/$$f not found; false)	\
+		done								\
+	done
+	@echo Lyrics-1/alpha.ps should have been made and not deleted
+	test -f Lyrics-1/alpha.ps
 
 ### Files needed for setup
 
 %/alphabet.flk %/alpha.flk:
 	cp ../TeX/alphabet.flk $@
 
-imports:
-	for d in Lyrics*; do (cd $$d; make imports); done
+%/song.sty: | %/Makefile
+	cd `dirname $@`; make imports
 
 ### boilerplate
 
@@ -40,8 +77,6 @@ setup::
 
 setup:: | $(TEST_DIRS) $(TEST_FILES)
 	echo $(TEST_FILES)
-
-setup:: imports
 
 teardown::
 	@echo tearing down $(SUITE).tests

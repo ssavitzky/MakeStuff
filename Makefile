@@ -15,16 +15,16 @@ MYPATH := $(shell pwd -P)
 MYNAME := $(notdir $(MYPATH))
 MYDIR  := $(dir $(MYPATH))
 BASEDIR:= $(shell d=$(MYPATH); 						\
-		  while [ ! -d $$d/MakeStuff ] && [ ! -d $$d/Tools ] && \
+		  while [ ! -d $$d/MakeStuff/make ] && [ ! -d $$d/Tools/make ] && \
 			[ ! $$d = / ]; do				\
 			d=`dirname $$d`;				\
 		  done; echo $$d)
 # Make sure we actually found Tools, because we can't proceed without it.
 ifeq ($(BASEDIR),/)
-     $(error Cannot find Tools directory.  Giving up.)
+     $(error Cannot find MakeStuff directory.  Giving up.)
 endif
 
-TOOLDIR := $(BASEDIR)/$(shell if [ -d $(BASEDIR)/MakeStuff ]; then	\
+TOOLDIR := $(BASEDIR)/$(shell if [ -d $(BASEDIR)/MakeStuff/make ]; then	\
 				 echo MakeStuff; else echo Tools; fi	)
 
 ### From this point we can start including stuff from TOOLDIR/make. 
