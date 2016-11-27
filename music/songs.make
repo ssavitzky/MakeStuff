@@ -84,6 +84,9 @@ WEBTEXT  = $(patsubst %,%/lyrics.txt,$(WEBNAMES))
 #	0Index* are the web-safe versions of the index files
 WEBINDICES = 0Index.html 0IndexTable.html 0IndexShort.html  # 0IndexLong.html
 
+# At some point we can add 1Index*, after we add subdir indices that can handle
+# directories without visible lyrics.
+
 
 # Utility programs:
 FLKTRAN  = $(TOOLDIR)/TeX/flktran.pl
@@ -100,7 +103,7 @@ reportVars += LPATH WEBNAMES NOTWEB
 # Rules to make song subdirectories and their contents
 
 %: %.flk
-	mkdir $@
+	mkdir -p $@
 
 %.ps: %.flk
 	d=`pwd`; cd `dirname $<`; make $@; cp $@ $$d
@@ -148,10 +151,9 @@ reportVars += LPATH WEBNAMES NOTWEB
 ### Targets
 ###
 
-all::	$(ALLDIRS) $(WEBHTML) $(ALLPDF) subdir-indices indices webindices
+all::	$(ALLDIRS) $(WEBHTML) $(ALLPDF) subdir-indices webindices
 
-.PHONY: indices webindices
-indices: $(INDICES) $(WEBINDICES) 
+.PHONY: webindices
 webindices: $(WEBINDICES)
 
 ### Showing and hiding lyrics:
@@ -246,7 +248,7 @@ htmlclean::
 # trying to generate lists in the lyrics directory.  That gives us better
 # control over what's included.
 
-0List.html: $(WEBNAMES) | $(INDEX)
+0List.html: $(WEBSONGS) | $(INDEX)
 	@echo building $@ from WEBLYRICS
 	@echo '<html>' 					>  $@
 	@echo '<head>'					>> $@
@@ -260,7 +262,7 @@ htmlclean::
 	@echo '</body>'					>> $@
 	@echo '</html>' 				>> $@
 
-0Index.html: $(WEBNAMES) | $(INDEX)
+0Index.html: $(WEBSONGS) | $(INDEX)
 	@echo building $@ from WEBLYRICS
 	@echo '<html>' 					>  $@
 	@echo '<head>'					>> $@
