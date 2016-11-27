@@ -55,9 +55,10 @@ WEBSONGS = $(OURS) $(MINE) $(WEB_OK) $(PD)
 #	those are the songs in our repertoire.  We will make lyrics visible only
 #	in WEBNAMES.
 #
-NAMES    = $(sort $(filter-out %--% %.orig.%, $(subst .flk,,$(notdir $(SONGBOOK)))))
+SBNAMES  = $(sort $(filter-out %--% %.orig.%, $(subst .flk,,$(notdir $(SONGBOOK)))))
 ALLNAMES = $(sort $(filter-out %--% %.orig.%, $(subst .flk,,$(notdir $(ALLSONGS)))))
 WEBNAMES = $(sort $(filter-out %--% %.orig.%, $(subst .flk,,$(notdir $(WEBSONGS)))))
+NOTWEB   = $(filter-out $(WEBNAMES), $(ALLNAMES))
 
 
 # Indices: all
@@ -68,6 +69,7 @@ WEBNAMES = $(sort $(filter-out %--% %.orig.%, $(subst .flk,,$(notdir $(WEBSONGS)
 #
 INDICES= 1Index.html 1IndexTable.html 1IndexShort.html   # 1IndexLong.html
 
+# Lists.  Just the ones we actually need
 ALLDIRS  = $(ALLNAMES)
 ALLPDF   = $(patsubst %,%/lyrics.pdf,$(ALLNAMES))
 ALLHTML  = $(patsubst %,%/lyrics.html,$(ALLNAMES))
@@ -88,7 +90,7 @@ FLKTRAN  = $(TOOLDIR)/TeX/flktran.pl
 INDEX    = $(TOOLDIR)/TeX/index.pl
 TRACKINFO = $(TOOLDIR)/TrackInfo.pl
 
-reportVars += LPATH ALLNAMES WEBSONGS 
+reportVars += LPATH WEBNAMES NOTWEB
 
 ########################################################################
 ###
@@ -146,11 +148,35 @@ reportVars += LPATH ALLNAMES WEBSONGS
 ### Targets
 ###
 
-all::	$(ALLDIRS) $(ALLHTML) $(ALLPDF) # $(INDICES) $(WEBINDICES) 
+all::	$(ALLDIRS) $(WEBHTML) $(ALLPDF) subdir-indices # $(INDICES) $(WEBINDICES) 
 
 .PHONY: indices webindices
 indices: $(INDICES) $(WEBINDICES) 
 webindices: $(WEBINDICES)
+
+### Showing and hiding lyrics:
+#
+#	For now, we're simply symlinking lyrics.html in any web-visible
+#	directory, and unlinking it (showing any unfortunate user an
+#	error if they try to see it) for non-web songs.
+#
+#	Eventually the plan is for index.html to come from a template and
+#	do server-side includes for header, notes, audio files, and
+#	lyrics.  That will allow us to show pages for all songs in our
+#	repertoire.
+#
+#	In either case, we do this in a loop, so that if the status of
+#	a song changes we do the right thing.
+
+.PHONY: show-lyrics hide-lyrics subdir-indices
+
+subdir-indices:: show-lyrics hide-lyrics
+
+show-lyrics: $(WEBNAMES)
+	for d in $(WEBNAMES); do (cd $$d; ln -sf lyrics.html index.html) done
+
+hide-lyrics: $(NOTWEB)
+	for d in $(NOTWEB); do (cd $$d; rm -f index.html) done
 
 ### Lists:
 

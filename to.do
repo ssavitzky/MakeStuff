@@ -26,7 +26,7 @@ TeX->YAML headers
     LaTeX 2e, etc.
 
 tracks.make (was album.make)
-  o TOC etc should be conditional off Master
+  o TOC etc should be conditional on the presence of Master
     since they're meaningless without it.  Mainly for field recordings
   o Master/* should be order-only prerequisites -- should not remake them.
     Master should be all you need to make album.rips.
@@ -44,13 +44,16 @@ makefile templates
     html2ps, probably.
 
 flktran
+  * 20081226 category -> tags
   o don't put in excess blank lines in html
   o eliminate ~ (halfspace) - see aengus.flk
   o performance notes (\perf{...})
-  * 20081226 category -> tags
   o link on .txt output is broken
   o all links in breadcrumbs should be fully-qualified for cut&paste
-
+  o LaTeX2e: https://www.latex-project.org/help/documentation/clsguide.pdf
+    Uppercase style names to distinguish;
+    Separate packages for context-specific (i.e. scripting) macros.
+    
 songs.make - make plugin for Songs directories
   * 20161125 VPATH made from ../Lyrics*, omitting WIP.
   * 20161125 test framework for MakeStuff; testing music stuff.
@@ -63,7 +66,8 @@ songs.make - make plugin for Songs directories
     (Can make all.songs from listing)
 
 songbook.make - make plugin for Songbook directories
-  o makes html songbook in a subdirectory can .gitignore [a-z]*.html
+  o makes html  and pdf songbook in a subdirectory. can .gitignore [a-z]*.html
+  o use a "songbook.songs" file to re-order.
 
 index.pl, flktran.pl; Songs/Makefile
   o (?)move index.pl and flktran.pl into Tools from TeX; adjust paths.
