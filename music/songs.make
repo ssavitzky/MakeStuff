@@ -24,7 +24,7 @@ VPATH = $(LPATH)
 ASONGS := $(shell for d in $(LPATH); do ls $$d/[a-z]*.flk | grep -ve '--' ; done)
 
 # WIP = work in progress
-WIP := $(shell [ -z "$(ASONGS)" ] || grep -le '^\\tags.*\Wwip\W' $(ASONGS))
+WIP := $(shell [ -z "$(ASONGS)" ] || grep -ile '^\\tags.*\Wwip\W' $(ASONGS))
 
 ALLSONGS := $(filter-out $(WIP), $(ASONGS))
 
@@ -251,7 +251,7 @@ htmlclean::
 # trying to generate lists in the lyrics directory.  That gives us better
 # control over what's included.
 
-0List.html: $(WEBSONGS) | $(INDEX)
+0List.html: $(WEBSONGS) $(WEBDIRS) | $(INDEX)
 	@echo building $@ from WEBLYRICS
 	@echo '<html>' 					>  $@
 	@echo '<head>'					>> $@
@@ -265,7 +265,7 @@ htmlclean::
 	@echo '</body>'					>> $@
 	@echo '</html>' 				>> $@
 
-0Index.html: $(WEBSONGS) | $(INDEX)
+0Index.html: $(WEBSONGS) $(WEBDIRS) | $(INDEX)
 	@echo building $@ from WEBLYRICS
 	@echo '<html>' 					>  $@
 	@echo '<head>'					>> $@
