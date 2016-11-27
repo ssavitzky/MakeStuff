@@ -66,7 +66,7 @@ songs.make - make plugin for Songs directories
     generate, which lets it include directly-linked audio files.  Put body text in an
     editable include file which is generated only if missing (e.g. text.html)
   o header should be #included and auto-generated; that's the way to do title and
-    navbar correctly.
+    navbar correctly - Songs/name currently aren't links.
   o header/footer boilerplate should come from a template file
   o use songlist files instead of passing list on the command line
     (Can make all.songs from listing)
@@ -74,6 +74,8 @@ songs.make - make plugin for Songs directories
 songbook.make - make plugin for Songbook directories
   o makes html  and pdf songbook in a subdirectory. can .gitignore [a-z]*.html
   o use a "songbook.songs" file to re-order.
+  o most indices should be (optionally?) sorted by title, not filename.
+    compact should of course be filenames.
 
 index.pl, flktran.pl; Songs/Makefile
   o (?)move index.pl and flktran.pl into Tools from TeX; adjust paths.
@@ -217,6 +219,9 @@ publish.make to split out the web and publish-to-web functionality (?)
   * much fixing in songs.make -- can now handle multiple lyrics directories.  On its way
     to being able to generate files in song subdirectories.
   * test framework in MakeStuff; music.test started with proof-of-concept for lyrics.
+
+1127Su
+  * update license to 4.0 international
   
 =now====Tools/to.do=====================================================================>|
 
