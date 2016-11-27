@@ -57,6 +57,8 @@ flktran
 songs.make - make plugin for Songs directories
   * 20161125 VPATH made from ../Lyrics*, omitting WIP.
   * 20161125 test framework for MakeStuff; testing music stuff.
+  * BUG: indices aren't sorted
+     make list-allsongs | sed 's/ /\n/g' | sed 's/\// /g' | sort -k3 | sed 's/ /\//g'
   o %/index.html should #include lyrics.html, and only if we have rights.
     generate, which lets it include directly-linked audio files.  Put body text in an
     editable include file which is generated only if missing (e.g. text.html)

@@ -29,7 +29,7 @@ WIP := $(shell [ -z "$(ASONGS)" ] || grep -le '^\\tags.*\Wwip\W' $(ASONGS))
 ALLSONGS := $(filter-out $(WIP), $(ASONGS))
 
 # PD = public domain
-PD := $(shell [ -z "$(ALLSONGS)" ] || grep -le '^\\tags.*\Wpd\W' $(ALLSONGS))
+PD := $(shell [ -z "$(ALLSONGS)" ] || grep -ile '^\\tags.*\Wpd\W' $(ALLSONGS))
 
 # OURS =  a band member has sufficient rights to allow us to publish the lyrics
 OURS := $(shell [ -z "$(ALLSONGS)" ] || grep -le '^\\tags.*\Wours\W' $(ALLSONGS))
@@ -40,14 +40,17 @@ MINE := $(shell [ -z "$(ALLSONGS)" ] || grep -le '^\\tags.*\Wmine\W' $(ALLSONGS)
 # WEB_OK = not ours but we have permission to publish on the web
 WEB_OK :=$(shell [ -z "$(ALLSONGS)" ] || grep -le '^\\tags.*\Wweb-ok\W' $(ALLSONGS))
 
+# ugly shell pipeline to sort a list of song references.
+SORT_SONGS =  sed 's/ /\n/g' | sed 's/\// /g' | sort -k3 | sed 's/ /\//g'
+
 # Songlists:
 #   SONGBOOK -- stuff that's OK to put in a songbook
 #   OURSONGS -- just ours, not PD or ok-to-publish
 #   WEBSONGS -- Adds $(WEB_OK) to get stuff that's OK to put on the web
 #   ALLSONGS -- everything but work in progress
-SONGBOOK = $(OURS) $(MINE) $(PD)
-OURSONGS = $(OURS) $(MINE)
-WEBSONGS = $(OURS) $(MINE) $(WEB_OK) $(PD)
+SONGBOOK = $(shell echo $(OURS) $(MINE) $(PD) | $(SORT_SONGS))
+OURSONGS = $(shell echo $(OURS) $(MINE) | $(SORT_SONGS))
+WEBSONGS = $(shell echo $(OURS) $(MINE) $(WEB_OK) $(PD) | $(SORT_SONGS))
 
 # Directory name lists:
 # 	Because we're building a web directory here, we're mostly interested in

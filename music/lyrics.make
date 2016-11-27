@@ -31,7 +31,7 @@ ASONGS := $(filter-out %--%, $(wildcard [a-z]*.flk))
 #	Note that we have to guard against the possibility that there are no
 #	.flk files in the directory; that would make grep read from STDIN
 #	if we let things get that far.
-WIP := $(shell [ -z "$(ASONGS)" ] || grep -le '^\\tags.*\Wwip\W' $(ASONGS))
+WIP := $(shell [ -z "$(ASONGS)" ] || grep -ile '^\\tags.*\Wwip\W' $(ASONGS))
 
 # ALLSONGS is the songs minus work in progress, which is usually what we want.
 ALLSONGS := $(filter-out $(WIP), $(ASONGS))
@@ -43,7 +43,7 @@ ALLSONGS := $(filter-out $(WIP), $(ASONGS))
 #   which I have no IP except as arranger, and hence that don't belong
 #   in /Steve_Savitzky/* or other publicly-accessible collections.
 #
-PD := $(shell [ -z "$(ALLSONGS)" ] || grep -le '^\\tags.*\Wpd\W' $(ALLSONGS))
+PD := $(shell [ -z "$(ALLSONGS)" ] || grep -ile '^\\tags.*\Wpd\W' $(ALLSONGS))
 
 # OURS contains songs in which a band member has sufficient rights to
 #   allow us to publish the lyrics on the web.
@@ -60,14 +60,18 @@ MINE := $(shell [ -z "$(ALLSONGS)" ] || grep -le '^\\tags.*\Wmine\W'  $(ALLSONGS
 #
 WEB_OK :=$(shell [ -z "$(ALLSONGS)" ] || grep -le '^\\tags.*\Wweb-ok\W'  $(ALLSONGS))
 
+# ugly shell pipeline to sort a list of song references.
+SORT_SONGS =  sed 's/ /\n/g' | sed 's/\// /g' | sort -k3 | sed 's/ /\//g'
+
 # Songlists:
 #   SONGBOOK -- stuff that's OK to put in a songbook
 #   OURSONGS -- just ours, not PD or ok-to-publish
 #   WEBSONGS -- Adds $(WEB_OK) to get stuff that's OK to put on the web
 #   ALLSONGS -- everything but work in progress
-SONGBOOK := $(OURS) $(MINE) $(PD)
-OURSONGS := $(OURS) $(MINE)
-WEBSONGS := $(OURS) $(MINE) $(WEB_OK) $(PD)
+SONGBOOK = $(shell echo $(OURS) $(MINE) $(PD) | $(SORT_SONGS))
+OURSONGS = $(shell echo $(OURS) $(MINE) | $(SORT_SONGS))
+WEBSONGS = $(shell echo $(OURS) $(MINE) $(WEB_OK) $(PD) | $(SORT_SONGS))
+
 
 # SONGS are what we can put in a songbook or compilation CDROM
 # 	The derived lists are PS, PDF, HTML, TEXT, and NAMES
