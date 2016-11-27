@@ -148,7 +148,7 @@ reportVars += LPATH WEBNAMES NOTWEB
 ### Targets
 ###
 
-all::	$(ALLDIRS) $(WEBHTML) $(ALLPDF) subdir-indices # $(INDICES) $(WEBINDICES) 
+all::	$(ALLDIRS) $(WEBHTML) $(ALLPDF) subdir-indices indices webindices
 
 .PHONY: indices webindices
 indices: $(INDICES) $(WEBINDICES) 
@@ -255,7 +255,7 @@ htmlclean::
 	@echo '<h2><a href="/">steve.savitzky.net</a> '	>> $@
 	@echo '  / <a href="./">Songs</a>'		>> $@
 	@echo '  / Song List</h1>'			>> $@
-	@$(INDEX) -h  $(WEBLYRICS)			>> $@
+	@$(INDEX) -h  $(WEBSONGS)			>> $@
 	@echo '<h5>Last update: ' `date` '</h5>'	>> $@
 	@echo '</body>'					>> $@
 	@echo '</html>' 				>> $@
@@ -269,7 +269,7 @@ htmlclean::
 	@echo '<h2><a href="/">steve.savitzky.net</a> '	>> $@
 	@echo '  / <a href="./">Songs</a>'		>> $@
 	@echo '  / Song Index</h2>'			>> $@
-	@$(INDEX) -t -h $(WEBLYRICS)			>> $@
+	@$(INDEX) -t -h $(WEBSONGS)			>> $@
 	@echo '<h5>Last update: ' `date` '</h5>'	>> $@
 	@echo '</body>'					>> $@
 	@echo '</html>' 				>> $@
@@ -277,7 +277,7 @@ htmlclean::
 0IndexTable.html: | $(INDEX)
 	@echo building $@ from WEBLYRICS
 	@echo '<!-- begin $@ -->'			>  $@
-	@$(INDEX) -t -h $(WEBLYRICS)			>> $@
+	@$(INDEX) -t -h $(WEBSONGS)			>> $@
 	@echo '<!-- end $@ -->'				>> $@
 
 0IndexShort.html: 
@@ -300,7 +300,7 @@ htmlclean::
 	@echo '<h2><a href="/">steve.savitzky.net</a> '	>> $@
 	@echo '  / <a href="./">Songs</a>'		>> $@
 	@echo '  / Complete Index</h2>'			>> $@
-	@$(INDEX) -t -h $(ALLLYRICS)			>> $@
+	@$(INDEX) -t -h $(ALLSONGS)			>> $@
 	@echo '<h5>Last update: ' `date` '</h5>'	>> $@
 	@echo '</body>'					>> $@
 	@echo '</html>' 				>> $@
@@ -308,13 +308,13 @@ htmlclean::
 1IndexTable.html: | $(INDEX)
 	@echo building $@ from ALLLYRICS
 	@echo '<!-- begin $@ -->'			>  $@
-	@$(INDEX) -t -h $(ALLLYRICS)			>> $@
+	@$(INDEX) -t -h $(ALLSONGS)			>> $@
 	@echo '<!-- end $@ -->'				>> $@
 
 1IndexShort.html:
 	@echo building $@ 
 	@echo '<!-- begin $@ -->'			>  $@
-	@for f in `echo $(ALLNAMES) | tr ' ' "\n" | sort | uniq`; do \
+	@for f in `echo $(ALLSONGS) | tr ' ' "\n" | sort | uniq`; do \
 		echo '<a href="'$$f/'">'$$f'</a>' 	>> $@; \
 	done
 	@echo '<!-- end $@ -->'				>> $@
