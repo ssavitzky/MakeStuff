@@ -59,10 +59,14 @@ songs.make - make plugin for Songs directories
   * 20161125 test framework for MakeStuff; testing music stuff.
   * BUG: indices aren't sorted
      make list-allsongs | sed 's/ /\n/g' | sed 's/\// /g' | sort -k3 | sed 's/ /\//g'
+  * Tag cleanup, because the new songs.make is tag-driven.
+    grep \\tags *.flk | grep -v mine | grep -v ours | grep -vi pd | grep -v web-ok
+    for f in $FILES; do sed -i.bak -e 's/\\tags{/\\tags{mine, /' $f; done
   o %/index.html should #include lyrics.html, and only if we have rights.
     generate, which lets it include directly-linked audio files.  Put body text in an
     editable include file which is generated only if missing (e.g. text.html)
-  o header should be #included and auto-generated; most should come
+  o header should be #included and auto-generated; that's the way to do title and
+    navbar correctly.
   o header/footer boilerplate should come from a template file
   o use songlist files instead of passing list on the command line
     (Can make all.songs from listing)
