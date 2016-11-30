@@ -1,0 +1,26 @@
+#!/bin/sh
+# Find and harden git repositories on a shared server.
+#
+# * make all git repos mode 750.  One could argue for 770 and g+s
+# * append a stanza to all top-level htaccess files that makes dotfiles
+#   inaccessible.
+#
+
+# To be executed from ~/vv or /vv; also hardens ../git if it exists.
+
+GIT_MODE=750
+echo setting git repos under `pwd` to mode $GIT_MODE
+for d in web/* users/*; do
+    if [ -d $d/.git ]; then
+	# Only look under users and websites that have git subdirs.
+	# this eliminates record, which is problematic.
+	echo $d
+	find $d -name .git -type d -print -exec chmod $GIT_MODE {} \;
+    fi
+done
+if [ -d ../git ]; then
+    echo hardening shared git repos under ../git
+    find . -name \*.git -type d -print -exec chmod $GIT_MODE {} \;
+fi
+
+
