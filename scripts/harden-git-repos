@@ -2,8 +2,6 @@
 # Find and harden git repositories on a shared server.
 #
 # * make all git repos mode 750.  One could argue for 770 and g+s
-# * append a stanza to all top-level htaccess files that makes dotfiles
-#   inaccessible.
 #
 
 # To be executed from ~/vv or /vv; also hardens ../git if it exists.
