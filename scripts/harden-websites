@@ -1,0 +1,31 @@
+#!/bin/sh
+# Find and harden websites' .htaccess files
+#
+
+# To be executed from ~/vv or /vv;
+
+echo hardening websites under web
+for d in web/*; do
+    if [ -d $d ] && [ ! -L $d ]; then
+	if [ ! -d $d/.git ]; then
+	    echo WARNING: $d has no git repo:  probably not deployable
+	elif [ ! -f $d/.htaccess ]; then
+	    echo WARNING:  $d has no .htaccess
+	elif grep -qs security/file_access.conf $d/.htaccess; then
+	    echo $d already hardened: good.
+	else
+	    echo harden $d/.htaccess
+	    cat >> $d/.htaccess <<'EOF'
+# see https://github.com/h5bp/server-configs-apache/blob/master/src/security/file_access.conf
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_URI} "!(^|/)\.well-known/([^./]+./?)+$" [NC]
+    RewriteCond %{SCRIPT_FILENAME} -d [OR]
+    RewriteCond %{SCRIPT_FILENAME} -f
+    RewriteRule "(^|/)\." - [F]
+</IfModule>
+EOF
+	fi
+    fi
+done
+
