@@ -44,7 +44,6 @@ makefile templates
     html2ps, probably.
 
 flktran
-  * 20081226 category -> tags
   o don't put in excess blank lines in html
   o eliminate ~ (halfspace) - see aengus.flk
   o performance notes (\perf{...})
@@ -53,15 +52,15 @@ flktran
   o LaTeX2e: https://www.latex-project.org/help/documentation/clsguide.pdf
     Uppercase style names to distinguish;
     Separate packages for context-specific (i.e. scripting) macros.
-    
+
+  o flktran should output HTML5 with properly-closed tags and quoted attributes.
+  @ <a href="http://www.html-tidy.org/" >HTML Tidy</a>
+  @ <a href="http://www.w3schools.com/html/html5_migration.asp" >HTML5 Migration</a>
+  . Web: Convert the main websites to HTML-5 and CSS.
+  o [audio] and [track] tags.  Need an "about" page to explain that ogg won't work in ie.
+  o Lyrics in HTML5 include files. Top-level tag should be [article class=lyrics]
+  
 songs.make - make plugin for Songs directories
-  * 20161125 VPATH made from ../Lyrics*, omitting WIP.
-  * 20161125 test framework for MakeStuff; testing music stuff.
-  * BUG: indices aren't sorted
-     make list-allsongs | sed 's/ /\n/g' | sed 's/\// /g' | sort -k3 | sed 's/ /\//g'
-  * Tag cleanup, because the new songs.make is tag-driven.
-    grep \\tags *.flk | grep -v mine | grep -v ours | grep -vi pd | grep -v web-ok
-    for f in $FILES; do sed -i.bak -e 's/\\tags{/\\tags{mine, /' $f; done
   o %/index.html should #include lyrics.html, and only if we have rights.
     generate, which lets it include directly-linked audio files.  Put body text in an
     editable include file which is generated only if missing (e.g. text.html)
@@ -70,8 +69,10 @@ songs.make - make plugin for Songs directories
   o header/footer boilerplate should come from a template file
   o use songlist files instead of passing list on the command line
     (Can make all.songs from listing)
-
-songbook.make - make plugin for Songbook directories
+  o Be nice if one could use Lyrics-suffix as an implicit tag.
+  o Use initials as tag instead of "mine", so "ss, nr" -- then have OURTAGS = ss nr
+    
+songbook.make (proposed) - make plugin for Songbook directories
   o makes html  and pdf songbook in a subdirectory. can .gitignore [a-z]*.html
   o use a "songbook.songs" file to re-order.
   o most indices should be (optionally?) sorted by title, not filename.
@@ -220,6 +221,15 @@ publish.make to split out the web and publish-to-web functionality (?)
     to being able to generate files in song subdirectories.
   * test framework in MakeStuff; music.test started with proof-of-concept for lyrics.
 
+songs.make - make plugin for Songs directories
+  * 20161125 VPATH made from ../Lyrics*, omitting WIP.
+  * 20161125 test framework for MakeStuff; testing music stuff.
+  * BUG: indices aren't sorted
+     make list-allsongs | sed 's/ /\n/g' | sed 's/\// /g' | sort -k3 | sed 's/ /\//g'
+  * Tag cleanup, because the new songs.make is tag-driven.
+    grep \\tags *.flk | grep -v mine | grep -v ours | grep -vi pd | grep -v web-ok
+    for f in $FILES; do sed -i.bak -e 's/\\tags{/\\tags{mine, /' $f; done
+    
 1127Su
   * update license to 4.0 international
   

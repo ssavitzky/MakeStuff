@@ -12,7 +12,7 @@ for d in web/*; do
 	elif [ ! -f $d/.htaccess ]; then
 	    echo WARNING:  $d has no .htaccess
 	elif grep -qs security/file_access.conf $d/.htaccess; then
-	    echo $d already hardened: good.
+	    echo NOTE: $d already hardened: good.
 	else
 	    echo harden $d/.htaccess
 	    cat >> $d/.htaccess <<'EOF'
