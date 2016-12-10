@@ -71,10 +71,13 @@ songs.make - make plugin for Songs directories
     (Can make all.songs from listing)
   o Be nice if one could use Lyrics-suffix as an implicit tag.
   o Use initials as tag instead of "mine", so "ss, nr" -- then have OURTAGS = ss nr
-    
+  o main audio files would of course be %/%.ogg.  Anything else should have a name like
+    yyyy-mm-dd--event--%.ogg or albumname--nn-%.ogg - i.e., the path with / -> -
+    There should be a script that does this for a list of files.
+
 songbook.make (proposed) - make plugin for Songbook directories
   o makes html  and pdf songbook in a subdirectory. can .gitignore [a-z]*.html
-  o use a "songbook.songs" file to re-order.
+  o use a "songbook.songs" file to re-order; default should be sorted by title.
   o most indices should be (optionally?) sorted by title, not filename.
     compact should of course be filenames.
 
@@ -232,7 +235,16 @@ songs.make - make plugin for Songs directories
     
 1127Su
   * update license to 4.0 international
-  
+
+1210Sa
+  * move files from Download to /newhome/steve/Download -- newhome was /home on nova under
+    Debian, and I was reluctant to use it when I went to Ubuntu.  Now that's a problem.
+    Many things are already symlinks; .gnupg in home is a subset.
+    .ssh - update known_hosts .dmrc copied.  .gconf empty
+    Volatile:	.ICEauthority .Xauthority .cache .dbus .emacs.d/auto-save-list .emacs.d
+    Remaining are directories:  .config .gnome .ljupdate .local .mozilla .pki
+    
+
 =now====Tools/to.do=====================================================================>|
 
 Local Variables:
