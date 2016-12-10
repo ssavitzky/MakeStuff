@@ -236,15 +236,6 @@ songs.make - make plugin for Songs directories
 1127Su
   * update license to 4.0 international
 
-1210Sa
-  * move files from Download to /newhome/steve/Download -- newhome was /home on nova under
-    Debian, and I was reluctant to use it when I went to Ubuntu.  Now that's a problem.
-    Many things are already symlinks; .gnupg in home is a subset.
-    .ssh - update known_hosts .dmrc copied.  .gconf empty
-    Volatile:	.ICEauthority .Xauthority .cache .dbus .emacs.d/auto-save-list .emacs.d
-    Remaining are directories:  .config .gnome .ljupdate .local .mozilla .pki
-    
-
 =now====Tools/to.do=====================================================================>|
 
 Local Variables:
