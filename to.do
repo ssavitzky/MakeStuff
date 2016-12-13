@@ -1,4 +1,4 @@
-			     to.do for Tools
+			     to.do for MakeStuff
 
 Many of the following items were pulled over from to.do in the 2014 year-end
 cleanup.  More ended up in wibnif.do, and should probably be consolidated here.
@@ -7,8 +7,6 @@ cleanup.  More ended up in wibnif.do, and should probably be consolidated here.
 
 
 WAV->FLAC
-  * review make manual for VPATH and GPATH, which may do the right thing for building
-    in subdirectories like SONGS/*, *.rips, etc.
   o Move to a workflow that uses flac instead of wav.  Audacity can export it,
     and most of the tools can handle it.  cdrdao can't, but Master is generated from
     Premaster/* by sox.  normalize-audio might not -- that's a problem.  But its
@@ -38,6 +36,8 @@ tags
 uploading: 
   o make sure we can handle multiple destinations.
   o upload to the fastest (e.g. dreamhost) and sync the others from there
+    -> actually, that's what we do now with pull deployments, so the right thing is to
+       generalize _that_
 
 makefile templates
   o need a good way to get a monochrome printable version of a web page
@@ -232,7 +232,10 @@ songs.make - make plugin for Songs directories
   * Tag cleanup, because the new songs.make is tag-driven.
     grep \\tags *.flk | grep -v mine | grep -v ours | grep -vi pd | grep -v web-ok
     for f in $FILES; do sed -i.bak -e 's/\\tags{/\\tags{mine, /' $f; done
-    
+
+  * review make manual for VPATH and GPATH, which may do the right thing for building
+    in subdirectories like SONGS/*, *.rips, etc.
+
 1127Su
   * update license to 4.0 international
 
