@@ -34,7 +34,7 @@ tags
     that way we can easily tell which tags not to copy over to the html
   
 uploading: 
-  o make sure we can handle multiple destinations.
+  ~ make sure we can handle multiple destinations -> multiple branches.  Easy.
   o upload to the fastest (e.g. dreamhost) and sync the others from there
     -> actually, that's what we do now with pull deployments, so the right thing is to
        generalize _that_
