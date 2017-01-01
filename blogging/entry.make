@@ -51,7 +51,7 @@ draft-required:
 #	The double use of sed deletes an empty	Posted: header.
 #	Note that git mv automatically adds.
 posted:	name-required draft-required
-	-mkdir -p $(MONTHDIR)
+	-mkdir -p $(MONTHPATH)
 	if [ -f $(DRAFT) ]; then git mv $(DRAFT) $(ENTRY); \
 			    else git add $(ENTRY); fi
 	sed -i -e '1,/^$$/ { /^Posted: *$$/ d }' $(ENTRY);
