@@ -21,9 +21,12 @@ BASEDIR:= $(shell d=$(MYPATH); 						\
 		  done; echo $$d)
 # Make sure we actually found Tools, because we can't proceed without it.
 ifeq ($(BASEDIR),/)
-     $(error Cannot find MakeStuff directory.  Giving up.)
+     $(error Cannot find MakeStuff directory.  You need a symlink to it.)
 endif
 
+### TOOLDIR:  absolute path to MakeStuff.  All scripts, include files, and so on
+#   are located in TOOLDIR or its subdirectories.
+#
 TOOLDIR := $(BASEDIR)/$(shell if [ -d $(BASEDIR)/MakeStuff/make ]; then	\
 				 echo MakeStuff; else echo Tools; fi	)
 

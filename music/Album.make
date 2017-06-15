@@ -72,12 +72,12 @@ RIPS=Rips
 
 ## Metadata extraction and formatting programs:
 
-TRACKINFO := $(TOOLDIR)/TrackInfo.pl
+TRACKINFO := $(TOOLDIR)/music/TrackInfo.pl
 ifdef PERFORMER
   TRACKINFO := $(TRACKINFO) performer="$(PERFORMER)"
 endif
 
-LIST_TRACKS = $(TOOLDIR)/list-tracks
+LIST_TRACKS = $(TOOLDIR)/music/list-tracks
 
 ## CD writing.  wodim and genisoimage are new as of Debian Etch.
 
@@ -549,7 +549,7 @@ mytracks.make: $(TRACK_SOURCES) $(TRACKFILE)
 	@echo 'TITLE	 = '"$(TITLE)"				>> $@
 	@echo 'TOOLDIR	 = $(TOOLDIR)'				>> $@
 	@echo 'SONGS	 = $(SONGS)'				>> $@
-	@echo 'include $$(TOOLDIR)/track-depends.make'		>> $@
+	@echo 'include $$(TOOLDIR)/music/track-depends.make'	>> $@
 	@echo 'all:: oggs mp3s'					>> $@
 	@echo 'oggs: $$(OGGS)'					>> $@
 	@echo 'mp3s: $$(MP3S)'					>> $@
@@ -572,7 +572,7 @@ mytracks.make: $(TRACK_SOURCES) $(TRACKFILE)
 	@echo 'TITLE	 = '"$(TITLE)"				>> $@
 	@echo 'TOOLDIR	 = $(TOOLDIR)'				>> $@
 	@echo 'SONGS	 = '`cat $*.names`			>> $@
-	@echo 'include $$(TOOLDIR)/track-depends.make'		>> $@
+	@echo 'include $$(TOOLDIR)/music/track-depends.make'	>> $@
 	@echo 'all:: oggs mp3s'					>> $@
 	@echo 'oggs: '`cat $*.oggs`				>> $@
 	@echo 'mp3s: '`cat $*.mp3s`				>> $@

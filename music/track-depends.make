@@ -1,9 +1,11 @@
 #!/usr/bin/make  ### track-depends.make
-#	$Id: track-depends.make,v 1.4 2010-10-14 06:48:15 steve Exp $
 #
-#	This file contains rules for things that depend on track data.
+#	This file contains rules for things that depend on track data;
+#	It's used in Album.make as an include in a generated makefile.
 #	We need it because track data moves around in a way that makes
-#	it difficult for make to compute dependencies.
+#	it difficult for make to compute dependencies
+#
+#	This and Album.make badly need to be replaced.
 #
 
 # These are used in rules like foo.ogg: foo; if we assume that 

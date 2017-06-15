@@ -94,7 +94,7 @@ WEBINDICES = 0Index.html 0IndexTable.html 0IndexShort.html  # 0IndexLong.html
 # Utility programs:
 FLKTRAN  = $(TOOLDIR)/TeX/flktran.pl
 INDEX    = $(TOOLDIR)/TeX/index.pl
-TRACKINFO = $(TOOLDIR)/TrackInfo.pl
+TRACKINFO = $(TOOLDIR)/music/TrackInfo.pl
 
 reportVars += LPATH WEBNAMES NOTWEB
 

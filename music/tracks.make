@@ -96,12 +96,12 @@ endif
 
 ## Metadata extraction and formatting programs:
 
-TRACKINFO := $(TOOLDIR)/TrackInfo.pl
+TRACKINFO := $(TOOLDIR)/music/TrackInfo.pl
 ifdef PERFORMER
   TRACKINFO := $(TRACKINFO) performer="$(PERFORMER)"
 endif
 
-LIST_TRACKS = $(TOOLDIR)/list-tracks
+LIST_TRACKS = $(TOOLDIR)/music/list-tracks
 
 ## CD writing.  wodim and genisoimage are new as of Debian Etch.
 
@@ -516,7 +516,7 @@ update-master: Premaster Master
 	@echo 'TITLE	 = '"$(TITLE)"				>> $@
 	@echo 'TOOLDIR	 = $(TOOLDIR)'				>> $@
 	@echo 'SONGS	 = '`cat $*.names`			>> $@
-	@echo 'include $$(TOOLDIR)/track-depends.make'		>> $@
+	@echo 'include $$(TOOLDIR)/music/track-depends.make'	>> $@
 	@echo 'all:: oggs mp3s'					>> $@
 	@echo 'oggs: '`cat $*.oggs`				>> $@
 	@echo 'mp3s: '`cat $*.mp3s`				>> $@

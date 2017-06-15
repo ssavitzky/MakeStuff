@@ -239,6 +239,14 @@ songs.make - make plugin for Songs directories
 1127Su
   * update license to 4.0 international
 
+
+2017
+====
+
+0615We
+  * Finally remove symlinks to the include and music directories; the appropriate .make
+    files now refer to them in the right place.
+
 =now====Tools/to.do=====================================================================>|
 
 Local Variables:
