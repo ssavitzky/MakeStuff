@@ -16,12 +16,46 @@ WAV->FLAC
     to the ogg and mp3 files.
   o upgrade makefiles in older record directories.
 
-TeX->YAML headers
-  o Move the format to one with YAML (i.e., email-type) headers instead of
-    LaTeX macros.  That would make them extensible.  Instead of concatenating
-    with a constant TeX header, simply translate foo.flk -> foo.tex.  This
-    should also make it easier to experiment with different macro packages,
-    LaTeX 2e, etc.
+TeX improvements
+  o separate broadside.sty and songbook.sty.  Actually, these should probably be classes.
+    That would leave song.sty (possibly renamed to lyrics.sty) formatting the lyrics.
+  o make */Songs from */Lyrics* -- use tags or subdirs to identify which ones get visible
+    lyrics.  Pages need to be there even if the lyrics are hidden, because the
+    performances, notes, etc. are still needed.
+  o Songbook 2-sided printing
+    Front cover, two facing pages, back cover.  If we don't mind the lyrics on the left
+    for one-pagers we can either drop pages 3 and 4, or have a blank third page.  (even
+    pages are on the left, odd on the right).  Suppressing covers would make a two-sided
+    songbook with half as many pages as song-at-a-time formatting.
+    @ <a      href="https://tex.stackexchange.com/questions/11707/how-to-force-output-to-a-left-or-right-page"
+      >double sided - How to force output to a left (or right) page?</a>
+  o There is a big problem with the cover pages, which is that the metadata hasn't been
+    seen by the time we want to put them out.  Possible solutions:
+    - don't have anything on the cover page but the title.
+    - define a lyrics environment.  Could change to make use of other peoples' packages.
+    - define \makesongtitle (analogous to \maketitle
+    - co-opt \maketitle (could define something new, but maketitle actually does something
+      close to the right thing)  Nice thing about that is that you can leave it off on
+      short songs, and they come out in the old style.
+    - Enclose the metadata with braces and make it an argument to begin{song}
+    - preprocess the metadata and put it in an auxiliary file (ugh!)
+    - find some kind of hook that gets called when starting page content.
+    x use catcode to redefine LF.  the first time it's seen, it runs \maketitle, then
+      does the right thing for line breaks and possibly even verse breaks.
+      -> doesn't work.  extra blank lines are ignored only because \leavevmode has no
+	 effect when already in vertical mode.
+    - note that \include forces a page break, so \file may not be needed at all.
+    - see subdoc class in https://en.wikibooks.org/wiki/LaTeX/Modular_Documents
+  o LaTeX2e
+    * documentclass.  May want broadside and songbook classes.
+    o music/lyrics.make - make variable for options (e.g. local options)
+    o fancyhdr for headers.
+    o clean up obsolete constructs
+    o multicol for columns,
+    o \comment instead of \ignore (?)
+    o parametrize page size and layout, e.g. for tablets.  See
+      <a href="https://en.wikibooks.org/wiki/LaTeX/Page_Layout#Page_size_for_tablets"
+      >LaTeX/Page Layout # Page size for tablets</a> 
 
 tracks.make (was album.make)
   o TOC etc should be conditional on the presence of Master
@@ -246,6 +280,13 @@ songs.make - make plugin for Songs directories
 0615We
   * Finally remove symlinks to the include and music directories; the appropriate .make
     files now refer to them in the right place.
+
+TeX->YAML headers -> rejected.  makes it harder to apply multiple styles to lyrics
+  x Move the format to one with YAML (i.e., email-type) headers instead of
+    LaTeX macros.  That would make them extensible.  Instead of concatenating
+    with a constant TeX header, simply translate foo.flk -> foo.tex.  This
+    should also make it easier to experiment with different macro packages,
+    LaTeX 2e, etc.
 
 =now====Tools/to.do=====================================================================>|
 

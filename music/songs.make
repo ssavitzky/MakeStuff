@@ -108,21 +108,16 @@ reportVars += LPATH WEBNAMES NOTWEB
 %: %.flk
 	mkdir -p $@
 
-%.ps: %.flk
-	d=`pwd`; cd `dirname $<`; make $@; cp $@ $$d
-
-%.pdf: %.ps
-	ps2pdf $< $@
-
 # lyrics.pdf
-#	It would be better if we could make foo/foo.pdf.  Unfortunately
-#	that would require a rule with two %'s on the left, and make
-#	can't handle it.  Moreover, using lyrics.* makes it easier to
-#	.gitignore them, so we're not going to worry about it.  If
-#	necessary, we could run make -f ../Makefile in the subdir.
-
-%/lyrics.pdf: %.ps
-	ps2pdf $< $@
+#	It would be better if we could make foo/lyrics.pdf directly, but
+#	there's no good way to do that because pdflatex doesn't have a
+#	way to specify the output file, just the output directory.  This
+#	recipe has the side effect of leaving the PDF file in Lyrics, but
+#	it's about half the size of the corresponding postscript, so we're
+#	switching to them from postscript.
+#	
+%/lyrics.pdf: %.flk
+	d=`pwd`; cd `dirname $<`; $(MAKE) $*.pdf; cp $*.pdf $$d/$@
 
 %/lyrics.html: %.flk
 	WEBSITE=$(WEBSITE) WEBDIR=$(MYNAME) $(FLKTRAN) -t $< $@

@@ -207,13 +207,6 @@ ifdef SITEDIR
   endif
 endif
 
-### music specific ###
-
-ifdef MUSIC_D
-  musicIncludes = $(addprefix $(MUSIC_D)/,$(MUSIC_D_INCLUDES))
-  -include $(musicIncludes)
-endif
-
 ### report-vars - list important make variables
 #   Down at the end in case any of the lists needs to get appended to.
 

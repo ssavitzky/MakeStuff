@@ -5,17 +5,35 @@
 #
 
 
+### music specific rules and defines ###
+#
+#	We need this first because rule inference appears to be order-
+#	dependent.  If we see the %.pdf: $.ps first, we won't try to
+#	use %pdf: %flk.  This is not how I always thought it worked,
+#	but there you have it.
+
+ifdef MUSIC_D
+  musicIncludes = $(addprefix $(MUSIC_D)/,$(MUSIC_D_INCLUDES))
+  -include $(musicIncludes)
+endif
+
 ### .tex to various output formats
 # 	the "echo q" bit quits out of the error dialog if necessary;
 # 	running latex for a  second time makes sure the most recent 
 #	auxiliary file has been included -- we only need it if the 
 #	.aux file is nontrivial.
 
-%.dvi:	%.tex
-	echo q | latex $*
+%.pdf:	%.tex
+	echo q | pdflatex $*
 	if [ -f $*.aux ] && [ `wc -l $*.aux | cut -d " " -f 1` -gt 0 ];\
-		then echo q|latex $*; fi
-	if [ -e $*.aux ] || [ -e $*.log ]; then rm -f $*.aux $*.log; fi
+		then echo q|pdflatex $*; fi
+	-rm -f $*.aux $*.log
+
+%.dvi:	%.tex
+	echo q | pdflatex $*
+	if [ -f $*.aux ] && [ `wc -l $*.aux | cut -d " " -f 1` -gt 0 ];\
+		then echo q|pdflatex $*; fi
+	-rm -f $*.aux $*.log
 
 # dvi to ps
 

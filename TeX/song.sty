@@ -205,13 +205,11 @@ Attribution-Noncommercial-Share Alike 4.0 License.}
 %%% \file{filename} Input a file containing a song. 
 %%%	We force a pagebreak here to ensure that the previous song
 %%%	doesn't pick up the new filename in its header and footer.
+%%%     Songs now consist only of a song environment, so we don't have to
+%%%	turn off \documentstyle and \begin{document}...\end{document}.
 %%%
-%%%	Turn off \documentstyle and \begin{document}...\end{document}
-%%%	so that the song can be typeset separately if desired.
-
 \def\file#1{\newpage\begingroup
 \def\theFile{#1}
-\renewenvironment{document}{}{}
 \def\documentstyle[##1]##2{}
 \input{#1}
 \endgroup}
@@ -321,7 +319,7 @@ Attribution-Noncommercial-Share Alike 4.0 License.}
 %% Marks and tags
 %%
 \def\DefineSongTags{%
-\tagUL{\sl\theTags}\tagUR{\chord{\theKey}\makebox[.5in][r]{\sl\theTiming}}
+\tagUL{\sl\theTags}\tagUR{{\chord{\theKey}}\makebox[.5in][r]{\sl\theTiming}}
 \tagLL{{\sl\theCrDate}}\tagLR{{\tt\theFile}}
 }
 \def\DefineBroadsideMarks{%
@@ -350,18 +348,18 @@ Attribution-Noncommercial-Share Alike 4.0 License.}
 %%%
 \headheight 2.1\baselineskip
 \headsep \baselineskip
-\footheight 2.1\baselineskip
+%\footheight 2.1\baselineskip
 \footskip \baselineskip
 \topmargin 0in
 \textheight 9in
-\advance\textheight -1\headheight\advance\textheight -1\headsep
-\advance\textheight -1\footheight\advance\textheight -1\footskip
+%\advance\textheight -1\headheight\advance\textheight -1\headsep
+%\advance\textheight -1\footheight\advance\textheight -1\footskip
 
 \def\tallpage{
  \topmargin -.5in
  \textheight 10in
- \advance\textheight -1\headheight\advance\textheight -1\headsep
- \advance\textheight -1\footheight\advance\textheight -1\footskip
+ %\advance\textheight -1\headheight\advance\textheight -1\headsep
+ %\advance\textheight -1\footheight\advance\textheight -1\footskip
 }
 \def\widepage{
  \oddsidemargin 0in

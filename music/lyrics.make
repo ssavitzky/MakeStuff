@@ -94,9 +94,6 @@ OTHER  = Makefile HEADER.html
 ALLNAMES = $(subst .flk,,$(ALLSONGS))
 ALLPS    = $(subst .flk,.ps,$(ALLSONGS))
 ALLPDF   = $(subst .flk,.pdf,$(ALLSONGS))
-ALLDIRS  = $(patsubst %,../Songs/%,$(ALLNAMES))
-ALLHTML  = $(patsubst %,../Songs/%/lyrics.html,$(ALLNAMES))
-ALLTEXT  = $(patsubst %,../Songs/%/lyrics.txt,$(ALLNAMES))
 ALLPRINT = $(ALLPS)
 
 # For publishing on the web, $(WEBSONGS) excludes NOTMINE but includes OK
@@ -104,11 +101,7 @@ ALLPRINT = $(ALLPS)
 WEBNAMES = $(subst .flk,,$(WEBSONGS))
 WEBDIRS  = $(patsubst %,../Songs/%,$(WEBNAMES))
 WEBPS    = $(subst .flk,.ps,$(WEBSONGS))
-WEBPDF   = $(patsubst %,../Songs/%/lyrics.pdf,$(WEBNAMES))
-WEBHTML  = $(patsubst %,../Songs/%/lyrics.html,$(WEBNAMES))
-WEBTEXT  = $(patsubst %,../Songs/%/lyrics.txt,$(WEBNAMES))
 WEBPRINT = $(WEBPS) $(WEBPDF)
-WEBINDICES = 0Index.html 0IndexTable.html 0IndexShort.html
 
 # Where it ends up on the website.  
 #    We use this when we need to make absolute links.
@@ -120,9 +113,11 @@ WEBDIR   = /Songs
 PUBFILES = $(WEBHTML) $(WEBPS) $(WEBPDF) $(WEBINDICES)
 
 # Utility programs:
-FLKTRAN   = $(TOOLDIR)/TeX/flktran.pl
-INDEX     = $(TOOLDIR)/TeX/index.pl
-TRACKINFO = $(TOOLDIR)/TrackInfo.pl
+TEXDIR	  = $(TOOLDIR)/TeX
+FLKTRAN   = $(TEXDIR)/flktran.pl
+INDEX     = $(TEXDIR)/index.pl
+TRACKINFO = $(TOOLDIR)/music/TrackInfo.pl
+LATEX	  = latex
 
 ########################################################################
 ###
@@ -131,17 +126,34 @@ TRACKINFO = $(TOOLDIR)/TrackInfo.pl
 
 ECHO=/bin/echo
 
-# flk to tex:
-#	Strictly speaking this isn't necessary; you shouldn't rebuild
-#	foo.tex every time foo.flk changes.  But it reduces clutter in
-#	the working directory and keeps filename completion from stopping
-#	to ask whether I meant .flk or .tex.
-%.tex:	%.flk	
-	@$(ECHO) \\'documentstyle[$(SIZE)song,twocolumns,zongbook]{article}' > $@
-	@$(ECHO) \\'special{papersize=8.5in,11in}'	>> $@
-	@$(ECHO) \\'begin{document}'			>> $@
-	$(ECHO)  \\'file{$*.flk}'			>> $@
-	@$(ECHO) \\'end{document}'			>> $@
+# flk to dvi:
+# 	Rather than make a temporary .tex file, we basically unroll both that and
+#	the existing \file macro, neither of which is particularly useful in this
+#	case.  \file has been simplified to reflect the fact that songs no longer
+#	contain a document environment, just a song environment; it's meant to be
+#	used in songbooks.
+#
+SONG_LATEX =  echo q | TEXINPUTS=.:$(TEXDIR):$$TEXINPUTS $(LATEX)
+SONG_PDFLATEX =  echo q | TEXINPUTS=.:$(TEXDIR):$$TEXINPUTS pdf$(LATEX)
+SONG_PREAMBLE = '\documentclass[$(SIZE)letterpaper]{article}'			\
+		'\usepackage{song,zongbook,twocolumns}'
+
+.SUFFIX: flk
+
+%.pdf:	%.flk
+	$(SONG_PDFLATEX) -jobname $* $(SONG_PREAMBLE) \\'def\\theFile{$<}' 	\
+		      \\'begin{document}' \\'input{$<}' \\'end{document}'
+	rm -f $*.log $*.aux
+
+%/lyrics.pdf:	%.flk
+	$(SONG_PDFLATEX) -jobname $* $(SONG_PREAMBLE) \\'def\\theFile{$<}' 	\
+		      \\'begin{document}' \\'input{$<}' \\'end{document}'
+	rm -f $*.log $*.aux
+
+%.dvi:	%.flk
+	$(SONG_LATEX) -jobname $* $(SONG_PREAMBLE) \\'def\\theFile{$<}' 	\
+		      \\'begin{document}' \\'input{$<}' \\'end{document}'
+	rm -f $*.log $*.aux
 
 # Ogg and mp3 files.  
 #	They have no dependencies to prevent their being constantly rebuilt.
@@ -159,11 +171,12 @@ ECHO=/bin/echo
 ###
 
 # We no longer have to worry about which flavor of directory we're in;
-# Lyrics and Songs have different include files
+# Lyrics and Songs have different include files.  Similarly, don't bother
+# building index files -- that's not something we need here.
 
 all::
-	@echo building for direct upload in Lyrics and ../Songs
-all::	$(ALLPRINT) $(INDICES) 
+	@echo building postscript files
+all::	$(ALLPRINT)
 all::  $(wildcard *.pdf)
 
 .PHONY: dirs html text postscript ps
@@ -220,111 +233,7 @@ filkbook: $(ALLPS)
 ### Cleanup:
 
 clean::
-	-rm -f $(WEBINDICES) $(INDICES)
-	-rm -f $(ALLHTML)
-	-rm -f $(ALLTEXT)
+	-rm -f *.ps *.pdf
 
-.PHONY: pubclean htmlclean
-
-pubclean::
-	-rm -f $(ALLHTML)
-	-rm -f $(ALLTEXT) $(WEBINDICES) $(INDICES)
-
-htmlclean::
-	-rm -f $(ALLHTML)
-
-### Setup:
-
-# Imports (for LaTeX)
-
-IMPORTS= song.sty twocolumns.sty zongbook.sty
-
-imports: $(IMPORTS)
-
-song.sty: $(TOOLDIR)/TeX/song.sty
-	ln -s $(TOOLDIR)/TeX/song.sty .
-
-twocolumns.sty: $(TOOLDIR)/TeX/twocolumns.sty
-	ln -s $(TOOLDIR)/TeX/twocolumns.sty .
-
-zongbook.sty: $(TOOLDIR)/TeX/zongbook.sty
-	ln -s $(TOOLDIR)/TeX/zongbook.sty .
-
-### Website indices:
-
-# .htaccess just has titles
-.htaccess: $(WEBSONGS)
-	$(INDEX) -dsc -o $@ $(WEBSONGS)
-
-# === These really need to be done using templates or defines ===
-
-0List.html: $(WEBSONGS) Makefile $(INDEX)
-	@echo building $@ from WEBSONGS
-	@echo '<html>' 					>  $@
-	@echo '<head>'					>> $@
-	@echo '<title>Song List</title>'		>> $@
-	@echo '</head><body>'				>> $@
-	@echo '<h2><a href="/">steve.savitzky.net</a> '	>> $@
-	@echo '  / <a href="./">Lyrics</a>'		>> $@
-	@echo '  / Song List</h1>'			>> $@
-	@$(INDEX) -h  $(WEBSONGS)			>> $@
-	@echo '<h5>Last update: ' `date` '</h5>'	>> $@
-	@echo '</body>'					>> $@
-	@echo '</html>' 				>> $@
-
-0Index.html: $(WEBSONGS) $(OGGS) $(MP3S) Makefile $(INDEX)
-	@echo building $@ from WEBSONGS
-	@echo '<html>' 					>  $@
-	@echo '<head>'					>> $@
-	@echo '<title>Song Index</title>'		>> $@
-	@echo '</head><body>'				>> $@
-	@echo '<h2><a href="/">steve.savitzky.net</a> '	>> $@
-	@echo '  / <a href="./">Lyrics</a>'		>> $@
-	@echo '  / Song Index</h2>'			>> $@
-	@$(INDEX) -t -h $(WEBSONGS)			>> $@
-	@echo '<h5>Last update: ' `date` '</h5>'	>> $@
-	@echo '</body>'					>> $@
-	@echo '</html>' 				>> $@
-
-0IndexTable.html: $(WEBSONGS) $(OGGS) $(MP3S) Makefile $(INDEX)
-	@echo building $@ from WEBSONGS
-	@echo '<!-- begin $@ -->'			>  $@
-	@$(INDEX) -t -h $(WEBSONGS)			>> $@
-	@echo '<!-- end $@ -->'				>> $@
-
-0IndexShort.html: $(WEBSONGS) Makefile
-	@echo building $@ from WEBSONGS
-	@echo '<!-- begin $@ -->'			>  $@
-	@for f in `echo $(WEBNAMES) | tr ' ' "\n" | sort | uniq`; do \
-		echo '<a href="'../Songs/$$f/'">'$$f'</a>' >> $@; \
-	done
-	@echo '<!-- end $@ -->'				>> $@
-
-1Index.html: $(ALLSONGS) $(OGGS) $(MP3S) Makefile $(INDEX)
-	@echo building $@ from ALLSONGS
-	@echo '<html>' 					>  $@
-	@echo '<head>'					>> $@
-	@echo '<title>Song Index</title>'		>> $@
-	@echo '</head><body>'				>> $@
-	@echo '<h2><a href="/">steve.savitzky.net</a> '	>> $@
-	@echo '  / <a href="./">Lyrics</a>'		>> $@
-	@echo '  / Complete Index</h2>'			>> $@
-	@$(INDEX) -t -h $(ALLSONGS)			>> $@
-	@echo '<h5>Last update: ' `date` '</h5>'	>> $@
-	@echo '</body>'					>> $@
-	@echo '</html>' 				>> $@
-
-1IndexTable.html: $(ALLSONGS) $(OGGS) $(MP3S)  Makefile $(INDEX)
-	@echo building $@ from ALLSONGS
-	@echo '<!-- begin $@ -->'			>  $@
-	@$(INDEX) -t -h $(ALLSONGS)			>> $@
-	@echo '<!-- end $@ -->'				>> $@
-
-1IndexShort.html: $(ALLSONGS) Makefile
-	@echo building $@ from ALLSONGS
-	@echo '<!-- begin $@ -->'			>  $@
-	@for f in `echo $(ALLNAMES) | tr ' ' "\n" | sort | uniq`; do \
-		echo '<a href="'../Songs/$$f/'">'$$f'</a>' >> $@; \
-	done
-	@echo '<!-- end $@ -->'				>> $@
+### end lyrics.make ###
 
