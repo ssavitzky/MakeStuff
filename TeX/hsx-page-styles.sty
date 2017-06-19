@@ -1,0 +1,85 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%
+%%% Page Styles --- these really belong in another file.
+%%%
+%%%	We define left, right, and center marks and ``tags''
+%%%	for two-line headers and footers.  The tags in both 
+%%%	headers and footers are placed on the line closest to 
+%%%	the text.
+%%%
+
+%% Marks
+\def\markUL#1{\global\def\ULmark{#1}}	\def\ULmark{}
+\def\markUC#1{\global\def\UCmark{#1}}	\def\UCmark{}
+\def\markUR#1{\global\def\URmark{#1}}	\def\URmark{}
+\def\markLL#1{\global\def\LLmark{#1}}	\def\LLmark{}
+\def\markLC#1{\global\def\LCmark{#1}}	\def\LCmark{}
+\def\markLR#1{\global\def\LRmark{#1}}	\def\LRmark{}
+%% Tags
+\def\tagUL#1{\global\def\ULtag{#1}}	\def\ULtag{}
+\def\tagUC#1{\global\def\UCtag{#1}}	\def\UCtag{}
+\def\tagUR#1{\global\def\URtag{#1}}	\def\URtag{}
+\def\tagLL#1{\global\def\LLtag{#1}}	\def\LLtag{}
+\def\tagLC#1{\global\def\LCtag{#1}}	\def\LCtag{}
+\def\tagLR#1{\global\def\LRtag{#1}}	\def\LRtag{}
+%% boxes
+\def\HFBox#1{\vbox{%		Ruled box
+	\vskip 2pt\HFTrule\hbox to\textwidth{\HFLrule\hfil#1\hfil\HFRrule}\HFBrule}}
+\def\HFFilling#1#2#3{%		3-part Box filling
+	\normalsize\strut\ \makebox[0pt][l]{#1}%
+	\hfill#2\hfill\makebox[0pt][r]{#3}\ }
+%%
+%% The macro that actually defines the headers and footers
+%%
+\def\DefineHFBoxes{%
+\def\@oddhead{\vbox{%
+ \HFBox{\HFFilling\ULmark\UCmark\URmark} \vskip 1pt
+ \hbox to \textwidth{\HFFilling\ULtag\UCtag\URtag} }}%
+\def\@evenhead{\vbox{%
+ \HFBox{\HFFilling\URmark\UCmark\ULmark} \vskip 1pt
+ \hbox to\textwidth{\HFFilling\URtag\UCtag\ULtag} }}%
+\def\@oddfoot{\vbox{%
+ \hbox to \textwidth{\HFFilling\LLtag\LCtag\LRtag} \vskip 1pt
+ \HFBox{\HFFilling\LLmark\LCmark\LRmark} }}%
+\def\@evenfoot{\vbox{%
+ \hbox to \textwidth{\HFFilling\LRtag\LCtag\LLtag} \vskip 1pt
+ \HFBox{\HFFilling\LRmark\LCmark\LLmark} }}%
+}
+%%
+%% Rules
+%%
+\def\DefineBoxHFrules{%		Define rules for simple boxes
+ \def\HFTrule{\hrule}\def\HFBrule{\hrule}
+ \def\HFLrule{\vrule}\def\HFRrule{\vrule}
+}
+\def\DefineShadowHFrules{%	Define rules for shadow boxes
+ \def\HFTrule{\hrule}\def\HFBrule{\hrule height 1pt}
+ \def\HFLrule{\vrule}\def\HFRrule{\vrule width 1pt}
+}
+\def\DefineOpenHFrules{%	Define rules for simple rules
+ \def\HFTrule{}\def\HFBrule{\hrule height .75pt}
+ \def\HFLrule{}\def\HFRrule{}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% Song-specific page styles
+%%
+%%	Broadside:	one song on a single sheet
+%%	Songbook:	numbered pages
+%%
+
+%%
+%% Marks and tags
+%%
+\def\DefineSongTags{%
+\tagUL{\sl\theTags}\tagUR{{\chord{\theKey}}\makebox[.5in][r]{\sl\theTiming}}
+\tagLL{{\sl\theCrDate}}\tagLR{{\tt\theFile}}
+}
+\def\DefineBroadsideMarks{%
+\DefineSongTags\markUR{\sl\theSong}%
+}
+\def\DefineSongbookMarks{%
+\DefineSongTags%
+\markUL{\sc\leftmark}\markUC{\sl\rightmark}\markUR{\sl\thepage}%
+}
