@@ -126,8 +126,10 @@ ECHO=/bin/echo
 #	contain a document environment, just a song environment; it's meant to be
 #	used in songbooks.
 #
-SONG_LATEX =  echo q | TEXINPUTS=.:$(TEXDIR):$$TEXINPUTS $(LATEX)
-SONG_PDFLATEX =  echo q | TEXINPUTS=.:$(TEXDIR):$$TEXINPUTS pdf$(LATEX)
+TEXINPUTS := .:$(TEXDIR):$(TEXINPUTS)
+export TEXINPUTS
+SONG_LATEX =  echo q |  $(LATEX)
+SONG_PDFLATEX =  echo q | pdf$(LATEX)
 SONG_PREAMBLE = '\documentclass[$(SIZE)letterpaper]{article}'			\
 		'\usepackage{song,zongbook}'
 
