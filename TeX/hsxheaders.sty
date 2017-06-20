@@ -83,3 +83,45 @@
 \DefineSongTags%
 \markUL{\sc\leftmark}\markUC{\sl\rightmark}\markUR{\sl\thepage}%
 }
+
+%%
+%% Page styles
+%%
+\def\ps@broadside{%
+\DefineShadowHFrules\DefineHFBoxes\DefineBroadsideMarks%
+\let\@evenhead=\@oddhead\let\@evenfoot=\@oddfoot% even and odd pages same.
+\def\chaptermark##1{\markboth{##1}}\def\sectionmark##1{\markright{##1}}%
+\def\subsectionmark##1{}}
+
+\def\ps@songbook{%
+\DefineSimpleHFrules\DefineHFBoxes\DefineSongbookMarks%
+\def\chaptermark##1{\markboth{##1}{}}\def\sectionmark##1{\markright{##1}}%
+\def\subsectionmark##1{}}
+
+
+%%%
+%%% Page Margins
+%%%
+\headheight 2.1\baselineskip
+\headsep \baselineskip
+%\footheight 2.1\baselineskip
+\footskip \baselineskip
+\topmargin 0in
+\textheight 9in
+%\advance\textheight -1\headheight\advance\textheight -1\headsep
+%\advance\textheight -1\footheight\advance\textheight -1\footskip
+
+\def\tallpage{
+ \topmargin -.5in
+ \textheight 9in
+ %\advance\textheight -1\headheight\advance\textheight -1\headsep
+ %\advance\textheight -1\footheight\advance\textheight -1\footskip
+}
+\def\widepage{
+ \oddsidemargin 0in
+ \evensidemargin 0in
+ \textwidth 6.5in
+}
+
+\tallpage
+\widepage

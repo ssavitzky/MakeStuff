@@ -1,8 +1,8 @@
 ### Makefile include for Lyrics directories
 #
 #   A Lyrics directory is mainly intended for making a printed songbook, so
-#   we build Postscript files here.  HTML, text, and PDF files are built in
-#   a Songs directory (see songs.make)
+#   we build PDF files here.  HTML and tex are built in a Songs directory
+#   (see songs.make)
 
 # 12pt is too big for: crypto.flk stuff.flk
 SIZE = 12pt,
@@ -27,6 +27,9 @@ SIZE = 12pt,
 #   Note that template files start with a digit, so the wildcard skips them
 ASONGS := $(filter-out %--%, $(wildcard [a-z]*.flk))
 
+# ugly shell pipeline to sort a list of song references.
+SORT_SONGS =  sed 's/ /\n/g' | sed 's/\// /g' | sort | sed 's/ /\//g'
+
 # WIP = work in progress
 #	Note that we have to guard against the possibility that there are no
 #	.flk files in the directory; that would make grep read from STDIN
@@ -34,7 +37,7 @@ ASONGS := $(filter-out %--%, $(wildcard [a-z]*.flk))
 WIP := $(shell [ -z "$(ASONGS)" ] || grep -ile '^\\tags.*\Wwip\W' $(ASONGS))
 
 # ALLSONGS is the songs minus work in progress, which is usually what we want.
-ALLSONGS := $(filter-out $(WIP), $(ASONGS))
+ALLSONGS := $(shell echo $(filter-out $(WIP), $(ASONGS)) | $(SORT_SONGS))
 
 # PD contains songs that aren't ours, but where both words and lyrics are
 #   in the public domain, so we don't have to worry about rights.  Note that
@@ -60,18 +63,14 @@ MINE := $(shell [ -z "$(ALLSONGS)" ] || grep -le '^\\tags.*\Wmine\W'  $(ALLSONGS
 #
 WEB_OK :=$(shell [ -z "$(ALLSONGS)" ] || grep -le '^\\tags.*\Wweb-ok\W'  $(ALLSONGS))
 
-# ugly shell pipeline to sort a list of song references.
-SORT_SONGS =  sed 's/ /\n/g' | sed 's/\// /g' | sort -k3 | sed 's/ /\//g'
-
 # Songlists:
 #   SONGBOOK -- stuff that's OK to put in a songbook
 #   OURSONGS -- just ours, not PD or ok-to-publish
 #   WEBSONGS -- Adds $(WEB_OK) to get stuff that's OK to put on the web
 #   ALLSONGS -- everything but work in progress
-SONGBOOK = $(shell echo $(OURS) $(MINE) $(PD) | $(SORT_SONGS))
-OURSONGS = $(shell echo $(OURS) $(MINE) | $(SORT_SONGS))
-WEBSONGS = $(shell echo $(OURS) $(MINE) $(WEB_OK) $(PD) | $(SORT_SONGS))
-
+SONGBOOK := $(shell echo $(OURS) $(MINE) $(PD) | $(SORT_SONGS))
+OURSONGS := $(shell echo $(OURS) $(MINE) | $(SORT_SONGS))
+WEBSONGS := $(shell echo $(OURS) $(MINE) $(WEB_OK) $(PD) | $(SORT_SONGS))
 
 # SONGS are what we can put in a songbook or compilation CDROM
 # 	The derived lists are PS, PDF, HTML, TEXT, and NAMES
@@ -79,7 +78,7 @@ PS    = $(subst .flk,.ps,$(SONGBOOK))
 PDF   = $(subst .flk,.pdf,$(SONGBOOK))
 NAMES = $(subst .flk,,$(SONGBOOK))
 HTML  = $(subst .flk,.html,$(SONGBOOK))
-PRINT = $(PS)
+PRINT = $(PDF)
 
 #	OGGS is also derived from SONGS, but only _includes_ what's here
 OGGS  = $(wildcard *.ogg)
@@ -94,20 +93,14 @@ OTHER  = Makefile HEADER.html
 ALLNAMES = $(subst .flk,,$(ALLSONGS))
 ALLPS    = $(subst .flk,.ps,$(ALLSONGS))
 ALLPDF   = $(subst .flk,.pdf,$(ALLSONGS))
-ALLPRINT = $(ALLPS)
+ALLPRINT = $(ALLPDF)
 
 # For publishing on the web, $(WEBSONGS) excludes NOTMINE but includes OK
 
 WEBNAMES = $(subst .flk,,$(WEBSONGS))
 WEBDIRS  = $(patsubst %,../Songs/%,$(WEBNAMES))
 WEBPS    = $(subst .flk,.ps,$(WEBSONGS))
-WEBPRINT = $(WEBPS) $(WEBPDF)
-
-# Where it ends up on the website.  
-#    We use this when we need to make absolute links.
-#    FIXME: this has to come out of site/config.make
-WEBSITE  = http://Steve.Savitzky.net
-WEBDIR   = /Songs
+WEBPRINT = $(WEBPDF)
 
 # What to publish on the web:
 PUBFILES = $(WEBHTML) $(WEBPS) $(WEBPDF) $(WEBINDICES)
@@ -136,12 +129,12 @@ ECHO=/bin/echo
 SONG_LATEX =  echo q | TEXINPUTS=.:$(TEXDIR):$$TEXINPUTS $(LATEX)
 SONG_PDFLATEX =  echo q | TEXINPUTS=.:$(TEXDIR):$$TEXINPUTS pdf$(LATEX)
 SONG_PREAMBLE = '\documentclass[$(SIZE)letterpaper]{article}'			\
-		'\usepackage{song,zongbook,twocolumns}'
+		'\usepackage{song,zongbook}'
 
 .SUFFIX: flk
 
 %.pdf:	%.flk
-	$(SONG_PDFLATEX) -jobname $* $(SONG_PREAMBLE) \\'def\\theFile{$<}' 	\
+	$(SONG_PDFLATEX) -jobname $* $(SONG_PREAMBLE) 	\
 		      \\'begin{document}' \\'input{$<}' \\'end{document}'
 	rm -f $*.log $*.aux
 
@@ -177,7 +170,6 @@ SONG_PREAMBLE = '\documentclass[$(SIZE)letterpaper]{article}'			\
 all::
 	@echo building postscript files
 all::	$(ALLPRINT)
-all::  $(wildcard *.pdf)
 
 .PHONY: dirs html text postscript ps
 dirs: 	$(ALLDIRS)
@@ -205,7 +197,7 @@ list-oursongs:
 list-websongs: 
 	@echo $(WEBSONGS)
 
-reportVars += NAMES ALLNAMES WEBNAMES
+reportVars += NAMES ALLNAMES WEBNAMES SONGBOOK ASONGS WIP
 
 ### Songbook:  Just my stuff and public domain.  
 #   Longbook:  same, but with notes.

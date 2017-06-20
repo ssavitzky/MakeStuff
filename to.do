@@ -16,42 +16,40 @@ WAV->FLAC
     to the ogg and mp3 files.
   o upgrade makefiles in older record directories.
 
-TeX improvements
-  o separate broadside.sty and songbook.sty.  Actually, these should probably be classes.
-    That would leave song.sty (possibly renamed to lyrics.sty) formatting the lyrics.
+lyrics.make improvements:
   o make */Songs from */Lyrics* -- use tags or subdirs to identify which ones get visible
     lyrics.  Pages need to be there even if the lyrics are hidden, because the
     performances, notes, etc. are still needed.
+  o music/lyrics.make - make variable for options (e.g. local options)
+
+TeX improvements
+  * use \newenvironment to define environments
+  o separate broadside.sty and songbook.sty.  Actually, these should probably be classes.
+    That would leave song.sty (possibly renamed to lyrics.sty) formatting the lyrics.
   o Songbook 2-sided printing
     Front cover, two facing pages, back cover.  If we don't mind the lyrics on the left
     for one-pagers we can either drop pages 3 and 4, or have a blank third page.  (even
     pages are on the left, odd on the right).  Suppressing covers would make a two-sided
-    songbook with half as many pages as song-at-a-time formatting.
-    @ <a      href="https://tex.stackexchange.com/questions/11707/how-to-force-output-to-a-left-or-right-page"
+    songbook with half as many pages as song-at-a-time formatting, but would make
+    insertions more difficult.
+    @ <a href="https://tex.stackexchange.com/questions/11707/how-to-force-output-to-a-left-or-right-page"
       >double sided - How to force output to a left (or right) page?</a>
-  o There is a big problem with the cover pages, which is that the metadata hasn't been
-    seen by the time we want to put them out.  Possible solutions:
-    - don't have anything on the cover page but the title.
-    - define a lyrics environment.  Could change to make use of other peoples' packages.
-    - define \makesongtitle (analogous to \maketitle
-    - co-opt \maketitle (could define something new, but maketitle actually does something
-      close to the right thing)  Nice thing about that is that you can leave it off on
-      short songs, and they come out in the old style.
-    - Enclose the metadata with braces and make it an argument to begin{song}
-    - preprocess the metadata and put it in an auxiliary file (ugh!)
-    - find some kind of hook that gets called when starting page content.
-    x use catcode to redefine LF.  the first time it's seen, it runs \maketitle, then
-      does the right thing for line breaks and possibly even verse breaks.
-      -> doesn't work.  extra blank lines are ignored only because \leavevmode has no
-	 effect when already in vertical mode.
-    - note that \include forces a page break, so \file may not be needed at all.
-    - see subdoc class in https://en.wikibooks.org/wiki/LaTeX/Modular_Documents
+      \cleardoublepage -- use \documentclass[...twoside...]
+  o refactoring:
+    o songbook, leadsheet (cover page, no tailnotes), and broadside (no cover page).
+    o local style file (basically zongbook, though may want to rename) that defines
+      the basic page style plus any locally-unique singer annotation macros.
+  o define \makesongtitle - make a song title page if appropriate.
+    Goes in front of the first line of the song, at which point all of the metadata has
+    been seen.  Makes title page if two-sided, puts out subtitle, notice, etc. on main
+    page (and title page if present)
+  o songbook document class should define \songfile (renamed from file) and add a hook so
+    that \makesongtitle can add it to the TOC.
   o LaTeX2e
     * documentclass.  May want broadside and songbook classes.
-    o music/lyrics.make - make variable for options (e.g. local options)
-    o fancyhdr for headers.
-    o clean up obsolete constructs
-    o multicol for columns,
+    * 0619 multicol for columns.  Redefine the twocolumns environment, for minimum upset.
+    * 0619 fancyhdr for headers.
+    . clean up obsolete constructs
     o \comment instead of \ignore (?)
     o parametrize page size and layout, e.g. for tablets.  See
       <a href="https://en.wikibooks.org/wiki/LaTeX/Page_Layout#Page_size_for_tablets"
@@ -93,7 +91,7 @@ flktran
   . Web: Convert the main websites to HTML-5 and CSS.
   o [audio] and [track] tags.  Need an "about" page to explain that ogg won't work in ie.
   o Lyrics in HTML5 include files. Top-level tag should be [article class=lyrics]
-  
+
 songs.make - make plugin for Songs directories
   o %/index.html should #include lyrics.html, and only if we have rights.
     generate, which lets it include directly-linked audio files.  Put body text in an
@@ -287,6 +285,40 @@ TeX->YAML headers -> rejected.  makes it harder to apply multiple styles to lyri
     with a constant TeX header, simply translate foo.flk -> foo.tex.  This
     should also make it easier to experiment with different macro packages,
     LaTeX 2e, etc.
+
+0619Mo
+  * There is a big problem with the cover pages, which is that the metadata hasn't been
+    seen by the time we want to put them out.  Worse than that, subtitle, notice,
+    dedication, description, etc. actually typeset their contents, and the song
+    environment itself puts out the title.
+    ? Possible solutions: -> decided 20170619
+    x don't have anything on the cover page but the title.  See above about subtitle etc. 
+    - define a lyrics environment.  Could change to make use of other peoples' packages.
+      Another really good thing about this is that we could put the tailnote _after_ the
+      lyrics, possibly making it an environment.  Needs to be skippable.
+      It would, however, probably require changing, e.g., \lyrics to \lyricist
+    ->define \makesongtitle (analogous to \maketitle)
+      less work than \lyrics because it doesn't require the name change.  Very little
+      effect on existing parsers, etc.  Easy for user to change behavior.
+    - move \begin{song} to after the metadata.  Add a keyword for the song title.
+    x co-opt \maketitle. bad idea because we'll want it for the songbook title page.
+    x Enclose the metadata with braces and make it an argument to begin{song}
+    x preprocess the metadata and put it in an auxiliary file (ugh!)
+    x find some kind of hook that gets called when starting page content.
+    x do it in \verse, for which \\ is an alias, so just starting with it would work.
+      This would require setting a flag so that it only gets expanded once, and because it
+      would require changing every file, it's no better than \makesongtitle or lyrics.
+    - do it in \file, making it a feature of songbooks/setlists rather than broadsides.
+      I like this, because it means that %.pdf will start with the song, the way we want
+      it to for publication on the web.  Songbooks can have options for page size
+      (e.g. tablet).  Nothing prevents having a make target that makes a one-song
+      songbook, and that would make it easy to give it a different filename.
+    x use catcode to redefine LF.  the first time it's seen, it runs \maketitle, then
+      does the right thing for line breaks and possibly even verse breaks.
+      -> doesn't work.  extra blank lines are ignored only because \leavevmode has no
+	 effect when already in vertical mode.
+    ~ note that \include forces a page break, so \file doesn't have to do much.
+    ~ see subdoc class in https://en.wikibooks.org/wiki/LaTeX/Modular_Documents
 
 =now====Tools/to.do=====================================================================>|
 
