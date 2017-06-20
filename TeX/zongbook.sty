@@ -6,12 +6,36 @@
 %%%
 %%% $Id: zongbook.sty,v 1.2 2007-05-20 17:57:20 steve Exp $
 
-\pagestyle{broadside}
-\tallpage
-\widepage
 
+\usepackage{fancyhdr}
+
+%%%
+%%% Page Margins
+%%%
+\headheight 2.1\baselineskip
+\headsep \baselineskip
+%\footheight 2.1\baselineskip
+\footskip \baselineskip
+\topmargin -.5in
+\textheight 9in
+
+\oddsidemargin 0in
+\evensidemargin 0in
+\textwidth 6.5in
+
+% First cut at formatting with fancyhdr
+% have to figure out how to widen the headings
+% should define \inner and \outer for, e.g., ER,OL if twosided, else OL
+
+\pagestyle{fancy}
+\fancyhead[OR]{{\bf\large\theSong}}
+\fancyhead[OL]{Key: \chord{\theKey}; Timing: \theTiming}
+\fancyfoot[OR]{\HSXlogo}
+\fancyfoot[OC]{\theCrDate}
+\fancyfoot[OL]{\HSXlogo}
+\renewcommand{\footrulewidth}{0.4pt}
+\renewcommand{\footruleskip}{.1\normalbaselineskip}
+
+\setlength{\headwidth}{\textwidth}
 
 \def\HSXlogo{$\hbox{Hyper}\!\int\!\!\hbox{pace}\ \hbox{Expre}\!\int\!\!\int$}
-
-\markUL{\HSXlogo}\markUC{{{$\beta\hbox{road}\!\int\!\!\hbox{ide!}$}}}
-\markLL{From the Songbook of}\markLC{Steve Savitzky}\markLR{\HSXlogo}

@@ -24,21 +24,27 @@ lyrics.make improvements:
 
 TeX improvements
   * use \newenvironment to define environments
-  o separate broadside.sty and songbook.sty.  Actually, these should probably be classes.
-    That would leave song.sty (possibly renamed to lyrics.sty) formatting the lyrics.
-  o Songbook 2-sided printing
+  o filkbook document class
+    see <a href="https://www.ctan.org/pkg/songbook" >CTAN: Package songbook</a>
+    page styles:  broadside, filkbook.  option compact: no title pages
+    \makesongtitle optional in compact mode, because we're not trying to do cover pages.
+    compact is the default when not twosided.
+    subtitle and other metadata that prints on the song's first page needs to save as well
+    as print, so that it can get duplicated on the title page.
+  o Songbook 2-sided printing (non-compact; see above)
     Front cover, two facing pages, back cover.  If we don't mind the lyrics on the left
     for one-pagers we can either drop pages 3 and 4, or have a blank third page.  (even
-    pages are on the left, odd on the right).  Suppressing covers would make a two-sided
-    songbook with half as many pages as song-at-a-time formatting, but would make
-    insertions more difficult.
+    pages are on the left, odd on the right).  Suppressing covers (compact mode) would
+    make a two-sided songbook with half as many pages as song-at-a-time formatting, but
+    would make insertions more difficult.
     @ <a href="https://tex.stackexchange.com/questions/11707/how-to-force-output-to-a-left-or-right-page"
       >double sided - How to force output to a left (or right) page?</a>
       \cleardoublepage -- use \documentclass[...twoside...]
   o refactoring:
     o songbook, leadsheet (cover page, no tailnotes), and broadside (no cover page).
-    o local style file (basically zongbook, though may want to rename) that defines
+    ? local style file (basically zongbook, though may want to rename) that defines
       the basic page style plus any locally-unique singer annotation macros.
+    o zingers.sty -> singer annotations.  Local overrides default, which is empty.
   o define \makesongtitle - make a song title page if appropriate.
     Goes in front of the first line of the song, at which point all of the metadata has
     been seen.  Makes title page if two-sided, puts out subtitle, notice, etc. on main
@@ -319,6 +325,12 @@ TeX->YAML headers -> rejected.  makes it harder to apply multiple styles to lyri
 	 effect when already in vertical mode.
     ~ note that \include forces a page break, so \file doesn't have to do much.
     ~ see subdoc class in https://en.wikibooks.org/wiki/LaTeX/Modular_Documents
+  * verify page counts:
+    for f in *.pdf; do echo -ne $f "\t"; pdfinfo $f | grep Pages:; done
+
+0620Tu
+  ~ 0620 separate broadside.sty and songbook.sty.  Actually, these should probably be classes.
+    That would leave song.sty (possibly renamed to lyrics.sty) formatting the lyrics.
 
 =now====Tools/to.do=====================================================================>|
 

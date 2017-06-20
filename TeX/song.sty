@@ -174,8 +174,23 @@ Attribution-Noncommercial-Share Alike 4.0 License.}
  \itemindent\listparindent
  \labelwidth 0pt
  \rightmargin 0pt
- \obeylines
  \parsep 0pt plus 1pt}\item[]}{\endlist}
+
+\def\indent{\list{}{\listparindent 6em
+ \itemindent\listparindent
+ \labelwidth 0pt
+ \rightmargin 0pt
+ \obeylines%
+ \parsep 0pt plus 1pt}\item[]}
+\let\endindent=\endlist
+
+\def\Indent{\list{}{\listparindent 8em
+ \itemindent\listparindent
+ \labelwidth 0pt
+ \rightmargin 0pt
+ \obeylines%
+ \parsep 0pt plus 1pt}\item[]}
+\let\endIndent=\endlist
 
 {\obeylines% We have to do this inside \obeylines to make it work right.
 \global\def\Indented#1{\begin{refrain}
@@ -183,12 +198,15 @@ Attribution-Noncommercial-Share Alike 4.0 License.}
 \end{refrain}}}
 
 
-\def\verse{\par\medskip\par}
 \def\inset#1{{\hskip1em\it #1}}
+\def\inst#1{{\it #1}}
+\def\singer#1{{\hskip-.5em\tt #1}} %\hskip-1em seems excessive
+\def\spoken#1{{\sl #1}}
+\def\verse{\par\medskip\par}
+
 \def\;{\hskip 1em}  % used for indentation, esp; to continue a line.
                     % many uses can be replaced by begin{refrain}
 
-\def\spoken#1{{\sl #1}}
 
 \def\vfiller#1{\vbox to #1\baselineskip{}}
 
@@ -247,6 +265,7 @@ Attribution-Noncommercial-Share Alike 4.0 License.}
 \def\min{\mbox{m}}
 \def\sus{\mbox{sus}}
 \def\capo{\mbox{\ \it capo\ }}
+\def\drop{\mbox{\ \it drop\ }}
 \def\up{\Uparrow}
 \def\add{\&}
 %\def\sharp{\#}

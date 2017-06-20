@@ -131,7 +131,7 @@ export TEXINPUTS
 SONG_LATEX =  echo q |  $(LATEX)
 SONG_PDFLATEX =  echo q | pdf$(LATEX)
 SONG_PREAMBLE = '\documentclass[$(SIZE)letterpaper]{article}'			\
-		'\usepackage{song,zongbook}'
+		'\usepackage{song,zingers,zongbook}'
 
 .SUFFIX: flk
 
