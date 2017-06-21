@@ -80,15 +80,6 @@ NAMES = $(subst .flk,,$(SONGBOOK))
 HTML  = $(subst .flk,.html,$(SONGBOOK))
 PRINT = $(PDF)
 
-#	OGGS is also derived from SONGS, but only _includes_ what's here
-OGGS  = $(wildcard *.ogg)
-MP3S  = $(wildcard *.mp3)
-
-# 	1Index.html is the index web page, 1IndexTable.html is just the
-#	 <table> element, for use in template replacement.
-INDICES= 1Index.html 1IndexTable.html 1IndexShort.html 
-OTHER  = Makefile HEADER.html
-
 # For personal songbook: $(ALLSONGS) just excludes incomplete stuff
 ALLNAMES = $(subst .flk,,$(ALLSONGS))
 ALLPS    = $(subst .flk,.ps,$(ALLSONGS))
@@ -102,15 +93,13 @@ WEBDIRS  = $(patsubst %,../Songs/%,$(WEBNAMES))
 WEBPS    = $(subst .flk,.ps,$(WEBSONGS))
 WEBPRINT = $(WEBPDF)
 
-# What to publish on the web:
-PUBFILES = $(WEBHTML) $(WEBPS) $(WEBPDF) $(WEBINDICES)
-
 # Utility programs:
 TEXDIR	  = $(TOOLDIR)/TeX
 FLKTRAN   = $(TEXDIR)/flktran.pl
 INDEX     = $(TEXDIR)/index.pl
 TRACKINFO = $(TOOLDIR)/music/TrackInfo.pl
 LATEX	  = latex
+PDFLATEX  = pdflatex
 
 ########################################################################
 ###
@@ -129,7 +118,7 @@ ECHO=/bin/echo
 TEXINPUTS := .:$(TEXDIR):$(TEXINPUTS)
 export TEXINPUTS
 SONG_LATEX =  echo q |  $(LATEX)
-SONG_PDFLATEX =  echo q | pdf$(LATEX)
+SONG_PDFLATEX =  echo q | $(PDFLATEX)
 SONG_PREAMBLE = '\documentclass[$(SIZE)letterpaper]{article}'			\
 		'\usepackage{song,zingers,zongbook}'
 
@@ -165,12 +154,11 @@ SONG_PREAMBLE = '\documentclass[$(SIZE)letterpaper]{article}'			\
 ### Targets
 ###
 
-# We no longer have to worry about which flavor of directory we're in;
-# Lyrics and Songs have different include files.  Similarly, don't bother
-# building index files -- that's not something we need here.
+# There's no need to build index files anymore; Lyrics isn't linked from
+# the website anymore.  
 
 all::
-	@echo building postscript files
+	@echo building PDF files
 all::	$(ALLPRINT)
 
 .PHONY: dirs html text postscript ps
@@ -179,12 +167,6 @@ html: 	$(FLKTRAN) $(HTML)
 text:	$(FLKTRAN) $(TEXT)
 postscript: $(PS)
 ps:	$(PS)
-
-.PHONY: indices webindices pubfiles
-
-indices: $(INDICES) $(WEBINDICES) 
-webindices: $(WEBINDICES)
-pubfiles: $(PUBFILES)
 
 ### Lists:
 
