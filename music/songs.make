@@ -92,8 +92,9 @@ WEBINDICES = 0Index.html 0IndexTable.html 0IndexShort.html  # 0IndexLong.html
 
 
 # Utility programs:
-FLKTRAN  = $(TOOLDIR)/TeX/flktran.pl
-INDEX    = $(TOOLDIR)/TeX/index.pl
+TEXDIR	  = $(TOOLDIR)/TeX
+FLKTRAN   = $(TEXDIR)/flktran.pl
+INDEX     = $(TEXDIR)/index.pl
 TRACKINFO = $(TOOLDIR)/music/TrackInfo.pl
 
 reportVars += LPATH WEBNAMES NOTWEB
@@ -110,14 +111,27 @@ reportVars += LPATH WEBNAMES NOTWEB
 
 # lyrics.pdf
 #	It would be better if we could make foo/lyrics.pdf directly, but
-#	there's no good way to do that because pdflatex doesn't have a
-#	way to specify the output file, just the output directory.  This
-#	recipe has the side effect of leaving the PDF file in Lyrics, but
-#	it's about half the size of the corresponding postscript, so we're
-#	switching to them from postscript.
+#	there's no good way to do that because latex doesn't have a way
+#	to specify the output file, just the output directory.
+#
+#	We also can't make %/%.pdf, because make can't handle rules with
+#	multiple wildcards on the left.
 #	
-%/lyrics.pdf: %.flk
-	d=`pwd`; cd `dirname $<`; $(MAKE) $*.pdf; cp $*.pdf $$d/$@
+%/lyrics.pdf: %.dvi
+	dvipdf $< $@
+
+# %.dvi:  Intermediate stage in making %/lyrics.pdf
+#	We want to do the build in the Lyrics directory rather than here
+#	because there may be multiple lyrics directories in the search path,
+#	and we want to use whatever local styles they have, including
+#	singer annotations (zinger.sty).
+#
+#	An alternative would be to put the lyrics directory in the
+#	search path, which would allow us to override the songbook
+#	style here if we wanted to.  See lyrics.make for the rule.
+#
+%.dvi:	%.flk
+	d=`pwd`; cd `dirname $<`; $(MAKE) $$d/$*.dvi DESTDIR=$$d
 
 %/lyrics.html: %.flk
 	WEBSITE=$(WEBSITE) WEBDIR=$(MYNAME) $(FLKTRAN) -t $< $@

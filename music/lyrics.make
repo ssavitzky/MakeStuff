@@ -109,45 +109,34 @@ PDFLATEX  = pdflatex
 ECHO=/bin/echo
 
 # flk to dvi:
-# 	Rather than make a temporary .tex file, we basically unroll both that and
-#	the existing \file macro, neither of which is particularly useful in this
-#	case.  \file has been simplified to reflect the fact that songs no longer
-#	contain a document environment, just a song environment; it's meant to be
-#	used in songbooks.
+# 	Rather than make a temporary .tex file, we pass everything we need
+#	on the command line to wrap the song file in a \documentclass and
+#	appropriate document environment.
 #
 TEXINPUTS := .:$(TEXDIR):$(TEXINPUTS)
 export TEXINPUTS
-SONG_LATEX =  echo q |  $(LATEX)
-SONG_PDFLATEX =  echo q | $(PDFLATEX)
 SONG_PREAMBLE = '\documentclass[$(SIZE)letterpaper]{article}'			\
 		'\usepackage{song,zingers,zongbook}'
 
 .SUFFIX: flk
 
 %.pdf:	%.flk
-	$(SONG_PDFLATEX) -jobname $* $(SONG_PREAMBLE) 	\
-		      \\'begin{document}' \\'input{$<}' \\'end{document}'
-	rm -f $*.log $*.aux
-
-%/lyrics.pdf:	%.flk
-	$(SONG_PDFLATEX) -jobname $* $(SONG_PREAMBLE) \\'def\\theFile{$<}' 	\
-		      \\'begin{document}' \\'input{$<}' \\'end{document}'
+	echo q | $(PDFLATEX) $(TEXOPTS) -jobname $*				\
+		$(SONG_PREAMBLE) '\begin{document}\input{$<}\end{document}'
 	rm -f $*.log $*.aux
 
 %.dvi:	%.flk
-	$(SONG_LATEX) -jobname $* $(SONG_PREAMBLE) \\'def\\theFile{$<}' 	\
-		      \\'begin{document}' \\'input{$<}' \\'end{document}'
+	echo q | $(LATEX) $(TEXOPTS) -jobname $*				\
+		$(SONG_PREAMBLE) '\begin{document}\input{$<}\end{document}'
 	rm -f $*.log $*.aux
 
-# Ogg and mp3 files.  
-#	They have no dependencies to prevent their being constantly rebuilt.
-#	It might be better to make the mp3s depend on the oggs.
-%.ogg: 
-	oggenc -Q -o $@ $(shell $(TRACKINFO) --ogg  $*)
-%.mp3: 
-	sox $(shell $(TRACKINFO) format=files $*) -w -t wav - | \
-	  lame -b 64 -S $(shell $(TRACKINFO) $(SONGLIST_FLAGS)  \
-	   --mp3 $*) $@
+# Build into another directory, for constructing websites and songbooks.
+#	Note that the target directory has to be specified directly as well as
+#	in the target filenames, e.g.:  make DESTDIR=foo foo/bar.dvi
+$(DESTDIR)/%.dvi:	%.flk
+	echo q | $(LATEX) $(TEXOPTS) -jobname $* -output-directory $(DESTDIR)	\
+		$(SONG_PREAMBLE) '\begin{document}\input{$<}\end{document}'
+	cd $(DESTDIR); rm -f $*.log $*.aux
 
 ########################################################################
 ###
@@ -155,7 +144,8 @@ SONG_PREAMBLE = '\documentclass[$(SIZE)letterpaper]{article}'			\
 ###
 
 # There's no need to build index files anymore; Lyrics isn't linked from
-# the website anymore.  
+# the website at this point.  HTML and PDF songbooks _will_ be built here
+# eventually.
 
 all::
 	@echo building PDF files
