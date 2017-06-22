@@ -20,7 +20,7 @@ lyrics.make improvements:
   o make */Songs from */Lyrics* -- use tags or subdirs to identify which ones get visible
     lyrics.  Pages need to be there even if the lyrics are hidden, because the
     performances, notes, etc. are still needed.
-  o music/lyrics.make - make variable for options (e.g. local options)
+  * 0620 music/lyrics.make - make variable for options (e.g. local options) TEXOPTS
 
 TeX improvements
   * use \newenvironment to define environments
@@ -51,6 +51,10 @@ TeX improvements
     page (and title page if present)
   o songbook document class should define \songfile (renamed from file) and add a hook so
     that \makesongtitle can add it to the TOC.
+    o LaTeX2e for class and package writers:
+      https://www.latex-project.org/help/documentation/clsguide.pdf
+    o Uppercase style names to distinguish;
+    * Separate packages for context-specific (i.e. scripting) macros. -> zingers
   o LaTeX2e
     * documentclass.  May want broadside and songbook classes.
     * 0619 multicol for columns.  Redefine the twocolumns environment, for minimum upset.
@@ -60,7 +64,7 @@ TeX improvements
     o parametrize page size and layout, e.g. for tablets.  See
       <a href="https://en.wikibooks.org/wiki/LaTeX/Page_Layout#Page_size_for_tablets"
       >LaTeX/Page Layout # Page size for tablets</a> 
-
+    
 tracks.make (was album.make)
   o TOC etc should be conditional on the presence of Master
     since they're meaningless without it.  Mainly for field recordings
@@ -70,27 +74,13 @@ tracks.make (was album.make)
 tags
   o hierarchical: fmt.long, lic.cc, pub.{no,web}
     that way we can easily tell which tags not to copy over to the html
-  
-uploading: 
-  ~ make sure we can handle multiple destinations -> multiple branches.  Easy.
-  o upload to the fastest (e.g. dreamhost) and sync the others from there
-    -> actually, that's what we do now with pull deployments, so the right thing is to
-       generalize _that_
-
-makefile templates
-  o need a good way to get a monochrome printable version of a web page
-    html2ps, probably.
 
 flktran
-  o don't put in excess blank lines in html
+  o suppress excess blank lines in html
   o eliminate ~ (halfspace) - see aengus.flk
   o performance notes (\perf{...})
   o link on .txt output is broken
   o all links in breadcrumbs should be fully-qualified for cut&paste
-  o LaTeX2e: https://www.latex-project.org/help/documentation/clsguide.pdf
-    Uppercase style names to distinguish;
-    Separate packages for context-specific (i.e. scripting) macros.
-
   o flktran should output HTML5 with properly-closed tags and quoted attributes.
   @ <a href="http://www.html-tidy.org/" >HTML Tidy</a>
   @ <a href="http://www.w3schools.com/html/html5_migration.asp" >HTML5 Migration</a>
@@ -170,18 +160,16 @@ o Need a program to replace an HTML element with a given id (mainly for
   lines. 
 
 Songs/ needs songlist files -- see $(TRACKS) in album.make
-  o instead of passing the whole list on the command line to, e.g., index.pl
+  x would remove the dependency on Makefile -> obsolete
+  x instead of passing the whole list on the command line to, e.g., index.pl
     this would allow using the same tools in Songs/ and the albums.
-  o would remove the dependency on Makefile
-  o use a real sort by title rather than relying on zongbook.tex
-
-  o allow sound files to be symlinks to released tracks in a Rips dir.
+  * allow sound files to be symlinks to released tracks in a Rips dir.
     this allows long, informative filenames
     handle, e.g., shortname.ogg with a redirect rather than a symlink
-
+  o use a real sort by title rather than relying on zongbook.tex
   o per-song directories would allow multiple sound files.
 
-Should have a track.make template for track directories
+Should have a track.make template for [album]/Tracks/* directories
   o use Makefile in Tracks to cons up the Makefile, HEADER.html, notes, etc.
   o move ogg generation into track directories.
 
@@ -331,6 +319,17 @@ TeX->YAML headers -> rejected.  makes it harder to apply multiple styles to lyri
 0620Tu
   ~ 0620 separate broadside.sty and songbook.sty.  Actually, these should probably be classes.
     That would leave song.sty (possibly renamed to lyrics.sty) formatting the lyrics.
+
+uploading: 
+  ~ make sure we can handle multiple destinations -> multiple branches.  Easy.
+  ~ upload to the fastest (e.g. dreamhost) and sync the others from there
+    -> actually, that's what we do now with pull deployments, so the right thing is to
+       generalize _that_
+
+makefile templates
+  ? need a good way to get a monochrome printable version of a web page
+    html2ps, probably.  But why?  What was I thinking needed this?
+
 
 =now====Tools/to.do=====================================================================>|
 
