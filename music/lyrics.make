@@ -16,7 +16,7 @@ INDEX     = $(TEXDIR)/index.pl
 TRACKINFO = $(TOOLDIR)/music/TrackInfo.pl
 LATEX	  = latex
 PDFLATEX  = pdflatex
-SORT_BY_TITLE = $(TEXDIR)/sort-by-title.pl
+SORT_BY_TITLE = $(TEXDIR)/sort-by-title
 
 ### Song lists:
 #
