@@ -11,9 +11,6 @@ SIZE = 12pt,
 
 ### Utility programs:
 TEXDIR	  = $(TOOLDIR)/TeX
-FLKTRAN   = $(TEXDIR)/flktran.pl
-INDEX     = $(TEXDIR)/index.pl
-TRACKINFO = $(TOOLDIR)/music/TrackInfo.pl
 LATEX	  = latex
 PDFLATEX  = pdflatex
 SORT_BY_TITLE = $(TEXDIR)/sort-by-title
@@ -176,11 +173,6 @@ all::
 	@echo building PDF files
 all::	$(PRINT)
 
-.PHONY: dirs html text postscript ps
-html: 	$(FLKTRAN) $(HTML)
-text:	$(FLKTRAN) $(TEXT)
-ps:	$(PS)
-
 ### Lists:
 
 list-names:
@@ -247,7 +239,7 @@ filkbook: $(ALLPS)
 ### Cleanup:
 
 clean::
-	-rm -f *.ps *.pdf
+	-rm -f *.ps *.pdf *.aux *.dvi *.log
 
 ### end lyrics.make ###
 
