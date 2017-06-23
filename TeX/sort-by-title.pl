@@ -1,0 +1,184 @@
+#!/usr/bin/perl
+# sort-by-title infile... 
+#	Sort songs by their title.
+
+### Print usage info:
+sub usage {
+    print "$0 [options] infile.flk ... \n";
+}
+
+### Variables set from song macros:
+$title = "";
+$subtitle = "";
+$notice = "";
+$license = "";
+$dedication = "";
+$tags = "";
+$key = "";
+$timing = "";
+$created = "";
+$cvsid = "";
+
+
+### Accumulate titles:
+
+$i = 0;
+while ($ARGV[0]) { 
+    $infile = shift; 
+    $title = "";
+    $subtitle = "";
+    $key = "";
+    $timing = "";
+
+    if ($infile !~ /\./) { $infile .= ".flk"; }
+
+    $infile = "../Lyrics/$infile" unless -f $infile;	
+
+    open(STDIN, $infile);
+    getTitle();
+    close(STDIN);
+
+    if ($verbose) {
+	print STDERR " $infile:	$title\n";
+    }
+
+    if ($title) {
+	$fn = $infile;
+	$title =~ s/^(A|An|The) //;             # remove leading articles
+
+	$fns{$title} = $fn;			# fns maps title => fn
+
+	$titleList[$i] = $title;
+
+	$i++;
+    }
+}
+
+### Sort the titles and fns
+
+@sortedTitles = (sort @titleList);
+
+for ($j = 0; $j < $i; $j++) {
+    $title = $sortedTitles[$j];
+    $fn = $fns{$title};
+    print "$fn\n";		# eventually maybe an option to add title?
+}
+
+exit(0);
+
+### Process input in FlkTeX:
+
+sub getTitle {
+    
+    while (<STDIN>) {			
+	if (/^[ \t]*$/) { }		# blank line
+	elsif (/^[ \t]*\%.*$/) { }	# comment: ignore
+
+    # Variable-setting macros:
+
+	elsif (/\\begin\{song/)	{ begSong($_); }  # Song
+
+	elsif (/\\subtitle/)  	{ $subtitle = getContent($_); }
+	elsif (/\\key/)  	{ $key = getContent($_); }
+	elsif (/\\tags/)	{ $tags = getContent($_); }
+	elsif (/\\category/)	{ $tags = getContent($_); }
+	elsif (/\\dedication/)	{ $dedication = getContent($_); }
+	elsif (/\\license/) 	{ $license = getContent($_); }
+	elsif (/\\timing/)  	{ $timing = getContent($_); }
+	elsif (/\\created/)  	{ $created = getContent($_); }
+	elsif (/\\notice/)  	{ $notice = getContent($_); }
+	elsif (/\\cvsid/)	{ $cvsid = getContent($_); }
+
+	elsif ($title) { return; }
+    }
+}
+
+
+########################################################################
+###
+### Macro handlers:
+###
+###	Each of the following routines handles a LaTeX macro.
+###
+
+### Separate verses.
+sub sepVerse {
+    if ($vlines) { endVerse(); }
+}
+
+### Handle a blank line.
+sub blankLine {
+    if ($vlines) { endVerse(); }
+    if ($plain) {
+	print "\n";
+	$plines = 0;
+    }
+}
+
+### Begin a song:
+###	Stash the title, put out the header.
+sub begSong {
+    my ($line) = @_;		# input line
+    $line =~ s/^.*song\}//;
+    $title = getContent($line);	
+}
+
+### Remove LaTeX constructs.
+###	This would be easier with a table.
+sub deTeX {
+    my ($txt) = @_;		# input line
+
+    while ($txt =~ /\%/) {	# TeX comments eat the line break, too.
+	$txt =~ s/\%.*$//;
+	$txt .= <STDIN>;
+     }
+    while ($txt =~ /\{\\em[ \t\n]/
+	   || $txt =~ /\{\\tt[ \t\n]/
+	   || $txt =~ /\{\\bf[ \t\n]/) {
+	# This will fail if there's a \bf and \em in one line in that order
+	if ($txt =~ /\{\\em[ \t\n]/) {
+	    $txt =~ s/\{\\em[ \t\n]/$EM/; 
+	    while (! $txt =~ /\}/) { $txt .= <STDIN>; }
+	    $txt =~ s/\}/$_EM/;
+	}
+	if ($txt =~ /\{\\tt[ \t\n]/) {
+	    $txt =~ s/\{\\tt[ \t\n]/$TT/; 
+	    while (! $txt =~ /\}/) { $txt .= <STDIN>; }
+	    $txt =~ s/\}/$_TT/;
+	}
+	if ($txt =~ /\{\\bf[ \t\n]/) { 
+	    $txt =~ s/\{\\bf[ \t\n]/$BF/; 
+	    while (! $txt =~ /\}/) { $txt .= <STDIN>; }
+	    $txt =~ s/\}/$_BF/;
+	}
+	if ($txt =~ /\{\\small[ \t\n]/) { 
+	    $txt =~ s/\{\\small[ \t\n]/$BF/; 
+	    while (! $txt =~ /\}/) { $txt .= <STDIN>; }
+	    $txt =~ s/\}/$_BF/;
+	}
+    }
+    $txt =~ s/\\small//;
+    $txt =~ s/\\&/$AMP/g;
+    $txt =~ s/\\;/$SP/g;
+    $txt =~ s/\\ /$SP/g;
+    $txt =~ s/\\ldots/.../g;
+    $txt =~ s/\\\\/$NL/g;
+
+    return $txt
+}
+
+
+### getContent(line): get what's between macro braces.
+sub getContent {
+    my ($line) = @_;		# input line
+    # Throw away everything up to the "{"
+    $line =~ s/^[^{]*\{//;
+    $line = deTeX($line);
+    # Suck in more lines if we haven't seen the closing brace
+    while ($line !~ /\}/) { $line .= <STDIN>; $line = deTeX($line); }
+    # Throw away everything after the "}"
+    $line =~ s/\}[^}]*$//;
+    $line =~ s/\n$//;
+    return $line;
+}
+
