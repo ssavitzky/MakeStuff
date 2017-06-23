@@ -8,6 +8,16 @@
 SIZE = 12pt,
 #SIZE = 
 
+
+### Utility programs:
+TEXDIR	  = $(TOOLDIR)/TeX
+FLKTRAN   = $(TEXDIR)/flktran.pl
+INDEX     = $(TEXDIR)/index.pl
+TRACKINFO = $(TOOLDIR)/music/TrackInfo.pl
+LATEX	  = latex
+PDFLATEX  = pdflatex
+SORT_BY_TITLE = $(TEXDIR)/sort-by-title.pl
+
 ### Song lists:
 #
 #   ASONGS   -- all songs (all .flk files)
@@ -20,14 +30,14 @@ SIZE = 12pt,
 # === need to drop the .flk and, ideally, generate the lists from metadata
 # === need to drop zongbook.tex and generate that from metadata, too.
 
-# ugly shell pipeline to sort a list of song references.
-SORT_SONGS =  sed 's/ /\n/g' | sed 's/\// /g' | sort | sed 's/ /\//g'
+# ugly shell pipeline to sort a list of file names.  Not used
+SORT_BY_FILENAME =  sed 's/ /\n/g' | sed 's/\// /g' | sort | sed 's/ /\//g'
 
 # ASONGS is just the song files, alphabetical by filename.
 #   This works in lgf and tg because we're not using Steve's
 #   cryptic shortnames.
 #   Note that template files start with a digit, so the wildcard skips them
-ASONGS := $(shell echo $(wildcard [a-z]*.flk) | $(SORT_SONGS))
+ASONGS := $(shell $(SORT_BY_TITLE) $(wildcard [a-z]*.flk))
 
 # WIP = work in progress
 #	Note that we have to guard against the possibility that there are no
@@ -115,14 +125,6 @@ ZPDF   = $(subst .flk,.pdf,$(ZONGBOOK))
 ZNAMES = $(subst .flk,,$(ZONGBOOK))
 ZHTML  = $(subst .flk,.html,$(ZONGBOOK))
 ZPRINT = $(ZPDF)
-
-### Utility programs:
-TEXDIR	  = $(TOOLDIR)/TeX
-FLKTRAN   = $(TEXDIR)/flktran.pl
-INDEX     = $(TEXDIR)/index.pl
-TRACKINFO = $(TOOLDIR)/music/TrackInfo.pl
-LATEX	  = latex
-PDFLATEX  = pdflatex
 
 ########################################################################
 ###
