@@ -7,6 +7,37 @@
 %%%	headers and footers are placed on the line closest to 
 %%%	the text.
 %%%
+%%%
+%%%  Page styles: 
+%%%	  broadside	songs on un-numbered single sheets
+%%%	  songbook	numbered pages set up for two-sided printing
+%%%	  boxed		plain boxed headers/footers: use markXY and tagXY
+%%%	  ruled		plain ruled headers/footers: use markXY and tagXY
+%%%	  shadowed	plain shadow-boxed headers/footers
+%%%
+%%%	  \tallpage	adds an extra inch to the text height
+%%%	  \widepage	adds an extra inch to the text width
+%%%
+%%%  Page formatting elements:
+%%%		additional conditional code can be put in the marks
+%%%		and tags to swap them on odd and even pages.
+%%%
+%%%	\markUL{x}	mark upper left		defines \ULmark
+%%%	\markUC{x}	mark upper center	etc.
+%%%	\markUR{x}	mark upper right
+%%%	\markLL{x}	mark lower left
+%%%	\markLC{x}	mark lower center
+%%%	\markLR{x}	mark lower right
+%%%
+%%%	\tagXY{x}	tag {upper,lower}{left, center,right}
+%%%			  the tags are like the marks except that in the
+%%%			  boxed styles they come underneath the boxes.
+%%%
+%%%		The following rules can be redefined for shadow effects.
+%%%	\HFTrule	header/footer top box rule
+%%%	\HFBrule	header/footer bottom box rule
+%%%	\HFLrule	header/footer left rule
+%%%	\HFRrule	header/footer right rule
 
 %% Marks
 \def\markUL#1{\global\def\ULmark{#1}}	\def\ULmark{}
@@ -64,9 +95,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
 %% Song-specific page styles
-%%
-%%	Broadside:	one song on a single sheet
-%%	Songbook:	numbered pages
 %%
 
 %%

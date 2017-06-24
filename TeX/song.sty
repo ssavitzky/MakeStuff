@@ -71,59 +71,36 @@
 %%%
 %%%  \file{songfile}	input a song file; set \theFile to the filename
 %%%
-%%%  Page styles: 
-%%%	  broadside	songs on un-numbered single sheets
-%%%	  songbook	numbered pages set up for two-sided printing
-%%%	  boxed		plain boxed headers/footers: use markXY and tagXY
-%%%	  ruled		plain ruled headers/footers: use markXY and tagXY
-%%%	  shadowed	plain shadow-boxed headers/footers
-%%%
-%%%	  \tallpage	adds an extra inch to the text height
-%%%	  \widepage	adds an extra inch to the text width
-%%%
-%%%  Page formatting elements:
-%%%		additional conditional code can be put in the marks
-%%%		and tags to swap them on odd and even pages.
-%%%
-%%%	\markUL{x}	mark upper left		defines \ULmark
-%%%	\markUC{x}	mark upper center	etc.
-%%%	\markUR{x}	mark upper right
-%%%	\markLL{x}	mark lower left
-%%%	\markLC{x}	mark lower center
-%%%	\markLR{x}	mark lower right
-%%%
-%%%	\tagXY{x}	tag {upper,lower}{left, center,right}
-%%%			  the tags are like the marks except that in the
-%%%			  boxed styles they come underneath the boxes.
-%%%
-%%%		The following rules can be redefined for shadow effects.
-%%%	\HFTrule	header/footer top box rule
-%%%	\HFBrule	header/footer bottom box rule
-%%%	\HFLrule	header/footer left rule
-%%%	\HFRrule	header/footer right rule
-%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%
 %%% Informational Components (notice, etc.)
 %%%
-\def\Centered #1{\begin{center}#1\end{center}}
-\let\notice=\Centered
+%%%    If we are making four-page songs with title pages, these are output
+%%%    on the title page by \makesongtitle.  Otherwise, they are typeset
+%%%    immediately, on the first page of the lyrics.  This is controlled
+%%%    by the ``looseleaf'' style option.
+%%%
+\def\notice#1{\global\def\theCopyrightNotice{#1}
+  \begin{center}\footnotesize #1\end{center}}\def\theCopyrightNotice{}
+\def\dedication#1{\global\def\theDedication{#1}
+  \begin{center}\footnotesize #1\end{center}}\def\theDedication{}
+\def\subtitle#1{\begin{center}\bf #1\end{center}}
+\def\license#1{\begin{center}\small #1\end{center}}
+
+%%% Macros for use in the copyright notice.
+
 \def\SomeRightsReserved{Some Rights Reserved\footnote{\CcByNcSa}}
 \def\CcByNcSa{This work is licensed under a Creative Commons
 Attribution-Noncommercial-Share Alike 4.0 License.}  
-\def\subtitle #1{\begin{center}\bf #1\end{center}}
-\def\license #1{\begin{center}\small #1\end{center}}
-\let\dedication=\Centered
-\def\ttto #1{{\sc ttto:} {\em #1\/}}
+\def\ttto#1{{\sc ttto:} {\em #1\/}}
 
 \def\link#1#2{#2\footnote{$<$#1$>$}}
 
-%%% define global variables for all the header statements
+%%% define macros and global variables for the rest of the metadata.
 %%% Note that some aren't used by LaTeX; they're for other formats, too.
 
 \def\timing#1{\global\def\theTiming{#1}}\def\theTiming{}
-\def\category#1{\global\def\theTags{#1}}\def\theTags{}
 \def\tags#1{\global\def\theTags{#1}}\def\theTags{}
 \def\description#1{\global\def\theDescription{#1}}\def\theDescription{}
 \def\key#1{\global\def\theKey{#1}}\def\theKey{}
@@ -189,12 +166,6 @@ Attribution-Noncommercial-Share Alike 4.0 License.}
  \rightmargin 0pt
  \parsep 0pt plus 1pt}\item[]}
 \let\endIndent=\endlist
-
-{\obeylines% We have to do this inside \obeylines to make it work right.
-\global\def\Indented#1{\begin{refrain}
- #1
-\end{refrain}}}
-
 
 \def\inset#1{{\hskip1em\it #1}}
 \def\inst#1{{\it #1}}

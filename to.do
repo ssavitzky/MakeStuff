@@ -16,14 +16,36 @@ WAV->FLAC
     to the ogg and mp3 files.
   o upgrade makefiles in older record directories.
 
-lyrics.make improvements:
+songs.make, Songs/ improvements:
   o make */Songs from */Lyrics* -- use tags or subdirs to identify which ones get visible
-    lyrics.  Pages need to be there even if the lyrics are hidden, because the
+    lyrics.  Pages want to be there even if the lyrics are hidden, because the
     performances, notes, etc. are still needed.
-  * 0620 music/lyrics.make - make variable for options (e.g. local options) TEXOPTS
+  o eventually, make lyrics visible for logged-in band members; maybe fans.
+  o web links for lyrics we don't own; on the songwriter's official site if possible. 
+  o options for lyrics:
+    - build %/lyrics.pdf, which is what we do currently
+    - symlink %.flk into Songs/%, and do the build directly.
+  o %/index.html should #include lyrics.html, and only if we have rights.
+    generate, which lets it include directly-linked audio files.  Put body text in an
+    editable include file which is generated only if missing (e.g. text.html)
+  o header should be #included and auto-generated; that's the way to do title and
+    navbar correctly - Songs/name currently aren't links.
+  @ <a href="http://httpd.apache.org/docs/current/expr.html"
+    >Expressions in Apache HTTP Server - Apache HTTP Server Version 2.4</a>
+    SSI can, for example, test variables set in  .htaccess.
+    Or, we can just have two different index file templates that we link to.
+  o be nice to have a song index on the left; maybe hideable.
+  o header/footer boilerplate should come from a template file
+  o use songlist files instead of passing list on the command line ?
+    (Can make all.songs from listing)
+  o Be nice if one could use Lyrics-suffix as an implicit tag.
+  o main audio files would of course be %/%.ogg.  Anything else should have a name like
+    yyyy-mm-dd--event--%.ogg or albumname--nn-%.ogg - i.e., the path with / -> -
+    There should be a script that does this for a list of files.
 
 TeX improvements
   * use \newenvironment to define environments
+  ? lyrics--*.pdf probably not worth the trouble in most cases.
   o filkbook document class
     see <a href="https://www.ctan.org/pkg/songbook" >CTAN: Package songbook</a>
     page styles:  broadside, filkbook.  option compact: no title pages
@@ -32,6 +54,8 @@ TeX improvements
     subtitle and other metadata that prints on the song's first page needs to save as well
     as print, so that it can get duplicated on the title page.
   o Songbook 2-sided printing (non-compact; see above)
+    \@twosidetrue - so this maps into a conditional, \iftwoside
+  o add license and URL info to ogg, html, pdf files
     Front cover, two facing pages, back cover.  If we don't mind the lyrics on the left
     for one-pagers we can either drop pages 3 and 4, or have a blank third page.  (even
     pages are on the left, odd on the right).  Suppressing covers (compact mode) would
@@ -44,7 +68,7 @@ TeX improvements
     o songbook, leadsheet (cover page, no tailnotes), and broadside (no cover page).
     ? local style file (basically zongbook, though may want to rename) that defines
       the basic page style plus any locally-unique singer annotation macros.
-    o zingers.sty -> singer annotations.  Local overrides default, which is empty.
+    * zingers.sty -> singer annotations.  Local overrides default, which is empty.
   o define \makesongtitle - make a song title page if appropriate.
     Goes in front of the first line of the song, at which point all of the metadata has
     been seen.  Makes title page if two-sided, puts out subtitle, notice, etc. on main
@@ -72,6 +96,7 @@ tracks.make (was album.make)
     Master should be all you need to make album.rips.
 
 tags
+  o Use initials as tag instead of "mine", so "ss, nr" -- then have OURTAGS = ss nr
   o hierarchical: fmt.long, lic.cc, pub.{no,web}
     that way we can easily tell which tags not to copy over to the html
 
@@ -80,28 +105,16 @@ flktran
   o eliminate ~ (halfspace) - see aengus.flk
   o performance notes (\perf{...})
   o link on .txt output is broken
+
+flktran HTML5 conversion
   o all links in breadcrumbs should be fully-qualified for cut&paste
   o flktran should output HTML5 with properly-closed tags and quoted attributes.
   @ <a href="http://www.html-tidy.org/" >HTML Tidy</a>
   @ <a href="http://www.w3schools.com/html/html5_migration.asp" >HTML5 Migration</a>
   . Web: Convert the main websites to HTML-5 and CSS.
-  o [audio] and [track] tags.  Need an "about" page to explain that ogg won't work in ie.
+  o audio and track HTML5 elements.
+  o Need an "about" page to explain that ogg won't work in ie.
   o Lyrics in HTML5 include files. Top-level tag should be [article class=lyrics]
-
-songs.make - make plugin for Songs directories
-  o %/index.html should #include lyrics.html, and only if we have rights.
-    generate, which lets it include directly-linked audio files.  Put body text in an
-    editable include file which is generated only if missing (e.g. text.html)
-  o header should be #included and auto-generated; that's the way to do title and
-    navbar correctly - Songs/name currently aren't links.
-  o header/footer boilerplate should come from a template file
-  o use songlist files instead of passing list on the command line
-    (Can make all.songs from listing)
-  o Be nice if one could use Lyrics-suffix as an implicit tag.
-  o Use initials as tag instead of "mine", so "ss, nr" -- then have OURTAGS = ss nr
-  o main audio files would of course be %/%.ogg.  Anything else should have a name like
-    yyyy-mm-dd--event--%.ogg or albumname--nn-%.ogg - i.e., the path with / -> -
-    There should be a script that does this for a list of files.
 
 songbook.make (proposed) - make plugin for Songbook directories
   o makes html  and pdf songbook in a subdirectory. can .gitignore [a-z]*.html
@@ -110,7 +123,12 @@ songbook.make (proposed) - make plugin for Songbook directories
     compact should of course be filenames.
 
 index.pl, flktran.pl; Songs/Makefile
-  o (?)move index.pl and flktran.pl into Tools from TeX; adjust paths.
+  x move index.pl and flktran.pl into Tools from TeX; adjust paths.
+    -> no, they belong with the rest of the scripts that operate on .flk files
+  : index.pl is incredibly badly written (parses a file into global variables instead of a
+    hash!) and seems to have a preliminary version of the flktran chord parser as well!
+    And why am I not using it to sort song files by title?
+  o flktex.pm song parser module would help a lot. 
   o (?)use TrackInfo instead of index.pl -- it's more recent.
   o add license and URL info to ogg, html, pdf files
 
@@ -126,6 +144,14 @@ TrackInfo:
   o needs an option that produces a setlist with proper links.
     format=list.html -T is probably close now.
 
+o Need a Perl *module* for extracting song/track info:
+  o basically a SongInfo _class_
+  o needs to include stuff from flktran as well -- unify all three
+  o iterate through a list of TeX macros to turn into variables, rather 
+    than the ad-hoc if statements used now.
+  o should also include functions to generate the list formats common to
+    Setlist.cgi and SongInfo.pl
+    
   o needs a way to pass a custom format string on the command line
     (probably just perl with $variable as needed)
 
@@ -138,36 +164,9 @@ TrackInfo:
 Tracklist.cgi: like Setlist.cgi but builds album tracklists 
   o could probably merge both into TrackInfo using a format and template.
 
-burning:  
-  = shntool to manipulate WAV files  shnlen [list-of-files] for length.
-    (doesn't give length in frames for files that aren't "CD quality";
-     and the sound files have to be padded to full frames in order not to
-     upset cdrdao.  The current mastering process fixes this.)
-  ? wodim for burning (tao for mixed disks) -- has cue support, not toc,
-    but can use .inf files with -useinfo.  see icedax(0)
-  o it seems to be important to eject the disk before reading the msinfo
-
-o Need a Perl *module* for extracting song/track info:
-  o basically a SongInfo _class_
-  o needs to include stuff from flktran as well -- unify all three
-  o iterate through a list of TeX macros to turn into variables, rather 
-    than the ad-hoc if statements used now.
-  o should also include functions to generate the list formats common to
-    Setlist.cgi and SongInfo.pl
-
 o Need a program to replace an HTML element with a given id (mainly for
   tracklists)  The present template hack has problems with multiple end
   lines. 
-
-Songs/ needs songlist files -- see $(TRACKS) in album.make
-  x would remove the dependency on Makefile -> obsolete
-  x instead of passing the whole list on the command line to, e.g., index.pl
-    this would allow using the same tools in Songs/ and the albums.
-  * allow sound files to be symlinks to released tracks in a Rips dir.
-    this allows long, informative filenames
-    handle, e.g., shortname.ogg with a redirect rather than a symlink
-  o use a real sort by title rather than relying on zongbook.tex
-  o per-song directories would allow multiple sound files.
 
 Should have a track.make template for [album]/Tracks/* directories
   o use Makefile in Tracks to cons up the Makefile, HEADER.html, notes, etc.
@@ -319,7 +318,8 @@ TeX->YAML headers -> rejected.  makes it harder to apply multiple styles to lyri
 0620Tu
   ~ 0620 separate broadside.sty and songbook.sty.  Actually, these should probably be classes.
     That would leave song.sty (possibly renamed to lyrics.sty) formatting the lyrics.
-
+  * 0620 music/lyrics.make - make variable for options (e.g. local options) TEXOPTS
+  
 uploading: 
   ~ make sure we can handle multiple destinations -> multiple branches.  Easy.
   ~ upload to the fastest (e.g. dreamhost) and sync the others from there
@@ -330,6 +330,34 @@ makefile templates
   ? need a good way to get a monochrome printable version of a web page
     html2ps, probably.  But why?  What was I thinking needed this?
 
+0622Th
+
+Songs/ needs songlist files -- see $(TRACKS) in album.make
+  x would remove the dependency on Makefile -> obsolete
+  x instead of passing the whole list on the command line to, e.g., index.pl
+    this would allow using the same tools in Songs/ and the albums.
+  * allow sound files to be symlinks to released tracks in a Rips dir.
+    this allows long, informative filenames
+    handle, e.g., shortname.ogg with a redirect rather than a symlink
+  * 0622 use a real sort by title rather than relying on zongbook.tex
+    could be done with index.pl, but better to make a new command that could
+    later be rewritten to use flktex.pm
+  * per-song directories would allow multiple sound files.
+
+
+burning:  -> notes copied to tracks.make
+  = shntool to manipulate WAV files  shnlen [list-of-files] for length.
+    (doesn't give length in frames for files that aren't "CD quality";
+     and the sound files have to be padded to full frames in order not to
+     upset cdrdao.  The current mastering process fixes this.)
+  ? wodim for burning (tao for mixed disks) -- has cue support, not toc,
+    but can use .inf files with -useinfo.  see icedax(0)
+  = it is necessary to eject and reload the disk before reading the msinfo
+
+0624Sa
+  * cleanup.  remove TeX/1song.tex, which is obsolete.
+    remove obsolete \Centered and \Indented macros.
+    Move some documentation from song.sty to hsxheaders.sty
 
 =now====Tools/to.do=====================================================================>|
 

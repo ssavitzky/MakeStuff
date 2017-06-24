@@ -103,6 +103,10 @@ endif
 
 LIST_TRACKS = $(TOOLDIR)/music/list-tracks
 
+## shntool looks useful for manipulating WAV files.
+##	shnlen <files> gets lengths
+##	cuetools for manipulating cue and toc files
+
 ## CD writing.  wodim and genisoimage are new as of Debian Etch.
 
 WODIM = $(shell if [ -x /usr/bin/wodim ]; \
@@ -624,7 +628,10 @@ $(SHORTNAME).$(yyyymmdd).tracks: $(SHORTNAME).tracks
 #	readom -c2scan dev=ATA:1,1,0
 #
 # 	Note that it is no longer necessary to specify a device
+#	Note that if you want to burn a mixed disk, you MUST eject and reload
+#	the disk before reading the msinfo.
 #
+
 #SPEED=--speed 8
 .PHONY: cdr
 cdr: $(BASEPFX)toc
