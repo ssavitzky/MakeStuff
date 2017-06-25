@@ -17,6 +17,7 @@ WAV->FLAC
   o upgrade makefiles in older record directories.
 
 songs.make, Songs/ improvements:
+  ? lyrics--*.pdf probably not worth the trouble in most cases.
   o make */Songs from */Lyrics* -- use tags or subdirs to identify which ones get visible
     lyrics.  Pages want to be there even if the lyrics are hidden, because the
     performances, notes, etc. are still needed.
@@ -45,7 +46,6 @@ songs.make, Songs/ improvements:
 
 TeX improvements
   * use \newenvironment to define environments
-  ? lyrics--*.pdf probably not worth the trouble in most cases.
   o filkbook document class
     see <a href="https://www.ctan.org/pkg/songbook" >CTAN: Package songbook</a>
     page styles:  broadside, filkbook.  option compact: no title pages
@@ -53,26 +53,27 @@ TeX improvements
     compact is the default when not twosided.
     subtitle and other metadata that prints on the song's first page needs to save as well
     as print, so that it can get duplicated on the title page.
-  o Songbook 2-sided printing (non-compact; see above)
-    \@twosidetrue - so this maps into a conditional, \iftwoside
-  o add license and URL info to ogg, html, pdf files
+  * 0624 Songbook 2-sided printing (compact)
+    \@twosidetrue - so this maps into a conditional, \if@twoside
+    \begin{song}[S/L], \defaultsonglength{S/L} - short songs can start on either side.
+  o looseleaf style:
     Front cover, two facing pages, back cover.  If we don't mind the lyrics on the left
     for one-pagers we can either drop pages 3 and 4, or have a blank third page.  (even
     pages are on the left, odd on the right).  Suppressing covers (compact mode) would
     make a two-sided songbook with half as many pages as song-at-a-time formatting, but
-    would make insertions more difficult.
-    @ <a href="https://tex.stackexchange.com/questions/11707/how-to-force-output-to-a-left-or-right-page"
+    would make insertions more difficult.  Makes some sense for printing sets, though
+  * 0624 <a href="https://tex.stackexchange.com/questions/11707/how-to-force-output-to-a-left-or-right-page"
       >double sided - How to force output to a left (or right) page?</a>
       \cleardoublepage -- use \documentclass[...twoside...]
+  o define \makesongtitle - make a song title page if appropriate.
+    Goes in front of the first line of the song, at which point all of the metadata has
+    been seen.  Makes title page if two-sided, puts out subtitle, notice, etc. on main
+    page (and title page if present)
   o refactoring:
     o songbook, leadsheet (cover page, no tailnotes), and broadside (no cover page).
     ? local style file (basically zongbook, though may want to rename) that defines
       the basic page style plus any locally-unique singer annotation macros.
     * zingers.sty -> singer annotations.  Local overrides default, which is empty.
-  o define \makesongtitle - make a song title page if appropriate.
-    Goes in front of the first line of the song, at which point all of the metadata has
-    been seen.  Makes title page if two-sided, puts out subtitle, notice, etc. on main
-    page (and title page if present)
   o songbook document class should define \songfile (renamed from file) and add a hook so
     that \makesongtitle can add it to the TOC.
     o LaTeX2e for class and package writers:
@@ -90,6 +91,7 @@ TeX improvements
       >LaTeX/Page Layout # Page size for tablets</a> 
     
 tracks.make (was album.make)
+  o add license and URL info to ogg, html, pdf files
   o TOC etc should be conditional on the presence of Master
     since they're meaningless without it.  Mainly for field recordings
   o Master/* should be order-only prerequisites -- should not remake them.

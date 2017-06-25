@@ -24,12 +24,11 @@
 \textwidth 6.5in
 
 % First cut at formatting with fancyhdr
-% have to figure out how to widen the headings
 % should define \inner and \outer for, e.g., ER,OL if twosided, else OL
 
 \pagestyle{fancy}
 \fancyhead[OR]{{\bf\large\theSong}}
-\fancyhead[OL]{\theTiming---\chord{\theKey}}
+\fancyhead[OL]{\chord{\theKey}\hskip 1em\theTiming}
 \fancyfoot[OR]{\HSXlogo}
 \fancyfoot[OC]{\theCrDate}
 \fancyfoot[OL]{\HSXlogo}

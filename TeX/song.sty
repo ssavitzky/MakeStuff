@@ -82,11 +82,17 @@
 %%%    by the ``looseleaf'' style option.
 %%%
 \def\notice#1{\global\def\theCopyrightNotice{#1}
-  \begin{center}\footnotesize #1\end{center}}\def\theCopyrightNotice{}
+  \ifcompact\begin{center}\footnotesize #1\end{center}\fi}
 \def\dedication#1{\global\def\theDedication{#1}
-  \begin{center}\footnotesize #1\end{center}}\def\theDedication{}
-\def\subtitle#1{\begin{center}\bf #1\end{center}}
-\def\license#1{\begin{center}\small #1\end{center}}
+  \ifcompact\begin{center}\footnotesize #1\end{center}\fi}
+\def\subtitle#1{\global\def\theSubtitle{#1}
+  \ifcompact\begin{center}\bf #1\end{center}\fi}
+\def\license#1{\global\def\theLicense{#1}
+  \ifcompact\begin{center}\small #1\end{center}\fi}
+
+\global\def\theCopyrightNotice{}
+\global\def\theDedication{}
+\global\def\theLicense{}
 
 %%% Macros for use in the copyright notice.
 
@@ -125,22 +131,66 @@ Attribution-Noncommercial-Share Alike 4.0 License.}
 \long\def\tailnote#1{\vfill\begin{note}#1\end{note}}
 
 %%%
-%%% The song and refrain environments
+%%% Set the default song length.  Can be overridden at any time.
 %%%
-\newenvironment{song}[1]{\newpage
-  % we don't need to put out the title; it's in the page header
-  % tags, creation date, file, etc. want to be put out at the beginning of the lyrics.
- \global\def\theSong{#1}
- \global\def\theTags{}\global\def\theTiming{}
- \global\def\theCrDate{}\global\def\theKey{}
- \begingroup
- \parskip 0pt plus 1pt
- \parindent 0pt
- \let\\=\verse
- \obeylines\catcode`\[=13}{
- \addcontentsline{toc}{Song}{\hbox{{\tt \hbox to 7em{\theFile\hss}}\hbox to 2em{\hss\theTiming}\;\hbox{\theSong\hss}}}
- \endgroup}
+\def\defaultsonglength#1{\def\song@default@length{#1}}
+\defaultsonglength{L}
+\def\short@length{S}
 
+%%%
+%%% The song environment
+%%% \begin[long/short]{song}
+%%%
+%%%   The optional parameter is either [L] or [S]; the default is L (long)
+%%%   but that can be changed with \defaultsonglength.  If a song is short and
+%%%   we are in compact mode, we don't care whether it starts on an odd or
+%%%   even page.
+%%%    
+%%%
+\newenvironment{song}[2][]{
+  % we don't need to put out the title; it's in the page header
+  % We want to allow the optional parameter to be either [short] or [long],
+  % with a default that can be set in the songbook.  The idea is that a short
+  % song only occupies a single page, so if we're in compact mode we don't
+  % care whether it's on an odd or even page.
+  \def\song@length{#1\song@default@length} % \if only sees first character.
+  \if@twoside
+    \ifcompact                  % compact formats
+      \if\short@length\song@length
+         \clearpage             % short songs can start anywhere
+      \else
+         \cleardoublepageleft   % longer songs start on an even (left) page
+      \fi
+    \else
+      \cleardoublepage
+    \fi
+  \else
+    \clearpage
+  \fi
+  % tags, creation date, file, etc. want to be put out at the beginning of the lyrics.
+  \global\def\theSong{#2}
+  \global\def\theTags{}\global\def\theTiming{}
+  \global\def\theCrDate{}\global\def\theKey{}
+  \begingroup
+  \parskip 0pt plus 1pt
+  \parindent 0pt
+  \let\\=\verse
+  \obeylines\catcode`\[=13}{
+  \endgroup
+  % Clear optional metadata, e.g. performance and description.  Doing it here
+  % lets us override the definition outside the song environment, which we
+  % might want to do if the song is being included in an album or setlist.
+  
+}
+
+%%%
+%%% Parts of songs
+%%%
+%%%    refrain (indent 1em)
+%%%    bridge  (indent 2em)
+%%%    indent  (indent 6em)
+%%%    Indent  (indent 8em)
+%%%
 \newenvironment{refrain}{\list{}{\listparindent 1em
  \itemindent\listparindent
  \labelwidth 0pt
@@ -153,19 +203,21 @@ Attribution-Noncommercial-Share Alike 4.0 License.}
  \rightmargin 0pt
  \parsep 0pt plus 1pt}\item[]}{\endlist}
 
-\def\indent{\list{}{\listparindent 6em
+\renewenvironment{indent}{\list{}{\listparindent 6em
  \itemindent\listparindent
  \labelwidth 0pt
  \rightmargin 0pt
- \parsep 0pt plus 1pt}\item[]}
-\let\endindent=\endlist
+ \parsep 0pt plus 1pt}\item[]}{\endlist}
 
-\def\Indent{\list{}{\listparindent 8em
+\newenvironment{Indent}{\list{}{\listparindent 8em
  \itemindent\listparindent
  \labelwidth 0pt
  \rightmargin 0pt
- \parsep 0pt plus 1pt}\item[]}
-\let\endIndent=\endlist
+ \parsep 0pt plus 1pt}\item[]}{\endlist}
+
+%%%
+%%% Annotations for songs
+%%%
 
 \def\inset#1{{\hskip1em\it #1}}
 \def\inst#1{{\it #1}}
@@ -179,6 +231,7 @@ Attribution-Noncommercial-Share Alike 4.0 License.}
 
 \def\vfiller#1{\vbox to #1\baselineskip{}}
 
+
 %%%
 %%% Replace the old twocolumns environment with multicol
 %%%
@@ -186,6 +239,44 @@ Attribution-Noncommercial-Share Alike 4.0 License.}
 
 \newenvironment{twocolumns}{
   \begin{multicols}{2}}{\end{multicols}}
+
+%%%
+%%% Formats:
+%%%    Broadside:  oneside,  compact -- default for publishing on the web
+%%%    Looseleaf:  twoside, !compact -- default for single songs
+%%%                \makesongtitle used to create (odd) title page.
+%%%                Song occupies pages 2 and 3; tailnotes on 4.
+%%%    Songbook:   twoside,  compact; Song starts on even page
+%%%                Tailnotes skipped to keep page count down.
+%%%
+%%%    In the compact formats the subtitle, copyright notice, description,
+%%%    and dedication are printed at the start of the song.  Most other
+%%%    metadata:  performance notes, headnote, etc., are skipped.  Tail
+%%%    notes are skipped in Songbook mode to keep the page count down;
+%%%    they are included in Broadside.
+
+\newif\ifcompact
+\if@twoside
+  \compactfalse                 % two-sided songs default to Looseleaf
+\else
+  \compacttrue                  % one-sided songs default to Broadside
+\fi
+
+%%%
+%%% \cleardoublepageleft:  like \cleardoublepage except that it
+%%%    goes to an even (left-side) page instead of an odd one.
+%%%
+\newcommand*{\cleardoublepageleft}{%
+  \clearpage
+    \if@twoside
+    \ifodd\c@page
+      \hbox{}\newpage
+      \if@twocolumn
+        \hbox{}\newpage
+      \fi
+    \fi
+  \fi
+}
 
 %%%
 %%% Table of contents is supposed to look like a song
@@ -203,8 +294,8 @@ Attribution-Noncommercial-Share Alike 4.0 License.}
 %%%
 \def\file#1{\newpage\begingroup
 \def\theFile{#1}
-\def\documentstyle[##1]##2{}
 \input{#1}
+\addcontentsline{toc}{Song}{\hbox{{\tt \hbox to 7em{\theFile\hss}}\hbox to 2em{\hss\theTiming}\;\hbox{\theSong\hss}}}
 \endgroup}
 %
 % \theFile defaults to \jobname, so that it doesn't have to be provided in

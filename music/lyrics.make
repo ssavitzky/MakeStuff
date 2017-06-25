@@ -11,8 +11,8 @@ SIZE = 12pt,
 
 ### Utility programs:
 TEXDIR	  = $(TOOLDIR)/TeX
-LATEX	  = latex
-PDFLATEX  = pdflatex
+LATEX	  = latex -file-line-error
+PDFLATEX  = pdflatex -file-line-error
 SORT_BY_TITLE = $(TEXDIR)/sort-by-title
 
 ### Song lists:
@@ -136,6 +136,8 @@ ZPRINT = $(ZPDF)
 TEXINPUTS := .:$(TEXDIR):$(TEXINPUTS)
 export TEXINPUTS
 SONG_PREAMBLE = '\documentclass[$(SIZE)letterpaper]{article}'			\
+		'\usepackage{song,zingers,zongbook}'
+SONG_LOOSELEAF= '\documentclass[$(SIZE)letterpaper,twoside]{article}'		\
 		'\usepackage{song,zingers,zongbook}'
 
 .SUFFIX: flk
