@@ -144,7 +144,7 @@ SONG_LOOSELEAF= '\documentclass[$(SIZE)letterpaper,twoside]{article}'		\
 
 %.pdf:	%.flk
 	echo q | $(PDFLATEX) $(TEXOPTS) -jobname $*				\
-		$(SONG_PREAMBLE) '\begin{document}\input{$<}\end{document}'
+		$(SONG_LOOSELEAF) '\begin{document}\input{$<}\end{document}'
 	rm -f $*.log $*.aux
 
 %.dvi:	%.flk

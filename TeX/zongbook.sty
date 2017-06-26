@@ -27,11 +27,11 @@
 % should define \inner and \outer for, e.g., ER,OL if twosided, else OL
 
 \pagestyle{fancy}
-\fancyhead[OR]{{\bf\large\theSong}}
-\fancyhead[OL]{\chord{\theKey}\hskip 1em\theTiming}
-\fancyfoot[OR]{\HSXlogo}
-\fancyfoot[OC]{\theCrDate}
-\fancyfoot[OL]{\HSXlogo}
+\fancyhead[\OUT]{{\bf\large\theSong}}
+\fancyhead[\INN]{\chord{\theKey}\hskip 1em\theTiming}
+\fancyfoot[\RHT]{\HSXlogo}
+\fancyfoot[\MID]{\theCrDate}
+\fancyfoot[\LFT]{FiLkTeX songbook}
 \renewcommand{\footrulewidth}{0.4pt}
 \renewcommand{\footruleskip}{.1\normalbaselineskip}
 
