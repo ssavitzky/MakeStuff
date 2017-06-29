@@ -73,6 +73,8 @@
 %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\usepackage{etoolbox}           % additional programming constructs.
+
 %%%
 %%% Informational Components (notice, etc.)
 %%%
@@ -132,14 +134,19 @@ Attribution-Noncommercial-Share Alike 4.0 License.}
 \long\def\tailnote#1{\vfill\begin{note}#1\end{note}}
 
 %%%
-%%% Set the default song length.  Can be overridden at any time.
+%%% \defaultsonglength{L/S} Set the default song length.
+%%%
+%%%   Short (single-page) songs can start on either even or odd (left or
+%%%   right) pages when typesetting a songbook in compact mode.
+
+%%%   Can be overridden at any time between songs; the
+%%%   default is long.  
 %%%
 \def\defaultsonglength#1{\def\song@default@length{#1}}
 \defaultsonglength{L}
 \def\short@length{S}
 
-%%% The song environment
-%%% \begin[long/short]{song}
+%%% The song environment: \begin[long/short]{song}
 %%%
 %%%   The optional parameter is either [L] or [S]; the default is L (long)
 %%%   but that can be changed with \defaultsonglength.  If a song is short and
@@ -147,6 +154,7 @@ Attribution-Noncommercial-Share Alike 4.0 License.}
 %%%   even page.
 %%%    
 \newenvironment{song}[2][]{
+  \global\def\theSong{#2}
   % We want to allow the optional parameter to be either [short] or [long],
   % with a default that can be set in the songbook.  The idea is that a short
   % song only occupies a single page, so if we're in compact mode we don't
@@ -166,14 +174,13 @@ Attribution-Noncommercial-Share Alike 4.0 License.}
     \clearpage                  % onesided (compact)
   \fi
   % tags, creation date, file, etc. want to be put out at the beginning of the lyrics.
-  \global\def\theSong{#2}
   \global\def\theTags{}\global\def\theTiming{}
   \global\def\theCrDate{}\global\def\theKey{}
   \begingroup
   \parskip 0pt plus 1pt
   \parindent 0pt
   \let\\=\verse
-  \obeylines\catcode`\[=13}{
+  \obeylines\catcode`\[=13}{% \end{song}
   \endgroup
   % Clear optional metadata, e.g. performance and description.  Doing it here
   % lets us define them outside the song environment, which we might want to
