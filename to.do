@@ -45,6 +45,15 @@ songs.make, Songs/ improvements:
     There should be a script that does this for a list of files.
 
 TeX improvements
+  @ <a href="http://www.ctan.org/pkg/etoolbox" >CTAN: Package etoolbox</a>
+  o use \newcomand and \newcommand* (opposite of \long) for all definitions.
+  o note that \indent is already defined - it adds paragraph indentation.  otoh, it's not
+    used at all.  \Indent is used only in times-they-are-a-changin (where refrain would
+    work equally well) and kitchen-heroes.  Rename to Refrain and Bridge respectively,
+    define Indented, or, better, define indented with an optional length argument.  Use
+    that with \refrainindent and \bridgeindent
+  @ <a href="https://www.tug.org/texinfohtml/latex2e.html"
+    >LaTeX2e unofficial reference manual (October 2015)</a>
   o filkbook document class
     see <a href="https://www.ctan.org/pkg/songbook" >CTAN: Package songbook</a>
     page styles:  broadside, filkbook.  option compact: no title pages
@@ -53,7 +62,7 @@ TeX improvements
     subtitle and other metadata that prints on the song's first page needs to save as well
     as print, so that it can get duplicated on the title page
   o songbook document class should define \songfile (renamed from file) and add a hook so
-    that \makesongtitle can add it to the TOC.
+    that \makesongtitle can add it to the TOC.  Suppose we could rename it "filk"
     o LaTeX2e for class and package writers:
       https://www.latex-project.org/help/documentation/clsguide.pdf
     o Uppercase style names to distinguish;
@@ -363,6 +372,7 @@ burning:  -> notes copied to tracks.make
     Goes in front of the first line of the song, at which point all of the metadata has
     been seen.  Makes title page if two-sided, puts out subtitle, notice, etc. on main
     page (and title page if present)
+  x marginpar for singer annotations?  -> no; interacts wrong with columns
 
 =now====Tools/to.do=====================================================================>|
 
