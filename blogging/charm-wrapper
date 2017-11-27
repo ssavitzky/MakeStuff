@@ -1,0 +1,44 @@
+#!/bin/bash
+#
+# Post to Dreamwidth using charm -q.
+#  The post comes from STDIN; subject, etc. come from email-like headers.  See:
+#  https://stackoverflow.com/questions/24943170/how-to-parse-http-headers-using-bash
+#  This is a quick hack because I'm too lazy to add the functionality to charm.
+shopt -s extglob # Required to trim whitespace; see below
+
+while IFS=':' read key value; do
+    # trim whitespace in "value"
+    value=${value##+([[:space:]])}; value=${value%%+([[:space:]])}
+
+    [ -z "$key" ] && break	# the separator line between headers and body
+    
+    case "$key" in
+        Subject) SUBJECT="$value"
+                ;;
+        Music) MUSIC="$value"
+                ;;
+        Tags) TAGS="$value"
+              ;;
+	Mood) MOOD="$value"
+	      ;;
+	Picture) PICTURE="$value"
+		 ;;
+	Location) LOCATION="$value"
+		  ;;
+	Access) PERMISSION="$value"
+		;;
+	Permission) PERMISSION="$value"
+		;;
+	
+	"--text follows this line--") break  # Handle emacs's separator
+				    ;;
+    esac
+done
+
+# Default location (for now)  Should really get out of .charmrc
+[ -z "$LOCATION" ] && LOCATION="The Rainbow Caravan's home on Whidbey Island"
+
+# Note for testing.  charm won't let you post two in a row with the same subject!
+charm -q --subject "$SUBJECT" --mood "$MOOD" --pic "$PICTURE"\
+      --tag "$TAGS" --permit "$PERMISSION" --location "$LOCATION"
+
