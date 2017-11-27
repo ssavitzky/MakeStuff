@@ -39,6 +39,10 @@ done
 [ -z "$LOCATION" ] && LOCATION="The Rainbow Caravan's home on Whidbey Island"
 
 # Note for testing.  charm won't let you post two in a row with the same subject!
+# A simple test script:
+# (echo Access: private; echo Subject: test3; echo Tags: test, software; \
+#  echo "--text follows this line--" ; echo test headers) | ljpost
+
 charm -q --subject "$SUBJECT" --mood "$MOOD" --pic "$PICTURE"\
       --tag "$TAGS" --permit "$PERMISSION" --location "$LOCATION"
 
