@@ -5,6 +5,11 @@ cleanup.  More ended up in wibnif.do, and should probably be consolidated here.
 
 =========================================================================
 
+Blogging:
+  o grab posting stuff from Private/Journals/River
+  o use charm to post - make foo.post
+  o probably useful to have a .do -> .html formatter, too.
+
 
 WAV->FLAC
   o Move to a workflow that uses flac instead of wav.  Audacity can export it,
@@ -72,7 +77,7 @@ TeX improvements
     * 0619 multicol for columns.  Redefine the twocolumns environment, for minimum upset.
     * 0619 fancyhdr for headers.
     . clean up obsolete constructs
-    o \comment instead of \ignore (?)
+    o \comment instead of \ignore
     o parametrize page size and layout, e.g. for tablets.  See
       <a href="https://en.wikibooks.org/wiki/LaTeX/Page_Layout#Page_size_for_tablets"
       >LaTeX/Page Layout # Page size for tablets</a> 
@@ -140,7 +145,7 @@ o Need a Perl *module* for extracting song/track info:
     than the ad-hoc if statements used now.
   o should also include functions to generate the list formats common to
     Setlist.cgi and SongInfo.pl
-    
+
   o needs a way to pass a custom format string on the command line
     (probably just perl with $variable as needed)
 
@@ -149,6 +154,8 @@ o Need a Perl *module* for extracting song/track info:
   o when making a TOC, -nogap to make a 0-length pregap for 
     run-together tracks like house-c/demon
   o output filename formatting option similar to grip, etc. 
+
+Consider rewriting TrackInfo etc in Python or Haskell, possibly as a Pandoc plugin.
 
 Tracklist.cgi: like Setlist.cgi but builds album tracklists 
   o could probably merge both into TrackInfo using a format and template.
