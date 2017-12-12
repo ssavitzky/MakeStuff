@@ -1,8 +1,23 @@
-### Makefile for Journals/River
+### MakeStuff plugin for making and posting blog entries.
 #
-#	This would work as a prototype for a generic set of blogging rules.
+#	
 
-ENTRY   := $(DAYPATH)--$(name).html
+### Targets for starting an entry:
+#	draft:	makes a draft entry in the top-level directory.  name-required
+#	entry:	makes an entry directly in the destination directory.  Leaves .draft symlinked
+#		to it; a name isn't required because it defaults to the day.
+#
+# Note: a name defined on the command line overrides a default value in .config.make, e.g. time.
+
+ifdef name
+    ENTRY := $(DAYPATH)--$(name).html
+    ifndef title
+	title := $(name)
+    endif
+else
+    ENTRY := $(DAYPATH).html
+endif
+
 DRAFT	:= $(name).html
 
 HELP  	  := make [entry|draft] name=<shortname> [title="<title>"]
@@ -10,13 +25,18 @@ POST_HELP := make post name=<shortname> [to=<post-url>]
 
 POSTED	:= $(shell date) $(to)
 
-.PHONY: entry draft-required name-required
+# The command to post a file.
+POSTCMD	= ljpost
+
+### Targets
+.PHONY: draft entry draft-or-entry-required name-required post posted
 
 all:: 
 	@echo you probably want '$(HELP)'
 	@echo ... followed by '  $(POST_HELP)'
 
-entry:  name-required $(ENTRY) .draft
+#
+entry:  $(ENTRY) .draft
 
 draft:	name-required $(DRAFT)
 
@@ -42,43 +62,54 @@ name-required:
 	   echo '$$(name) not defined.\n  Use "$(HELP)"'; false; \
 	fi
 
-draft-required:
+draft-or-entry-required:
 	@if [ ! -f $(DRAFT) ] && [ ! -f $(ENTRY) ]; then			\
 	    echo 'You need to "make draft|entry name=$(name)" first'; false;	\
 	fi
 
 # Record a post.
-#	The double use of sed deletes an empty	Posted: header.
-#	Note that git mv automatically adds.
+#	The first use of sed deletes an empty "Posted:" header; it should perhaps
+#	be optional so that a posting log is kept.  It's trivial to get it out of the
+#	git log, though.
+#	Note that git add is not needed because commit with a filename automatically
+#	commits the current state of the file.
 posted:	name-required draft-required
 	-mkdir -p $(MONTHPATH)
-	if [ -f $(DRAFT) ]; then git mv $(DRAFT) $(ENTRY); \
-			    else git add $(ENTRY); fi
+	if [ -f $(DRAFT) ]; then git mv $(DRAFT) $(ENTRY); fi
 	sed -i -e '1,/^$$/ { /^Posted: *$$/ d }' $(ENTRY);
 	sed -i -e '1,/^$$/ s/^$$/Posted:  $(POSTED)\n/' $(ENTRY)
 	git commit -m "posted $(ENTRY)" $(ENTRY)
 
-.PHONY: entry draft post name-required draft-required
+post:	posted
+	$(POSTCMD) $(ENTRY)
 
 # make .draft point to today's entry
 .draft:: $(ENTRY)
 	if [ -L $@ ]; then rm $@; else true; fi
 	ln -s $< $@
 
+report-template:
+	@echo "$$TEMPLATE"
+
+# The default entry template.
+#     A redefinition in .config.make will silently override it
 define TEMPLATE
-Subject: River: $(title)
-Tags: river, 
+Subject: $(title)
+Access: public
+Tags: 
 Music: 
 Mood: 
-Access: public
-Posted: 
-
-<!-- notes: (removed from post)
-  * started: $(ENTRY)
--->
+Location:
 
 <p> 
-</p>
+
 endef
 
 export TEMPLATE
+
+### A little history:
+#
+#	This was derived from the depends.make -- formerly the Makefile -- in one
+#	of my "private" journals.  Specifically, Private/Journals/River was one
+#	of the two "journals" that were used primarily for Livejournal (later
+#	Dreamwidth) entry drafts.
