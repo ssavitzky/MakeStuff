@@ -59,3 +59,4 @@ WAV
 # suggested.txt isn't, but it's been moved to tempered-glass.info
 
 #*.txt
+.well-known/
