@@ -2,10 +2,11 @@
 #
 #	
 
-### Targets for starting an entry:
+### Targets:
 #	draft:	makes a draft entry in the top-level directory.  name-required
-#	entry:	makes an entry directly in the destination directory.  Leaves .draft symlinked
+#	entry:	makes an entry directly in the destination directory.  symlinks .draft
 #		to it; a name isn't required because it defaults to the day.
+#       post:	post an entry.  Define POSTCMD if you have your own posting client.
 #
 # Note: a name defined on the command line overrides a default value in .config.make, e.g. time.
 
@@ -20,8 +21,8 @@ endif
 
 DRAFT	:= $(name).html
 
-HELP  	  := make [entry|draft] name=<shortname> [title="<title>"]
-POST_HELP := make post name=<shortname> [to=<post-url>]
+HELP  	  := make [entry|draft] name=<filename> [title="<title>"]
+POST_HELP := make post name=<filename> [to=<post-url>]
 
 POSTED	:= $(shell date) $(to)
 
@@ -29,11 +30,11 @@ POSTED	:= $(shell date) $(to)
 POSTCMD	= ljpost
 
 ### Targets
-.PHONY: draft entry draft-or-entry-required name-required post posted
+.PHONY: draft entry draft-or-entry-required name-required pre-post post 
 
 all:: 
-	@echo you probably want '$(HELP)'
-	@echo ... followed by '  $(POST_HELP)'
+	@echo To draft an entry, '$(HELP)'
+	@echo ... then to post: ' $(POST_HELP)'
 
 #
 entry:  $(ENTRY) .draft
@@ -73,15 +74,15 @@ draft-or-entry-required:
 #	git log, though.
 #	Note that git add is not needed because commit with a filename automatically
 #	commits the current state of the file.
-posted:	name-required draft-required
+pre-post:	name-required draft-required
 	-mkdir -p $(MONTHPATH)
 	if [ -f $(DRAFT) ]; then git mv $(DRAFT) $(ENTRY); fi
+
+post:	pre-post
+	$(POSTCMD) $(ENTRY)
 	sed -i -e '1,/^$$/ { /^Posted: *$$/ d }' $(ENTRY);
 	sed -i -e '1,/^$$/ s/^$$/Posted:  $(POSTED)\n/' $(ENTRY)
 	git commit -m "posted $(ENTRY)" $(ENTRY)
-
-post:	posted
-	$(POSTCMD) $(ENTRY)
 
 # make .draft point to today's entry
 .draft:: $(ENTRY)
