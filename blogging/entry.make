@@ -1,6 +1,5 @@
 ### MakeStuff plugin for making and posting blog entries.
 #
-#	
 
 ### Targets:
 #	draft:	makes a draft entry in the top-level directory.  name-required
@@ -8,29 +7,33 @@
 #		to it; a name isn't required because it defaults to the day.
 #       post:	post an entry.  Define POSTCMD if you have your own posting client.
 #
-# Note: a name defined on the command line overrides a default value in .config.make, e.g. time.
+# Note: you can define a name on the command line and it will override a default value
+# in .config.make, e.g. time.  You can post an arbitrary file with make post ENTRY=<file>
 
-ifdef name
+ifdef ENTRY
+else
+  ifdef name
     ENTRY := $(DAYPATH)--$(name).html
     ifndef title
 	title := $(name)
     endif
-else
+  else
     ENTRY := $(DAYPATH).html
+  endif
 endif
 
 DRAFT	:= $(name).html
 
 HELP  	  := make [entry|draft] name=<filename> [title="<title>"]
 POST_HELP := make post name=<filename> [to=<post-url>]
-
-POSTED	:= $(shell date) $(to)
+POSTED	  := $(shell date) $(to)
 
 # The command to post a file.
 POSTCMD	= ljpost
 
 ### Targets
-.PHONY: draft entry draft-or-entry-required name-required pre-post post 
+.PHONY: draft entry draft-or-entry-required name-or-entry-required name-required
+.PHONY: pre-post post 
 
 all:: 
 	@echo To draft an entry, '$(HELP)'
@@ -63,24 +66,31 @@ name-required:
 	   echo '$$(name) not defined.\n  Use "$(HELP)"'; false; \
 	fi
 
+name-or-entry-required:
+	@if [ -z $(name) ] && [ ! -f $(ENTRY) ]; then \
+	   echo '$$(name) not defined.\n  Use "$(HELP)"'; false; \
+	fi
+
 draft-or-entry-required:
 	@if [ ! -f $(DRAFT) ] && [ ! -f $(ENTRY) ]; then			\
 	    echo 'You need to "make draft|entry name=$(name)" first'; false;	\
 	fi
 
-# Record a post.
-#	The first use of sed deletes an empty "Posted:" header; it should perhaps
-#	be optional so that a posting log is kept.  It's trivial to get it out of the
-#	git log, though.
-#	Note that git add is not needed because commit with a filename automatically
-#	commits the current state of the file.
-pre-post:	name-required draft-required
-	-mkdir -p $(MONTHPATH)
-	if [ -f $(DRAFT) ]; then git mv $(DRAFT) $(ENTRY); fi
+# pre-post:  move the entry to the correct location (yyyy/mm/dd--name) if necessary
+#	The entry is not committed; that's done in post
+pre-post:	name-or-entry-required draft-or-entry-required
+	if [ ! -f $(ENTRY) ]; then mkdir -p $(MONTHPATH); git mv $(DRAFT) $(ENTRY); fi
 
+# post an entry.
+#	The date is recorded in the entry; it would be easy to modify this to
+#	add the url if POSTCMD was able to return it.
 post:	pre-post
 	$(POSTCMD) $(ENTRY)
-	sed -i -e '1,/^$$/ { /^Posted: *$$/ d }' $(ENTRY);
+	sed -i -e '1,/^$$/ s/^$$/Posted:  $(POSTED)\n/' $(ENTRY)
+	git add $(ENTRY)
+	git commit -m "posted $(ENTRY)"
+
+posted:
 	sed -i -e '1,/^$$/ s/^$$/Posted:  $(POSTED)\n/' $(ENTRY)
 	git commit -m "posted $(ENTRY)" $(ENTRY)
 
