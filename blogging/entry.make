@@ -6,10 +6,12 @@
 #	entry:	makes an entry directly in the destination directory.  symlinks .draft
 #		to it; a name isn't required because it defaults to the day.
 #       post:	post an entry.  Define POSTCMD if you have your own posting client.
+#		if name isn't defined, uses the link in .draft if not posted yet.
 #
 # Note: you can define a name on the command line and it will override a default value
 # in .config.make, e.g. time.  You can post an arbitrary file with make post ENTRY=<file>
 
+draft_if_present := $(shell readlink .draft)
 ifdef ENTRY
 else
   ifdef name
@@ -18,11 +20,13 @@ else
 	title := $(name)
     endif
   else
-    ENTRY := $(DAYPATH).html
+    ENTRY := $(shell readlink .draft)
   endif
 endif
 
-DRAFT	:= $(name).html
+ifdef name
+  DRAFT	:= $(name).html
+endif
 
 HELP  	  := make [entry|draft] name=<filename> [title="<title>"]
 POST_HELP := make post name=<filename> [to=<post-url>]
@@ -89,6 +93,7 @@ post:	pre-post
 	sed -i -e '1,/^$$/ s/^$$/Posted:  $(POSTED)\n/' $(ENTRY)
 	git add $(ENTRY)
 	git commit -m "posted $(ENTRY)"
+	rm -f .draft
 
 posted:
 	sed -i -e '1,/^$$/ s/^$$/Posted:  $(POSTED)\n/' $(ENTRY)
@@ -98,6 +103,9 @@ posted:
 .draft:: $(ENTRY)
 	if [ -L $@ ]; then rm $@; else true; fi
 	ln -s $< $@
+
+report-vars::
+	echo name=$(NAME) ENTRY=$(ENTRY) DRAFT=$(DRAFT)
 
 report-template:
 	@echo "$$TEMPLATE"
