@@ -118,6 +118,7 @@ Tags:
 Music: 
 Mood: 
 Location:
+Picture:
 
 <p> 
 
