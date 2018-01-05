@@ -148,11 +148,11 @@ MUSIC_D_INCLUDES := $(hasLyrics) $(hasSongs) $(hasTracks)
 #	The lists are defined here so that they can be appended to 
 varsLine1  := SHELL MYNAME HOST
 varsLine2  := BASEREL TOOLREL
-reportVars := BASEDIR TOOLDIR DOTDOT SITEDIR ALLDIRS SUBDIRS \
+reportVars := $(reportVars) BASEDIR TOOLDIR DOTDOT SITEDIR ALLDIRS SUBDIRS \
 			COLLDIRS DATEDIRS ITEMDIRS \
 	   		GITDIRS GIT_REPO hasLyrics hasSongs hasTracks  MUSIC_D \
 			MUSIC_D_INCLUDES
-reportStrs := COMMIT_MSG
+reportStrs := $(reportStrs) COMMIT_MSG
 
 
 ### Templates

@@ -77,5 +77,18 @@ deploy: all pre-deploy deploy-this
 #
 include $(MFDIR)/targets.make
 -include .depends.make depends.make
+
+### report-vars - list important make variables
+#   Down at the end in case any of the lists needs to get appended to.
+
+.PHONY: report-vars
+filteredVars = $(foreach v, $(reportVars), $(if $($(v)), $(v)))
+filteredStrs = $(foreach v, $(reportStrs), $(if $($(v)), $(v)))
+
+report-vars::
+	@echo "" $(foreach v,$(varsLine1), $(v)=$($(v)) )
+	@echo "" $(foreach v,$(varsLine2), $(v)=$($(v)) )
+	@echo -n "" $(foreach v,$(filteredVars),$(v)=$($(v)) "\n")
+	@echo "" $(foreach v,$(filteredStrs),$(v)=\"$($(v))\" "\n")
 #
 ###### End of Tools/Makefile.  Thanks for playing. ######

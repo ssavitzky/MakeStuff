@@ -104,8 +104,7 @@ posted:
 	if [ -L $@ ]; then rm $@; else true; fi
 	ln -s $< $@
 
-report-vars::
-	echo name=$(NAME) ENTRY=$(ENTRY) DRAFT=$(DRAFT)
+reportVars := $(reportVars) name ENTRY DRAFT
 
 report-template:
 	@echo "$$TEMPLATE"

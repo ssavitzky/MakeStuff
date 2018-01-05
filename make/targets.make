@@ -207,17 +207,4 @@ ifdef SITEDIR
   endif
 endif
 
-### report-vars - list important make variables
-#   Down at the end in case any of the lists needs to get appended to.
-
-.PHONY: report-vars
-filteredVars := $(foreach v, $(reportVars), $(if $($(v)), $(v)))
-filteredStrs := $(foreach v, $(reportStrs), $(if $($(v)), $(v)))
-
-report-vars::
-	@echo "" $(foreach v,$(varsLine1), $(v)=$($(v)) )
-	@echo "" $(foreach v,$(varsLine2), $(v)=$($(v)) )
-	@echo -n "" $(foreach v,$(filteredVars),$(v)=$($(v)) "\n")
-	@echo "" $(foreach v,$(filteredStrs),$(v)=\"$($(v))\" "\n")
-
 ###### end of targets.make ######
