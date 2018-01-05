@@ -48,6 +48,11 @@ while IFS=':' read key value; do
     esac
 done
 
+# posts with local access don't get posted
+# This is in contrast to "private", which get posted but are only visible to the user
+
+if [ "local" = "$PERMISSION" ]; then exit fi
+				     
 # Note for testing.  charm won't let you post two in a row with the same subject!
 # A simple test script:
 # (echo Access: private; echo Subject: test3; echo Tags: test, software; \
