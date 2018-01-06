@@ -1,26 +1,31 @@
 ### MakeStuff plugin for making and posting blog entries.
 #
+# Usage:  include $(TOOLDIR)/blogging/entry.make
 
 ### Targets:
 #	draft:	makes a draft entry in the top-level directory.  name-required
 #	entry:	makes an entry directly in the destination directory.  symlinks .draft
-#		to it; a name isn't required because it defaults to the day.
+#		to it so that you can post without specifying a name.
 #       post:	post an entry.  Define POSTCMD if you have your own posting client.
-#		if name isn't defined, uses the link in .draft if not posted yet.
+#		if name isn't defined, uses the link in .draft
 #
-# Note: you can define a name on the command line and it will override a default value
-# in .config.make, e.g. time.  You can post an arbitrary file with make post ENTRY=<file>
+# Note: You can post an arbitrary file with make post ENTRY=<file>
+#	A default name can be defined in .config.make and overridden on the command line.
+#	FIXME:  override the default name if .draft exists.
 
-draft_if_present := $(shell readlink .draft)
-ifdef ENTRY
-else
+linked_draft := $(shell readlink .draft)
+ifndef ENTRY
   ifdef name
     ENTRY := $(DAYPATH)--$(name).html
     ifndef title
 	title := $(name)
     endif
+  else ifneq ($(linked_draft),)
+    ENTRY := $(linked_draft)
+  else ifeq ($(DEFAULT_NAME),)
+      ENTRY := $(DAYPATH)
   else
-    ENTRY := $(shell readlink .draft)
+      ENTRY := $(DAYPATH)--$(DEFAULT_NAME).html
   endif
 endif
 
@@ -35,7 +40,8 @@ POSTED	  := $(shell date) $(to)
 # The command to post a file.
 POSTCMD	= ljpost
 
-### Targets
+### Targets ###
+
 .PHONY: draft entry draft-or-entry-required name-or-entry-required name-required
 .PHONY: pre-post post 
 
@@ -43,25 +49,26 @@ all::
 	@echo To draft an entry, '$(HELP)'
 	@echo ... then to post: ' $(POST_HELP)'
 
+## entry:  make an entry for today, and link .draft
+#	The commit gives us a record of the starting time.
+#	the subject is, by default, today's date.
+#	Leaves .draft a symlink to the entry; name= is not required for posting.
 #
 entry:  $(ENTRY) .draft
 
+## draft:  make a draft in the top level.  No link is needed.
+#	post with "make post name=<filename>"; name is required in this case
+#
 draft:	name-required $(DRAFT)
 
-# make an entry for today
-#	The commit gives us a record of the starting time.
-#	the subject is, by default, today's date.
-#
 $(ENTRY):
 	mkdir -p $(MONTHPATH)
-	@echo "$$TEMPLATE" > $@
+	@echo "$$$(PFX)TEMPLATE" > $@
 	git add $@
 	git commit -m "$(MYNAME): started entry $(ENTRY)" $@
 
-# make a draft in the top level.  No link is needed.
-#	post with "make post name=<filename>"
 $(DRAFT):
-	@echo "$$TEMPLATE" > $@
+	@echo "$$$(PFX)TEMPLATE" > $@
 	git add $@
 	git commit -m "$(MYNAME): started entry $(ENTRY)" $@
 
