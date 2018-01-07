@@ -9,6 +9,8 @@
 if [ "-n" == "$1" ]; then
     ACTION=no_action
     shift
+else
+    ACTION=""
 fi
 
 no_action () {
@@ -16,9 +18,9 @@ no_action () {
     cat
 }
 
-{
 shopt -s extglob # Required to trim whitespace; see below
 
+{
 while IFS=':' read key value; do
     # trim whitespace in "value"
     value=${value##+([[:space:]])}; value=${value%%+([[:space:]])}
@@ -51,7 +53,7 @@ done
 # posts with local access don't get posted
 # This is in contrast to "private", which get posted but are only visible to the user
 
-if [ "local" = "$PERMISSION" ]; then exit fi
+if [ "local" == "$PERMISSION" ]; then cat > /dev/null; exit; fi
 				     
 # Note for testing.  charm won't let you post two in a row with the same subject!
 # A simple test script:
