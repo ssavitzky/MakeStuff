@@ -7,25 +7,30 @@
 #	entry:	makes an entry directly in the destination directory.  symlinks .draft
 #		to it so that you can post without specifying a name.
 #       post:	post an entry.  Define POSTCMD if you have your own posting client.
-#		if name isn't defined, uses the link in .draft
+#		if name isn't defined, uses the link in .draft.
 #
 # Note: You can post an arbitrary file with make post ENTRY=<file>
 #	A default name can be defined in .config.make and overridden on the command line.
-#	FIXME:  override the default name if .draft exists.
+#
+# Tweakable Parameters:
+#	DEFAULT_NAME - if defined, it's used if name is not defined on the command line
+#	POST_ARCHIVE - if defined, this is the path to the yyyy/... post archive directories.
+#		       Typically this will be ../ (slash required)
+#	PFX	     - prepended to the template name
 
 linked_draft := $(shell readlink .draft)
 ifndef ENTRY
   ifdef name
-    ENTRY := $(DAYPATH)--$(name).html
+    ENTRY := $(POST_ARCHIVE)$(DAYPATH)--$(name).html
     ifndef title
 	title := $(name)
     endif
   else ifneq ($(linked_draft),)
     ENTRY := $(linked_draft)
   else ifeq ($(DEFAULT_NAME),)
-      ENTRY := $(DAYPATH)
+      ENTRY := $(POST_ARCHIVE)$(DAYPATH)
   else
-      ENTRY := $(DAYPATH)--$(DEFAULT_NAME).html
+      ENTRY := $(POST_ARCHIVE)$(DAYPATH)--$(DEFAULT_NAME).html
   endif
 endif
 
@@ -34,7 +39,7 @@ ifdef name
 endif
 
 HELP  	  := make [entry|draft] name=<filename> [title="<title>"]
-POST_HELP := make post name=<filename> [to=<post-url>]
+POST_HELP := make post [name=<filename>] [to=<post-url>]
 POSTED	  := $(shell date) $(to)
 
 # The command to post a file.
@@ -83,7 +88,7 @@ name-or-entry-required:
 	fi
 
 draft-or-entry-required:
-	@if [ ! -f $(DRAFT) ] && [ ! -f $(ENTRY) ]; then			\
+	@if [ ! -f $(DRAFT) ] && [ ! -e $(ENTRY) ]; then			\
 	    echo 'You need to "make draft|entry name=$(name)" first'; false;	\
 	fi
 
