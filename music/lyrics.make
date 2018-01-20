@@ -136,8 +136,10 @@ ZPRINT = $(ZPDF)
 TEXINPUTS := .:$(TEXDIR):$(TEXINPUTS)
 export TEXINPUTS
 SONG_PREAMBLE = '\documentclass[$(SIZE)letterpaper]{article}'			\
+		'\usepackage[utf8]{inputenc}'                                   \
 		'\usepackage{song,zingers,zongbook}'
 SONG_LOOSELEAF= '\documentclass[$(SIZE)letterpaper,twoside]{article}'		\
+		'\usepackage[utf8]{inputenc}'                                   \
 		'\usepackage{song,zingers,zongbook}'
 
 .SUFFIX: flk
