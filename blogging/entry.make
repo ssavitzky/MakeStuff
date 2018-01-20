@@ -1,26 +1,36 @@
 ### MakeStuff plugin for making and posting blog entries.
 #
+# Usage:  include $(TOOLDIR)/blogging/entry.make
 
 ### Targets:
 #	draft:	makes a draft entry in the top-level directory.  name-required
 #	entry:	makes an entry directly in the destination directory.  symlinks .draft
-#		to it; a name isn't required because it defaults to the day.
+#		to it so that you can post without specifying a name.
 #       post:	post an entry.  Define POSTCMD if you have your own posting client.
-#		if name isn't defined, uses the link in .draft if not posted yet.
+#		if name isn't defined, uses the link in .draft.
 #
-# Note: you can define a name on the command line and it will override a default value
-# in .config.make, e.g. time.  You can post an arbitrary file with make post ENTRY=<file>
+# Note: You can post an arbitrary file with make post ENTRY=<file>
+#	A default name can be defined in .config.make and overridden on the command line.
+#
+# Tweakable Parameters:
+#	DEFAULT_NAME - if defined, it's used if name is not defined on the command line
+#	POST_ARCHIVE - if defined, this is the path to the yyyy/... post archive directories.
+#		       Typically this will be ../ (slash required)
+#	PFX	     - prepended to the template name
 
-draft_if_present := $(shell readlink .draft)
-ifdef ENTRY
-else
+linked_draft := $(shell readlink .draft)
+ifndef ENTRY
   ifdef name
-    ENTRY := $(DAYPATH)--$(name).html
+    ENTRY := $(POST_ARCHIVE)$(DAYPATH)--$(name).html
     ifndef title
 	title := $(name)
     endif
+  else ifneq ($(linked_draft),)
+    ENTRY := $(linked_draft)
+  else ifeq ($(DEFAULT_NAME),)
+      ENTRY := $(POST_ARCHIVE)$(DAYPATH)
   else
-    ENTRY := $(shell readlink .draft)
+      ENTRY := $(POST_ARCHIVE)$(DAYPATH)--$(DEFAULT_NAME).html
   endif
 endif
 
@@ -29,13 +39,14 @@ ifdef name
 endif
 
 HELP  	  := make [entry|draft] name=<filename> [title="<title>"]
-POST_HELP := make post name=<filename> [to=<post-url>]
+POST_HELP := make post [name=<filename>] [to=<post-url>]
 POSTED	  := $(shell date) $(to)
 
 # The command to post a file.
 POSTCMD	= ljpost
 
-### Targets
+### Targets ###
+
 .PHONY: draft entry draft-or-entry-required name-or-entry-required name-required
 .PHONY: pre-post post 
 
@@ -43,25 +54,26 @@ all::
 	@echo To draft an entry, '$(HELP)'
 	@echo ... then to post: ' $(POST_HELP)'
 
+## entry:  make an entry for today, and link .draft
+#	The commit gives us a record of the starting time.
+#	the subject is, by default, today's date.
+#	Leaves .draft a symlink to the entry; name= is not required for posting.
 #
 entry:  $(ENTRY) .draft
 
+## draft:  make a draft in the top level.  No link is needed.
+#	post with "make post name=<filename>"; name is required in this case
+#
 draft:	name-required $(DRAFT)
 
-# make an entry for today
-#	The commit gives us a record of the starting time.
-#	the subject is, by default, today's date.
-#
 $(ENTRY):
 	mkdir -p $(MONTHPATH)
-	@echo "$$TEMPLATE" > $@
+	@echo "$$$(PFX)TEMPLATE" > $@
 	git add $@
 	git commit -m "$(MYNAME): started entry $(ENTRY)" $@
 
-# make a draft in the top level.  No link is needed.
-#	post with "make post name=<filename>"
 $(DRAFT):
-	@echo "$$TEMPLATE" > $@
+	@echo "$$$(PFX)TEMPLATE" > $@
 	git add $@
 	git commit -m "$(MYNAME): started entry $(ENTRY)" $@
 
@@ -76,7 +88,7 @@ name-or-entry-required:
 	fi
 
 draft-or-entry-required:
-	@if [ ! -f $(DRAFT) ] && [ ! -f $(ENTRY) ]; then			\
+	@if [ ! -f $(DRAFT) ] && [ ! -e $(ENTRY) ]; then			\
 	    echo 'You need to "make draft|entry name=$(name)" first'; false;	\
 	fi
 
@@ -104,8 +116,7 @@ posted:
 	if [ -L $@ ]; then rm $@; else true; fi
 	ln -s $< $@
 
-report-vars::
-	echo name=$(NAME) ENTRY=$(ENTRY) DRAFT=$(DRAFT)
+reportVars := $(reportVars) name ENTRY DRAFT
 
 report-template:
 	@echo "$$TEMPLATE"
@@ -119,6 +130,7 @@ Tags:
 Music: 
 Mood: 
 Location:
+Picture:
 
 <p> 
 
