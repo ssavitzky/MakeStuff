@@ -14,6 +14,7 @@ TEXDIR	  = $(TOOLDIR)/TeX
 LATEX	  = latex -file-line-error
 PDFLATEX  = pdflatex -file-line-error
 SORT_BY_TITLE = $(TEXDIR)/sort-by-title
+PRINT_DUPLEX = lp -o sides=two-sided-long-edge
 
 ### Song lists:
 #
@@ -219,16 +220,19 @@ list-songs:
 #	@for f in $(PS) ; do lpr $$f ; done 
 
 # Songbook: print SONGS as individual files
-songbook: $(PDF) 
-	lp $(PDF)
+print-songbook: $(PDF) 
+	$(PRINT_DUPLEX) $(PDF)
 
 # Longbook: print ALLSONGS as individual files
-longbook: $(ALLPDF) 
-	lp $(ALLPDF)
+print-longbook: $(ALLPDF) 
+	$(PRINT_DUPLEX) $(ALLPDF)
 
-# Zongbook: print ZSONGS as individual files
-zongbook: $(ZPDF) 
-	lp $(ZPDF)
+# Zongbook: print zongbook.pdf
+print-zongbook: zongbook.pdf
+	$(PRINT_DUPLEX) $(zongbook.pdf)
+
+# zongbook.pdf depends on 
+zongbook.pdf: $(ZSONGS)
 
 # songlists:
 

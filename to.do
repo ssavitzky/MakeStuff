@@ -22,6 +22,9 @@ WAV->FLAC
   o upgrade makefiles in older record directories.
 
 songs.make, Songs/ improvements:
+  o BUG [S] puts a spurious L on the (unnecessary) first page of short songs.
+  o BUG: zongbook.pdf should depend on all .flk files
+  o BUG: printing doesn't force two-sided.
   ? lyrics--*.pdf probably not worth the trouble in most cases.
   o make */Songs from */Lyrics* -- use tags or subdirs to identify which ones get visible
     lyrics.  Pages want to be there even if the lyrics are hidden, because the
@@ -381,6 +384,14 @@ burning:  -> notes copied to tracks.make
     page (and title page if present)
   x marginpar for singer annotations?  -> no; interacts wrong with columns
 
+2018
+====
+
+  * 0121 BUG: make zongbook prints in looseleaf format; one would expect it to make and
+    print zongbook.pdf.
+  ~ 0121 might be a good idea to ask for confirmation before printing a songbook
+    -> change targets to print-songbook etc.
+    
 =now====Tools/to.do=====================================================================>|
 
 Local Variables:
