@@ -340,9 +340,10 @@ Attribution-Noncommercial-Share Alike 4.0 License.}
 %%%	turn off \documentstyle and \begin{document}...\end{document}.
 %%%
 \def\file#1{\newpage\begingroup
-\def\theFile{#1}
+  \def\theFile{#1}
+  \def\thisPage{\thepage}
 \input{#1}
-\addcontentsline{toc}{Song}{\hbox{{\tt \hbox to 7em{\theFile\hss}}\hbox to 2em{\hss\theTiming}\;\hbox{\theSong\hss}}}
+\addcontentsline{toc}{Song}{\hbox{\hbox to 2em{\hss\thisPage}\hbox to 3em{\hss\theTiming}\;\hbox{\theSong\hss}}}
 \endgroup}
 %
 % \theFile defaults to \jobname, so that it doesn't have to be provided in
