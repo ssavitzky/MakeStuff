@@ -22,8 +22,6 @@ WAV->FLAC
   o upgrade makefiles in older record directories.
 
 songs.make, Songs/ improvements:
-  o BUG [S] puts a spurious L on the (unnecessary) first page of short songs.
-  o BUG: zongbook.pdf should depend on all .flk files
   o BUG: printing doesn't force two-sided.
   ? lyrics--*.pdf probably not worth the trouble in most cases.
   o make */Songs from */Lyrics* -- use tags or subdirs to identify which ones get visible
@@ -387,10 +385,16 @@ burning:  -> notes copied to tracks.make
 2018
 ====
 
-  * 0121 BUG: make zongbook prints in looseleaf format; one would expect it to make and
+0121
+  * BUG: make zongbook prints in looseleaf format; one would expect it to make and
     print zongbook.pdf.
-  ~ 0121 might be a good idea to ask for confirmation before printing a songbook
+  ~ might be a good idea to ask for confirmation before printing a songbook
     -> change targets to print-songbook etc.
+  * BUG: zongbook.pdf should depend on all .flk files
+
+0122
+  * BUG [S] puts a spurious L on the (unnecessary) first page of short songs.
+    -> was using \if to compare expansions; should have used \ifx
     
 =now====Tools/to.do=====================================================================>|
 
