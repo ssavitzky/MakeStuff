@@ -162,7 +162,7 @@ Attribution-Noncommercial-Share Alike 4.0 License.}
   \def\song@length{#1\song@default@length} % \if only sees first character.
   \if@twoside
     \ifcompact                  % compact formats
-      \if\short@length\song@length
+      \ifx\short@length\song@length
          \clearpage             % compact: short songs can start anywhere
       \else
          \cleardoublepageleft   % compact: longer songs start on even (left) page
