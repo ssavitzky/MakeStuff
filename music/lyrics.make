@@ -178,12 +178,50 @@ all::
 	@echo building PDF files
 all::	$(PRINT)
 
+# zongbook.pdf depends on all the files it references 
+zongbook.pdf: zongbook.tex $(ZONGS)
+
+
+# songlists:
+
+songlist.txt: $(ALLSONGS) Makefile
+	@echo building $@ from ALLSONGS
+	@$(TOOLDIR)/Setlist.cgi $(ALLSONGS) > $@
+
 ### Lists:
 
 list-names:
 	@echo $(NAMES)
 list-songs: 
 	@echo $(SONGBOOK)
+
+.PHONY: list-missing list-long list-short
+
+# List the songs that are missing from zongbook.tex
+#
+list-missing:
+	for f in *.flk; do \
+		grep -q $$f zongbook.tex || echo $$f missing from zongbook.tex ;\
+	done
+
+# List long songs, i.e. songs that will require two facing pages when printed
+#
+list-long:
+	for f in *.pdf; do g=$$(basename $$f .pdf); \
+		echo $$f $$(pdfinfo $$f | grep Pages) \
+		     $$(if head -1 $$g.flk|grep -q '\[L'; \
+			then :; else echo unmarked; fi);\
+	done | egrep '[3-6]'
+
+# List short songs, for which lyrics fit on one page
+#	We test for 2 pages because the stand-along PDFs always have a title page.
+#
+list-short:
+	for f in *.pdf; do g=$$(basename $$f .pdf); \
+		echo $$f $$(pdfinfo $$f|grep Pages) \
+		     $$(if head -1 $$g.flk | grep -q '\[S'; \
+			then :; else echo unmarked; fi);\
+	done | grep 2
 
 ### Printing.
 #	The following recipes print the individual PDF files that make
@@ -227,22 +265,18 @@ print-songbook: $(PDF)
 print-longbook: $(ALLPDF) 
 	$(PRINT_DUPLEX) $(ALLPDF)
 
-# Zongbook: print zongbook.pdf
+# Zongbook: print zongbook.pdf, which is a properly-formatted book.
+#
+#	zongbook.tex should have a \file tag for every song you want
+#	to print.  The easy way to make it is to add every song and
+#	comment out the ones you don't want.
+#
 print-zongbook: zongbook.pdf
 	$(PRINT_DUPLEX) $(zongbook.pdf)
 
-# zongbook.pdf depends on 
-zongbook.pdf: zongbook.tex $(ZONGS)
-
-# songlists:
-
-songlist.txt:$(ALLSONGS) Makefile
-	@echo building $@ from ALLSONGS
-	@$(TOOLDIR)/Setlist.cgi $(ALLSONGS) > $@
-
-### filkbook: make a printed songbook with everything in it.
-filkbook: $(ALLPS)
-	lp $(ALLPS)
+# all: make a printed songbook with everything in it.
+print-all: $(ALLPS)
+	$(PRINT_DUPLEX) $(ALLPS)
 
 ### Cleanup:
 
