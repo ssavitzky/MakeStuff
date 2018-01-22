@@ -232,7 +232,7 @@ print-zongbook: zongbook.pdf
 	$(PRINT_DUPLEX) $(zongbook.pdf)
 
 # zongbook.pdf depends on 
-zongbook.pdf: $(ZSONGS)
+zongbook.pdf: zongbook.tex $(ZONGS)
 
 # songlists:
 
