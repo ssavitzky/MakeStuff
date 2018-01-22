@@ -181,21 +181,15 @@ all::	$(PRINT)
 # zongbook.pdf depends on all the files it references 
 zongbook.pdf: zongbook.tex $(ZONGS)
 
-
-# songlists:
-
-songlist.txt: $(ALLSONGS) Makefile
-	@echo building $@ from ALLSONGS
-	@$(TOOLDIR)/Setlist.cgi $(ALLSONGS) > $@
-
+###
 ### Lists:
+###
+.PHONY: list-names list-songs list-missing list-long list-short
 
 list-names:
 	@echo $(NAMES)
 list-songs: 
 	@echo $(SONGBOOK)
-
-.PHONY: list-missing list-long list-short
 
 # List the songs that are missing from zongbook.tex
 #
@@ -257,13 +251,21 @@ list-short:
 #   Note that in some cases the following might work better:
 #	@for f in $(PS) ; do lpr $$f ; done 
 
-# Songbook: print SONGS as individual files
+# print-songbook: print SONGS as individual files
 print-songbook: $(PDF) 
 	$(PRINT_DUPLEX) $(PDF)
 
-# Longbook: print ALLSONGS as individual files
+# print-longbook: print ALLSONGS as individual files
 print-longbook: $(ALLPDF) 
 	$(PRINT_DUPLEX) $(ALLPDF)
+
+# print-looseleaf -- all the songs in zongbook printed separately
+#
+#	zongbook is supposed to contain \file entriues for all the songs
+#	that we actually want
+#
+print-looseleaf: $(ZONGS)
+	$(PRINT_DUPLEX) $(ZONGS)
 
 # Zongbook: print zongbook.pdf, which is a properly-formatted book.
 #
