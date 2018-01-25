@@ -110,7 +110,7 @@ HAVE_ZONGBOOK := $(wildcard zongbook.tex)
 # This really ought to go into a file.
 
 ZONGS := $(shell [ -e zongbook.tex ] && 	\
-		 perl -n -e '/file\{(.+\.flk)/ && print "$$1\n"' zongbook.tex)
+		 perl -n -e '/^\\file\{(.+\.flk)/ && print "$$1\n"' zongbook.tex)
 ZONGBOOK := $(filter-out $(WIP), $(ZONGS))
 
 # Compute the song lists by filtering ZSONGS
@@ -201,18 +201,19 @@ list-missing:
 # List long songs, i.e. songs that will require two facing pages when printed
 #
 list-long:
-	for f in *.pdf; do g=$$(basename $$f .pdf); \
-		echo $$f $$(pdfinfo $$f | grep Pages) \
+	@for f in *.pdf; do g=$$(basename $$f .pdf); \
+		echo $$g.flk $$(pdfinfo $$f | grep Pages) \
 		     $$(if head -1 $$g.flk|grep -q '\[L'; \
 			then :; else echo unmarked; fi);\
 	done | egrep '[3-6]'
 
 # List short songs, for which lyrics fit on one page
 #	We test for 2 pages because the stand-along PDFs always have a title page.
+#	Only bother with songs that will actually be printed.
 #
 list-short:
-	for f in *.pdf; do g=$$(basename $$f .pdf); \
-		echo $$f $$(pdfinfo $$f|grep Pages) \
+	@for f in $(ZPDF); do g=$$(basename $$f .pdf); \
+		echo $$g.flk $$(pdfinfo $$f|grep Pages) \
 		     $$(if head -1 $$g.flk | grep -q '\[S'; \
 			then :; else echo unmarked; fi);\
 	done | grep 2
@@ -261,7 +262,7 @@ print-longbook: $(ALLPDF)
 
 # print-looseleaf -- all the songs in zongbook printed separately
 #
-#	zongbook is supposed to contain \file entriues for all the songs
+#	zongbook is supposed to contain \file entries for all the songs
 #	that we actually want
 #
 print-looseleaf: $(ZONGS)
