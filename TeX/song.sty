@@ -159,7 +159,15 @@ Attribution-Noncommercial-Share Alike 4.0 License.}
   % with a default that can be set in the songbook.  The idea is that a short
   % song only occupies a single page, so if we're in compact mode we don't
   % care whether it's on an odd or even page.
-  \def\song@length{#1\song@default@length} % \if only sees first character.
+  \def\@empty{}
+  \def\song@length{#1}
+  \ifx\song@length\empty
+    \if\song@default@length\short@length
+       \def\song@length{S}
+    \else
+       \def\song@length{L}
+    \fi
+  \fi
   \if@twoside
     \ifcompact                  % compact formats
       \ifx\short@length\song@length
