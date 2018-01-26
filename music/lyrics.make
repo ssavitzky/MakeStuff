@@ -179,7 +179,7 @@ all::
 all::	$(PRINT)
 
 # zongbook.pdf depends on all the files it references 
-zongbook.pdf: zongbook.tex $(ZONGS)
+zongbook.pdf: zongbook.tex $(ZONGS) $(TEXDIR)/song.sty
 
 ###
 ### Lists:
