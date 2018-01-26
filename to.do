@@ -6,10 +6,9 @@ cleanup.  More ended up in wibnif.do, and should probably be consolidated here.
 =========================================================================
 
 Blogging:
-  o grab posting stuff from Private/Journals/River
-  o use charm to post - make foo.post
   o probably useful to have a .do -> .html formatter, too.
-
+  o be useful to have targets for both html and markdown, or else a command-line variable
+    maybe ff for file format.  ff=html (default), ff=md, etc.  ff is more versatile.
 
 WAV->FLAC
   o Move to a workflow that uses flac instead of wav.  Audacity can export it,
@@ -22,7 +21,7 @@ WAV->FLAC
   o upgrade makefiles in older record directories.
 
 songs.make, Songs/ improvements:
-  o BUG: printing doesn't force two-sided.
+  o BUG: etoolbox.sty not found on Dreamhost.
   ? lyrics--*.pdf probably not worth the trouble in most cases.
   o make */Songs from */Lyrics* -- use tags or subdirs to identify which ones get visible
     lyrics.  Pages want to be there even if the lyrics are hidden, because the
@@ -382,6 +381,11 @@ burning:  -> notes copied to tracks.make
     page (and title page if present)
   x marginpar for singer annotations?  -> no; interacts wrong with columns
 
+1211
+  * grab posting stuff from Private/Journals/River
+  * use charm to post - make foo.post
+  : note that the ljpost wrapper for charm is in Honu/bin
+  
 2018
 ====
 
@@ -391,6 +395,7 @@ burning:  -> notes copied to tracks.make
   ~ might be a good idea to ask for confirmation before printing a songbook
     -> change targets to print-songbook etc.
   * BUG: zongbook.pdf should depend on all .flk files
+  * BUG: printing doesn't force two-sided.
 
 0122
   * BUG [S] puts a spurious L on the (unnecessary) first page of short songs.
