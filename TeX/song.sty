@@ -343,7 +343,8 @@ Attribution-Noncommercial-Share Alike 4.0 License.}
   \def\theFile{#1}
   \def\thisPage{\thepage}
 \input{#1}
-\addcontentsline{toc}{Song}{\hbox{\hbox to 2em{\hss\thisPage}\hbox to 3em{\hss\theTiming}\;\hbox{\theSong\hss}}}
+\addcontentsline{toc}{Song}{\hbox{\hbox to 2em{\hss\thisPage}%
+    \hbox to 3em{\hss\theTiming}\;\hbox{\theSong\hss}}}
 \endgroup}
 %
 % \theFile defaults to \jobname, so that it doesn't have to be provided in
