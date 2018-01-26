@@ -260,26 +260,23 @@ print-songbook: $(PDF)
 print-longbook: $(ALLPDF) 
 	$(PRINT_DUPLEX) $(ALLPDF)
 
-# print-looseleaf -- all the songs in zongbook printed separately
-#
-#	zongbook is supposed to contain \file entries for all the songs
-#	that we actually want
-#
-print-looseleaf: $(ZONGS)
-	$(PRINT_DUPLEX) $(ZONGS)
-
 # Zongbook: print zongbook.pdf, which is a properly-formatted book.
 #
 #	zongbook.tex should have a \file tag for every song you want
 #	to print.  The easy way to make it is to add every song and
-#	comment out the ones you don't want.
+#	comment out the ones you don't want; that makes it easy to
+#	verify that you haven't left anything out.  Use list-missing.
 #
 print-zongbook: zongbook.pdf
-	$(PRINT_DUPLEX) $(zongbook.pdf)
+	$(PRINT_DUPLEX) $<
 
-# all: make a printed songbook with everything in it.
-print-all: $(ALLPS)
-	$(PRINT_DUPLEX) $(ALLPS)
+# print-zongs -- all the songs in zongbook printed separately
+#
+#	zongbook is supposed to contain \file entries for all the songs
+#	that we actually want
+#
+print-zongs: $(ZONGS)
+	$(PRINT_DUPLEX) $(ZONGS)
 
 ### Cleanup:
 
