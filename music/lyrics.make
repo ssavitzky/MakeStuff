@@ -5,7 +5,7 @@
 #   (see songs.make)
 
 # 12pt is too big for: crypto.flk stuff.flk
-SIZE = 12pt,
+SIZE = fontsize=14pt,
 #SIZE = 
 
 
