@@ -135,11 +135,15 @@ ZPRINT = $(ZPDF)
 #
 TEXINPUTS := .:$(TEXDIR):$(TEXINPUTS)
 export TEXINPUTS
+# heavy microtype shrinking, with 200 it can pull in up to two short
+# words which would hit the next line otherwise.
 SONG_PREAMBLE = '\documentclass[$(SIZE)a4paper,enabledeprecatedfontcommands]{scrartcl}'			\
 		'\usepackage[utf8]{inputenc}'                                   \
+		'\usepackage[protrusion=true,expansion=true,tracking=true,stretch=10,shrink=200]{microtype}'                                   \
 		'\usepackage{song,zingers,zongbook}'
 SONG_LOOSELEAF= '\documentclass[$(SIZE)a4paper,enabledeprecatedfontcommands]{scrartcl}'		\
 		'\usepackage[utf8]{inputenc}'                                   \
+		'\usepackage[protrusion=true,expansion=true,tracking=true,stretch=10,shrink=200]{microtype}'                                   \
 		'\usepackage{song,zingers,zongbook}'
 
 .SUFFIX: flk
