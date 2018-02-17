@@ -65,7 +65,7 @@ INDEX = index.pl
 #	foo.tex every time foo.flk changes.  But it's much simpler.
 #	The style stuff should be in a header file.
 .flk.tex:	
-	echo '\documentstyle[fontsize=14pt,a4paper,enabledeprecatedfontcommands,song,twocolumns,zongbook]{scrartcl}' > $@
+	echo '\documentstyle[fontsize=12pt,a4paper,enabledeprecatedfontcommands,song,twocolumns,zongbook]{scrartcl}' > $@
 	echo '\begin{document}'		>> $@
 	echo '\file{'$*.flk'}'		>> $@
 	echo '\end{document}'		>> $@
