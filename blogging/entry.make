@@ -67,7 +67,7 @@ entry:  $(ENTRY) .draft
 draft:	name-required $(DRAFT)
 
 $(ENTRY):
-	mkdir -p $(MONTHPATH)
+	mkdir -p $(POST_ARCHIVE)$(MONTHPATH)
 	@echo "$$$(PFX)TEMPLATE" > $@
 	git add $@
 	git commit -m "$(MYNAME): started entry $(ENTRY)" $@
