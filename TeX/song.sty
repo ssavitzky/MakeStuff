@@ -35,9 +35,11 @@
 %%%	  \verse or \\
 %%%	  between verses
 %%%	  \spoken{spoken parts in slanted type}
-%%%	  \begin{refrain}
-%%%	    indented refrain with verse spacing
-%%%	  \end{refrain}
+%%%	  \begin{chorus}
+%%%	    indented chorus with verse spacing
+%%%	  \end{chorus}
+%%%       NOTE:  you can use ``refrain'' instead of chorus; it's technically
+%%%              incorrect, but I've been using it.
 %%%	  \begin{bridge}
 %%%	      indented (2em) bridge with verse spacing
 %%%	  \end{bridge}
@@ -204,11 +206,18 @@ Attribution-Noncommercial-Share Alike 4.0 License.}
 %%% Parts of songs
 %%%
 %%%    refrain (indent 1em)
+%%%    chorus  (indent 1em)
 %%%    bridge  (indent 2em)
 %%%    indent  (indent 6em)
 %%%    Indent  (indent 8em)
 %%%
 \newenvironment{refrain}{\list{}{\listparindent 1em
+ \itemindent\listparindent
+ \labelwidth 0pt
+ \rightmargin 0pt
+ \parsep 0pt plus 1pt}\item[]}{\endlist}
+
+\newenvironment{chorus}{\list{}{\listparindent 1em
  \itemindent\listparindent
  \labelwidth 0pt
  \rightmargin 0pt
