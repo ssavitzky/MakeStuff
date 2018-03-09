@@ -231,7 +231,7 @@ while (<STDIN>) {
     elsif (/\\tailnote/)	{ doTailnote(); }
 
     # Ignorable TeX macros:
-    elsif (/\\(small|footnotesize|advance|vfill|vfiller|vbox)/) {}
+    elsif (/\\(small|footnotesize|advance|vfill|vfiller|vbox|makesongtitle)/) {}
     elsif (/\\(begin|end)\{/)	{} # other environments get ignored
     elsif (/\\ignore/)		{ getContent($_); }
 
