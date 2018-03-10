@@ -684,14 +684,15 @@ sub printInfo {
 	print "shortname='$shortname'\n";
 	print "longname='$longname'\n";
 	print "filename='$filename'\n";
-	print "title='$title'\n";
-	print "index_title='$index_title'\n";
+	print "title=\"$title\"\n";
+	print "index_title=\"$index_title\"\n";
 	print "track_number='$track_number'\n";
 	print "subtitle='$subtitle'\n" if $subtitle;
 	# can't (easily) have multiline items in shell format
 	#print "dedication='$dedication'\n" if $dedication;
 	#print "description='$description'\n" if $description;
 	# === needs license and url
+	$music = $lyrics unless $music;
 	print "lyrics='$lyrics'\n";
 	print "music='$music'\n" if $music;
 	print "arranger='$arranger'\n" if $arranger;
