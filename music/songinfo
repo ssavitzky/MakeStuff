@@ -14,7 +14,8 @@
 $debug = 0;					# debug
 
 $verbose = 0;					# be verbose
-$ok_tags = "cc pd";				# tags that indicate lyrics are ok to publish
+$ok_tags = "web-ok cc pd";			# tags that indicate lyrics are ok to publish
+$bad_tags = "not-ok rej wip";			# tags that keep us from publishing lyrics.
 $format = "shell";
 
 $message = "";					# error message
@@ -29,8 +30,6 @@ $license = "";
 $dedication = "";
 $description = "";
 $tags = "";
-$ok_tags = "pd cc";
-$bad_tags = "wip not-ok";
 $key = "";
 $timing = "";
 $created = "";
@@ -196,13 +195,13 @@ sub getSongFileInfo {
     
     # Figure out whether it's ok to put these lyrics on our website
     for $t (split(' ', $ok_tags)) {
-	if ($tags =~ /$t/) {
+	if ($tags =~ /$t/i) {
 	    $web_ok = "true";
 	    last;
 	}
     }
     for $t (split(' ', $bad_tags)) {
-	if ($tags =~ /$t/) {
+	if ($tags =~ /$t/i) {
 	    $web_ok = "";
 	    last;
 	}
@@ -233,7 +232,7 @@ sub printMetadata {
 	die "unknown format";
     }
 	
-    # Shell is name='value' -- need single quotes to prevent expansion
+    # TODO:  have different print routines for long values and lists.
     printItem("shortname", $shortname);
     printItem("longname", $longname);
     printItem("filename", $filename);

@@ -37,11 +37,11 @@ SORT_BY_FILENAME =  sed 's/ /\n/g' | sed 's/\// /g' | sort | sed 's/ /\//g'
 #   Note that template files start with a digit, so the wildcard skips them
 ASONGS := $(shell $(SORT_BY_TITLE) $(wildcard [a-z]*.flk))
 
-# WIP = work in progress
+# REJECT = work in progress and other songs we don't want in the songbook
 #	Note that we have to guard against the possibility that there are no
 #	.flk files in the directory; that would make grep read from STDIN
 #	if we let things get that far.
-WIP := $(shell [ -z "$(ASONGS)" ] || grep -ile '^\\tags.*\Wwip\W' $(ASONGS))
+REJECT := $(shell [ -z "$(ASONGS)" ] || grep -ilEe '^\\tags.*\W(wip|rej)\W' $(ASONGS))
 
 # TRANSPOSED
 #	We use "--X" to indicate songs that have been transposed into the key
@@ -72,7 +72,7 @@ PD := $(shell [ -z "$(ALLSONGS)" ] || grep -ile '^\\tags.*\Wpd\W' $(ALLSONGS))
 
 
 # ALLSONGS is the songs minus work in progress, which is usually what we want.
-ALLSONGS := $(filter-out $(WIP), $(ASONGS))
+ALLSONGS := $(filter-out $(REJECT), $(ASONGS))
 
 SONGBOOK := $(filter-out $(TRANSPOSED), $(ALLSONGS))
 
@@ -111,7 +111,7 @@ HAVE_ZONGBOOK := $(wildcard zongbook.tex)
 
 ZONGS := $(shell [ -e zongbook.tex ] && 	\
 		 perl -n -e '/^\\file\{(.+\.flk)/ && print "$$1\n"' zongbook.tex)
-ZONGBOOK := $(filter-out $(WIP), $(ZONGS))
+ZONGBOOK := $(filter-out $(REJECT), $(ZONGS))
 
 # Compute the song lists by filtering ZSONGS
 #   SONGS    -- stuff that's OK to put in a songbook
@@ -163,7 +163,7 @@ $(DESTDIR)/%.dvi:	%.flk
 		$(SONG_PREAMBLE) '\begin{document}\input{$<}\end{document}'
 	cd $(DESTDIR); rm -f $*.log $*.aux
 
-reportVars += TRANSPOSED NAMES ALLNAMES ZNAMES WIP
+reportVars += TRANSPOSED NAMES ALLNAMES ZNAMES REJECT
 
 ########################################################################
 ###

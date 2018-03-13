@@ -12,8 +12,14 @@
 #   ALLSONGS -- everything but in-progress songs
 #
 
-# These are the tags for which we can put lyrics on the web
-WEB_OK_TAGS = mine ours tgl pd cc web-ok
+# These are the tags for which we can put lyrics on the web.  This can be overridden
+# in the local .config.make, e.g. to add specific songwriter tags.
+WEB_OK_TAGS = web-ok mine ours pd cc
+
+# These are the tags that indicate that it's not ok to put up lyrics, even if they have
+# one of the tags in WEB_OK_TAGS.  The rej and wip tags are included for completeness;
+# songs that have them don't normally have directories made for them.
+NOT_OK_TAGS = not-ok rej wip
 
 # Directories containing lyrics (virtual path for dependencies):
 LPATH := $(filter-out %WIP, $(wildcard $(BASEREL)Lyrics*))
@@ -26,10 +32,11 @@ VPATH = $(LPATH)
 #
 ASONGS := $(shell for d in $(LPATH); do ls $$d/[a-z]*.flk | grep -ve '--' ; done)
 
-# WIP = work in progress
-WIP := $(shell [ -z "$(ASONGS)" ] || grep -ile '^\\tags.*\Wwip\W' $(ASONGS))
+# REJECT = work in progress and other songs we don't want on the web at all.
+#
+REJECT := $(shell [ -z "$(ASONGS)" ] || grep -ilEe '^\\tags.*\W(wip|rej)\W' $(ASONGS))
 
-ALLSONGS := $(filter-out $(WIP), $(ASONGS))
+ALLSONGS := $(filter-out $(REJECT), $(ASONGS))
 
 # PD = public domain
 PD := $(shell [ -z "$(ALLSONGS)" ] || grep -ile '^\\tags.*\Wpd\W' $(ALLSONGS))
