@@ -29,13 +29,16 @@ songs.make, Songs/ improvements:
   o eventually, make lyrics visible for logged-in band members; maybe fans.
   o web links for lyrics we don't own; on the songwriter's official site if possible. 
   o options for lyrics:
-    - build %/lyrics.pdf, which is what we do currently
-    - symlink %.flk into Songs/%, and do the build directly.
+    -> build %/lyrics.pdf, which is what we do currently
+    - symlink %.flk into Songs/%, and do the build directly.  (loses information about
+      which directory it came from)
   o %/index.html should #include lyrics.html, and only if we have rights.
+    in steve/Songs we can do this by lyrics directory, i.e. Lyrics and Lyrics-PD.  In lgf, use tags.
     generate, which lets it include directly-linked audio files.  Put body text in an
     editable include file which is generated only if missing (e.g. text.html)
   o header should be #included and auto-generated; that's the way to do title and
     navbar correctly - Songs/name currently aren't links.
+  o generate Songs/*/index.html from templates
   @ <a href="http://httpd.apache.org/docs/current/expr.html"
     >Expressions in Apache HTTP Server - Apache HTTP Server Version 2.4</a>
     SSI can, for example, test variables set in  .htaccess.
@@ -400,7 +403,18 @@ burning:  -> notes copied to tracks.make
 0122
   * BUG [S] puts a spurious L on the (unnecessary) first page of short songs.
     -> was using \if to compare expansions; should have used \ifx
-    
+
+0309Fr
+  * generate Songs/*/lyrics.html without headers.
+
+0312Mo
+  * extracting song info for template expansion:
+    eval $(LYRICDIR=../Lyrics-Other $(TOOLDIR)/music/TrackInfo.pl --shell $shortname)
+    loads the shell's environment with the track info.
+    TrackInfo does too much; need a module that parses song files correctly.
+    -> 0312 songinfo.
+    -> Needs YAML and make options as well as shell.
+
 =now====Tools/to.do=====================================================================>|
 
 Local Variables:

@@ -2,7 +2,7 @@
 #
 
 # Songs is the web directory; each song is in an individual subdirectory
-#   At the moment, [song]/lyrics.{html,pdf,txt} are built from ../Lyrics;
+#   [song]/lyrics.{html,pdf,txt} are built from ../Lyrics*/[song].flk
 #   this needs to be fixed eventually.
 
 ### Song lists:  (All made via (cd ../Lyrics; make list-*)
@@ -11,6 +11,9 @@
 #   WEBSONGS -- Adds $(OK) to get stuff that's OK to put on the web
 #   ALLSONGS -- everything but in-progress songs
 #
+
+# These are the tags for which we can put lyrics on the web
+WEB_OK_TAGS = mine ours tgl pd cc web-ok
 
 # Directories containing lyrics (virtual path for dependencies):
 LPATH := $(filter-out %WIP, $(wildcard $(BASEREL)Lyrics*))
@@ -96,8 +99,9 @@ TEXDIR	  = $(TOOLDIR)/TeX
 FLKTRAN   = $(TEXDIR)/flktran.pl
 INDEX     = $(TEXDIR)/index.pl
 TRACKINFO = $(TOOLDIR)/music/TrackInfo.pl
+SONGINFO  = $(TOOLDIR)/music/songinfo
 
-reportVars += LPATH WEBNAMES NOTWEB
+reportVars += LPATH WEBNAMES NOTWEB WEB_OK_TAGS
 
 ########################################################################
 ###
@@ -134,16 +138,20 @@ reportVars += LPATH WEBNAMES NOTWEB
 	d=`pwd`; cd `dirname $<`; $(MAKE) $$d/$*.dvi DESTDIR=$$d
 
 %/lyrics.html: %.flk
-	WEBSITE=$(WEBSITE) WEBDIR=$(MYNAME) $(FLKTRAN) -t $< $@
+	WEBSITE=$(WEBSITE) WEBDIR=$(MYNAME) $(FLKTRAN) -t -b $< $@
 
 %/lyrics.txt: %.flk
 	WEBSITE=$(WEBSITE) WEBDIR=$(MYNAME) $(FLKTRAN) $< $@
 
-# === Eventually we want to be able to make the index.html file.
-#	This is currently a symlink to lyrics.html, but if we don't
-#	have the necessary rights it needs to be a link to dummy.html
-#	instead.  We also need to be able to make dummy.html, but 
-#	that's another matter.
+# We generate several types of metadata
+%/metadata.sh: %.flk
+	$(SONGINFO) --format=shell --ok='$(WEB_OK_TAGS)' $< > $@
+
+%/metadata.yml: %.flk
+	$(SONGINFO) --format=yaml --ok='$(WEB_OK_TAGS)' $< > $@
+
+%/metadata.make: %.flk
+	$(SONGINFO) --format=make --ok='$(WEB_OK_TAGS)' $< > $@
 
 %/index.html:
 	cd `dirname $@`; ln -s lyrics.html index.html
