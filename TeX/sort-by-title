@@ -18,13 +18,17 @@ $key = "";
 $timing = "";
 $created = "";
 $cvsid = "";
+$verbose = "";
 
 
 ### Accumulate titles:
 
 $i = 0;
 while ($ARGV[0]) { 
-    $infile = shift; 
+    $infile = shift;
+    if ($infile eq "-v") {
+	next;
+    }
     $title = "";
     $subtitle = "";
     $key = "";
@@ -46,9 +50,8 @@ while ($ARGV[0]) {
 	$fn = $infile;
 	$title =~ s/^(A|An|The) //;             # remove leading articles
 
-	$fns{$title} = $fn;			# fns maps title => fn
-
-	$titleList[$i] = $title;
+	# concatenate titles with filenames to handle the case of variants with the same title
+	$titleList[$i] = "$title::$fn";
 
 	$i++;
     }
@@ -60,7 +63,8 @@ while ($ARGV[0]) {
 
 for ($j = 0; $j < $i; $j++) {
     $title = $sortedTitles[$j];
-    $fn = $fns{$title};
+    $title =~ /::(.*)$/;
+    $fn = $1;
     print "$fn\n";		# eventually maybe an option to add title?
 }
 
