@@ -28,9 +28,6 @@ PRINT_DUPLEX = lp -o sides=two-sided-long-edge
 # === need to drop the .flk and, ideally, generate the lists from metadata
 # === need to drop zongbook.tex and generate that from metadata, too.
 
-# ugly shell pipeline to sort a list of file names.  Not used
-SORT_BY_FILENAME =  sed 's/ /\n/g' | sed 's/\// /g' | sort | sed 's/ /\//g'
-
 # ASONGS is just the song files, alphabetical by filename.
 #   This works in lgf and tg because we're not using Steve's
 #   cryptic shortnames.
