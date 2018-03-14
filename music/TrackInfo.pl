@@ -994,6 +994,8 @@ sub setupFormattingConstants {
 	$_TT = "</tt>";
 	$UL  = "<u>";
 	$_UL = "</u>";
+	$SMALL = "<small>";
+	$_SMALL = "</small>";
 	$SPOKEN  = "(spoken)";
 	$_SPOKEN = "";
 	$NL  = "<br />\n";
@@ -1015,6 +1017,8 @@ sub setupFormattingConstants {
 	$_TT = "";
 	$UL  = "";
 	$_UL = "";
+	$SMALL = "";
+	$_SMALL = "";
 	$SPOKEN  = "(spoken)";
 	$_SPOKEN = "";
 	$NL  = "\n";
@@ -1053,6 +1057,11 @@ sub deTeX {
 	    $txt =~ s/\{\\bf[ \t\n]/$BF/; 
 	    while (! $txt =~ /\}/) { $txt .= <STDIN>; }
 	    $txt =~ s/\}/$_BF/;
+	}
+	if ($txt =~ /\{\\small[ \t\n]/) { 
+	    $txt =~ s/\{\\small[ \t\n]/$SMALL/; 
+	    while (! $txt =~ /\}/) { $txt .= <STDIN>; }
+	    $txt =~ s/\}/$_SMALL/;
 	}
     }
     if ($html) { 
