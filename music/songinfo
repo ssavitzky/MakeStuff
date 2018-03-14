@@ -7,12 +7,15 @@
 #	The default is to produce a simple property list of name=value assignments.
 #       It is also able to substitute these into a template.
 
-
+$usage="$0 [options] $filename
+options:
+  --format=[yaml|shell|make]
+";
 
 ### Option variables and their defaults:
 
 $debug = 0;					# debug
-
+$html  = 0;					# convert TeX constructs to HTML
 $verbose = 0;					# be verbose
 $ok_tags = "web-ok cc pd";			# tags that indicate lyrics are ok to publish
 $bad_tags = "not-ok rej wip";			# tags that keep us from publishing lyrics.
@@ -57,10 +60,11 @@ $morefiles = "";
 
 foreach $f (@ARGV) {
     if ($f =~ /^-/) {
-	if ($f =~ /-v/)        { ++$verbose; }
+	if ($f =~ /-v/)           { ++$verbose; }
      	elsif ($f =~ /--verbose/) { ++$verbose; }
 	elsif ($f =~ /--?debug/)  { ++$debug; }
 	elsif ($f =~ /-d/)  	  { ++$debug; }
+	elsif ($f =~ /-h/)  	  { ++$html; }
 	elsif ($f =~ /--template=(.+)/) { $template = $1; }
 	elsif ($f =~ /--ok=(.+)/) {$ok_tags = $1;}
 	elsif ($f =~ /--format=(.+)/) { $format = $1; }
@@ -72,6 +76,10 @@ foreach $f (@ARGV) {
 	$filename = $f;
     }
 }
+if ($html || $format eq "yaml") {
+    $html = 1;
+}
+setupFormattingConstants();
 
 getSongFileInfo($filename);
 
@@ -196,7 +204,7 @@ sub getSongFileInfo {
     # Figure out whether it's ok to put these lyrics on our website
     for $t (split(' ', $ok_tags)) {
 	if ($tags =~ /$t/i) {
-	    $web_ok = "true";
+	    $web_ok = "1";
 	    last;
 	}
     }
@@ -238,12 +246,10 @@ sub printMetadata {
     printItem("filename", $filename);
     printItem("title", $title);
     printItem("index_title", $index_title);
-    printItem("track_number", $track_number);
     printItem("subtitle", $subtitle) if $subtitle;
-    #printItem("dedication", '$dedication'\n" if $dedication;
-    #printItem("description", '$description'\n" if $description;
+    #printItem("dedication", $dedication); if $dedication;
+    #printItem("description", $description) if $description;
     printItem("notice", $notice) if $notice;
-    # ", ", ",  needs license and url
     printItem("license", $license) if $license;
     printItem("lyrics", $lyrics);
     printItem("music", $music) if $music;
@@ -253,7 +259,7 @@ sub printMetadata {
     printItem("key", $key) if $key;
     printItem("credits", $credits) if $credits;
     printItem("created", $created) if $created;
-    printItem("web_ok", $web_ok) if $web_ok;
+    printItem("webok", $web_ok) if $web_ok;
 
     if ($format eq "yaml") {
 	print "---\n";
@@ -267,7 +273,9 @@ sub printMetadata {
 sub printItem {
     my ($key, $value) = @_;
     if ($format eq "yaml") {
-	print "$key: $value\n";
+	$value =~ s/\\/\\\\/g;
+	$value =~ s/"/\\"/g;
+	print "$key: \"$value\"\n";
     } elsif ($format eq "shell") {
 	print "$key=\"$value\"\n";
     } elsif ($format eq "make") {
@@ -290,42 +298,90 @@ sub begSong {
     $title = getContent($line);	
 }
 
-### Remove LaTeX constructs.
-###	This would be easier with a table.
+### Formatting constants:
+sub setupFormattingConstants {
+    if ($html) {
+	$EM  = "<em>";
+	$_EM = "</em>";
+	$BF  = "<b>";
+	$_BF = "</b>";
+	$TT  = "<tt>";
+	$_TT = "</tt>";
+	$UL  = "<u>";
+	$_UL = "</u>";
+	$SMALL = "<small>";
+	$_SMALL = "</small>";
+	$SPOKEN  = "(spoken)";
+	$_SPOKEN = "";
+	$NL  = "<br />\n";
+	$NP  = "<hr />\n";
+	$SP  = "&nbsp;";
+	$AMP = "&amp;";
+	$FLKTRAN = "<a href='../Tools/TeX/flktran.html'><code>flktran</code></a>";
+	# Creative Commons copyright notice
+	$CCnotice = "<a href=\"http://creativecommons.org/licenses/by-nc-sa/2.0/\"
+><img  alt=\"Creative Commons License\" border=\"0\" 
+       src=\"http://creativecommons.org/images/public/somerights.gif\" 
+     /><small>Some rights reserved.</small></a>";
+    } else {
+	$EM  = "_";
+	$_EM = "_";
+	$BF  = "*";
+	$_BF = "*";
+	$TT  = "";
+	$_TT = "";
+	$UL  = "";
+	$_UL = "";
+	$SMALL = "";
+	$_SMALL = "";
+	$SPOKEN  = "(spoken)";
+	$_SPOKEN = "";
+	$NL  = "\n";
+	$NP  = "\f";
+	$SP  = " ";
+	$AMP = "&";
+	$FLKTRAN = "flktran";
+	$CCnotice = "Some Rights Reserved:  CC by-nc-sa/2.0/";
+    }
+}
+
+### Remove LaTeX constructs or replace them with equivalent html
 sub deTeX {
     my ($txt) = @_;		# input line
-
     while ($txt =~ /\%/) {	# TeX comments eat the line break, too.
 	$txt =~ s/\%.*$//;
 	$txt .= <IN>;
-     }
+
+    }
     while ($txt =~ /\{\\em[ \t\n]/
 	   || $txt =~ /\{\\tt[ \t\n]/
-	   || $txt =~ /\{\\bf[ \t\n]/) {
+	   || $txt =~ /\{\\bf[ \t\n]/
+	   || !($txt =~ /\}/s)) {
 	# This will fail if there's a \bf and \em in one line in that order
-	if ($txt =~ /\{\\em[ \t\n]/) {
-	    $txt =~ s/\{\\em[ \t\n]/$EM/; 
-	    while (! $txt =~ /\}/) { $txt .= <STDIN>; }
-	    $txt =~ s/\}/$_EM/;
+	if ($txt =~ /\{\\em[ \t\n]/s) {
+	    $txt =~ s/\{\\em[ \t\n]/$EM/s; 
+	    while (! $txt =~ /\}/s) {$txt =~ s/[\n\r]*/ /g; $txt .= <IN>; }
+	    $txt =~ s/\}/$_EM/s;
 	}
 	if ($txt =~ /\{\\tt[ \t\n]/) {
 	    $txt =~ s/\{\\tt[ \t\n]/$TT/; 
-	    while (! $txt =~ /\}/) { $txt .= <STDIN>; }
+	    while (! $txt =~ /\}/) {$txt =~ s/[\n\r]*/ /g; $txt .= <IN>; }
 	    $txt =~ s/\}/$_TT/;
 	}
 	if ($txt =~ /\{\\bf[ \t\n]/) { 
 	    $txt =~ s/\{\\bf[ \t\n]/$BF/; 
-	    while (! $txt =~ /\}/) { $txt .= <STDIN>; }
+	    while (! $txt =~ /\}/) {$txt =~ s/[\n\r]*/ /g; $txt .= <IN>; }
 	    $txt =~ s/\}/$_BF/;
 	}
+	if ($txt =~ /\{\\small[ \t\n]/) { 
+	    $txt =~ s/\{\\small[ \t\n]/$SMALL/; 
+	    while (! $txt =~ /\}/) {$txt =~ s/[\n\r]*$/ /g; $txt .= <IN>; }
+	    $txt =~ s/\}/$_SMALL/s;
+	}
+	if (!($txt =~ /\}/)) {$txt =~ s/[\n\r]/ /g; $txt .= <IN>;}
     }
-    if ($html) { 
-	$txt =~ s/\~/&nbsp;/g; 
-	$txt =~ s/---/--/g;			# no &emdash;?
-    } else { 
-	$txt =~ s/\~/ /g;
-	$txt =~ s/---/--/g;
-    }
+    $txt =~ s/\~/&nbsp;/g; 
+    $txt =~ s/---/--/g;			# no &emdash;?
     while ($txt =~ /\\link\{[^}]+\}\{[^}]+\}/s) {
 	if ($html) {
 	    $txt =~ s/\\link\{([^}]+)\}\{([^}]+)\}/<a href="$1">$2<\/a>/s;
@@ -339,9 +395,15 @@ sub deTeX {
     $txt =~ s/\\ldots/.../g;
     $txt =~ s/\\\\/$NL/g;
 
-    $txt =~ s/\\min/m/g;
+    $txt =~ s/\\m/m/g;
+    $txt =~ s/\\sus/sus/g;
     $txt =~ s/\\capo/ capo/g;
+    $txt =~ s/\\sharp/#/g;
+    $txt =~ s/\\flat/b/g;
 
+    $txt =~ s/\n$//;
+    print STDERR "-> '$txt'\n";
+    $txt =~ s/[{}]//g;
     return $txt
 }
 
@@ -349,15 +411,11 @@ sub deTeX {
 #
 sub getContent {
     my ($line) = @_;		# input line
+    print STDERR "getContent($line)";
     # Throw away everything up to the "{"
-    $line =~ s/^[^{]*\{//;
-    $line = deTeX($line);
+    $line =~ s/^[^{]*\{/\{/;
     # Suck in more lines if we haven't seen the closing brace
     # NOTE that we have to use the same file handle as getSongInfo!!
-    while ($line !~ /\}/) { $line .= <IN>; $line = deTeX($line); }
-    # Throw away everything after the "}"
-    $line =~ s/\}[^}]*$//;
-    $line =~ s/\n$//;
-    return $line;
+    return deTeX($line);
 }
 
