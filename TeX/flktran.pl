@@ -232,6 +232,7 @@ while (<STDIN>) {
 
     # Ignorable TeX macros:
     elsif (/\\(small|footnotesize|advance|vfill|vfiller|vbox|makesongtitle)/) {}
+    elsif (/\\(twocolumns|oddsidemargin|evensidemargin|textwidth)/) {}
     elsif (/\\(begin|end)\{/)	{} # other environments get ignored
     elsif (/\\ignore/)		{ getContent($_); }
 
@@ -573,8 +574,8 @@ sub tableLine {
     $line =~ s/\\min/m/g;
     $line =~ s/[\n\r]//g;
 
-    $cline .= "  <tr><td>";
-    $dline .= "  <tr><td>";
+    $cline .= "  <tr class=chords><td>";
+    $dline .= "  <tr class=lyrics><td>";
 
     for ($p = 0; $p < length($line); $p++) {
 	$c = substr($line, $p, 1); 
