@@ -216,8 +216,10 @@ while (<STDIN>) {
 
     # Environments: 
 
-    elsif (/\\begin\{refrain/)	{ begRefrain(); } # Refrain
+    elsif (/\\begin\{refrain/)	{ begRefrain(); } # Refrain (deprecated)
     elsif (/\\end\{refrain/)	{ endRefrain(); }
+    elsif (/\\begin\{chorus/)	{ begRefrain(); } # chorus (same as refrain) for now)
+    elsif (/\\end\{chorus/)	{ endRefrain(); }
     elsif (/\\begin\{bridge/)	{ begBridge(); }  # Bridge
     elsif (/\\end\{bridge/)	{ endBridge(); }
     elsif (/\\begin\{note/)	{ begNote(); } 	  # Note
