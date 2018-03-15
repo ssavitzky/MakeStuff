@@ -8,6 +8,7 @@ sub usage {
     print "$0 [options] infile[.flk] [outfile].ext\n";
     print "	-t	use tables\n";
     print "	-h	output html\n";
+    print "	-l	include link to lyrics.pdf\n";
     print "	-dsc	output .htaccess description lines\n";
     print "	-v	verbose\n";
     print "	-o fn	output file\n";
@@ -76,6 +77,7 @@ while ($ARGV[0] =~ /^\-/) {
     elsif ($ARGV[0] eq "-p") { shift; $prefix = shift; }
     elsif ($ARGV[0] eq "-s") { shift; $suffix = shift; }
     elsif ($ARGV[0] eq "-h" || $ARGV[0] eq "-html") { shift; $html = 1; }
+    elsif ($ARGV[0] eq "-l" || $ARGV[0] eq "-lyrics") { shift; $lyrics = 1; }
     elsif ($ARGV[0] eq "-dsc") { shift; $outfmt = "dsc"; }
     elsif ($ARGV[0] eq "-t"|| $ARGV[0] eq "-tables") { shift; $tables = 1; }
     elsif ($ARGV[0] eq "-v"|| $ARGV[0] eq "-verbose") { shift; $verbose = 1; }
@@ -191,7 +193,8 @@ if ($outfmt eq "dsc") {		# .htaccess description lines
     }
 } elsif ($outfmt eq "html" && $tables) {	# HTML table
     print "<table class='songlist'>\n";
-    print "<tr><th>ogg</th><th>mp3</th><th>pdf</th><th align=left>file</th>"
+    print "<tr><th>ogg</th><th>mp3</th>"
+	. ($lyrics? "<th>pdf</th><th align=left>file</th>" : "")
 	. "<th>time</th>";
     print "<th align=left> Title </tr>\n ";
     for ($j = 0; $j < $i; $j++) {
@@ -204,7 +207,7 @@ if ($outfmt eq "dsc") {		# .htaccess description lines
 	print "<tr> ";
 	print "  <td valign='top'> $audio_o </td>";
 	print "  <td valign='top'> $audio_m </td>";
-	print "  <td valign='top'> <a href='$d$fn/lyrics.pdf'>pdf</a>	\n";
+	if ($lyrics) { print "  <td valign='top'> <a href='$d$fn/lyrics.pdf'>pdf</a>";}
 	print "  <td valign='top'> <tt><a href='$d$fn/'>$fn</a></tt></td>\n";
 	print "  <td valign='top'> $times{$fn}	</td>";
 	print "  <td valign='top'> <a href='$d$fn/'>", $titles{$fn};
@@ -219,7 +222,7 @@ if ($outfmt eq "dsc") {		# .htaccess description lines
 	$fn = $fnList[$j];
 	my $d = (-d $fn)? "" : "../Songs/";
 	print "  <li> ";
-	print "<a href='$d$fn/lyrics.pdf'>[pdf]</a>	"; 
+	if ($lyrics) {print "<a href='$d$fn/lyrics.pdf'>[pdf]</a>	"; }
 	print "<a href='$d$fn/'>", $titles{$fn};
 	if ($subtitles{$fn}) {print " ($subtitles{$fn})"; }
 	print "</a> $times{$fn}";
