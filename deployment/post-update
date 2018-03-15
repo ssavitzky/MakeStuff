@@ -2,7 +2,7 @@
 # Called once after update, with list of refs pushed in the arguments.
 
 # Files to search for a post-deployment make target
-PD_FILES="Makefile depends.make site/depends.make"
+PD_FILES="Makefile .depends.make depends.make site/depends.make config.make .config.make"
 
 for ref in $*; do
     if [[ $ref =~ .*/master$ ]]; then
