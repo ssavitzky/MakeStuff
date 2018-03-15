@@ -616,7 +616,7 @@ sub tableLine {
 }
 
 ### Remove LaTeX constructs.
-###	This would be easier with a table.
+###	NOTE:  This code does not handle {...} blocks that are nested or split across lines.
 sub deTeX {
     my ($txt) = @_;		# input line
 
@@ -624,7 +624,9 @@ sub deTeX {
 	$txt =~ s/\%.*$//;
 	$txt .= <STDIN>;
      }
-    # here's where we need to handle superscripts.
+    # The tricky part is making sure that the block doesn't include a chord, because
+    # the parts before and after the chord end up in different <td> cells.  It may not
+    # be a problem anywhere but Secret of the Crossroads Devil at the moment.
     while ($txt =~ /\{\\em[ \t\n]/
 	   || $txt =~ /\{\\tt[ \t\n]/
 	   || $txt =~ /\{\\bf[ \t\n]/
@@ -634,28 +636,50 @@ sub deTeX {
 	   || $txt =~ /\\sub(sub)?section/
 	   ) {
 	if ($txt =~ /\{\\em[ \t\n]/) {
+	    if ($tables && $txt =~ /\\em\{[^\}\[]*\[/) {
+		# we have a chord before the end of the block.  Split.
+		$txt =~ s/\[/\}\]/;
+		$txt =~ s/\]/\]\\e\{/;
+	    }	    
 	    $txt =~ s/\{\\em[ \t\n]/$EM/; 
-	    while ($txt !~ /\}/) { $txt .= <STDIN>; }
 	    $txt =~ s/\}/$_EM/;
 	}
 	if ($txt =~ /\{\\tt[ \t\n]/) {
+	    if ($tables && $txt =~ /\\tt\{[^\}\[]*\[/) {
+		# we have a chord before the end of the block.  Split.
+		$txt =~ s/\[/\}\]/;
+		$txt =~ s/\]/\]\\tt\{/;
+	    }	    
 	    $txt =~ s/\{\\tt[ \t\n]/$TT/; 
 	    while ($txt !~ /\}/) { $txt .= <STDIN>; }
 	    $txt =~ s/\}/$_TT/;
 	}
 	if ($txt =~ /\{\\bf[ \t\n]/) { 
+	    if ($tables && $txt =~ /\\bf\{[^\}\[]*\[/) {
+		# we have a chord before the end of the block.  Split.
+		$txt =~ s/\[/\}\]/;
+		$txt =~ s/\]/\]\\bf\{/;
+	    }	    
 	    $txt =~ s/\{\\bf[ \t\n]/$BF/; 
 	    while ($txt !~ /\}/) { $txt .= <STDIN>; }
 	    $txt =~ s/\}/$_BF/;
 	}
-	if ($txt =~ /\\underline\{/) { 
+	if ($txt =~ /\\underline\{/) {
+	    if ($tables && $txt =~ /\\underline\{[^\}\[]*\[/) {
+		# we have a chord before the end of the block.  Split.
+		$txt =~ s/\[/\}\]/;
+		$txt =~ s/\]/\]\\underline\{/;
+	    }	    
 	    $txt =~ s/\\underline\{/$UL/; 
-	    while ($txt !~ /\}/) { $txt .= <STDIN>; }
 	    $txt =~ s/\}/$_UL/;
 	}
 	if ($txt =~ /\\ul\{/) { 
+	    if ($tables && ($txt =~ /\\ul\{[^\}\[]*\[/)) {
+		# we have a chord before the end of the block.  Split.
+		$txt =~ s/\[/\}\]/;
+		$txt =~ s/\]/\]\\ul\{/;
+	    }	    
 	    $txt =~ s/\\ul\{/$UL/; 
-	    while ($txt !~ /\}/) { $txt .= <STDIN>; }
 	    $txt =~ s/\}/$_UL/;
 	}
 	if ($txt =~ /\\link/) {
@@ -692,7 +716,6 @@ sub deTeX {
 
     return $txt
 }
-
 
 ### getContent(line): get what's between macro braces.
 sub getContent {
