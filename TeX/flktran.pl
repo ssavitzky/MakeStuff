@@ -191,7 +191,7 @@ Attribution-Noncommercial-Share Alike 4.0 International License</a>. ';
 
 ### Process input in FlkTeX:
 
-while (<STDIN>) {			
+while (<STDIN>) {
     if (/^\\\\/) { sepVerse(); } 		# verse separator
     elsif (/^[ \t]*$/) { blankLine(); }		# blank line
     elsif (/^[ \t]*\%.*$/) { }			# comment: ignore
@@ -213,6 +213,7 @@ while (<STDIN>) {
     elsif (/\\arranger/)	{ $arranger = getContent($_); }
     elsif (/\\description/)	{ $description = getContent($_); }
     elsif (/\\ttto/)            { $ttto = getContent($_); }
+    elsif (/\\def/)             {  } # ignore macro definitionsgit 
 
     # Environments: 
 
@@ -234,7 +235,7 @@ while (<STDIN>) {
 
     # Ignorable TeX macros:
     elsif (/\\(small|footnotesize|advance|vfill|vfiller|vbox|makesongtitle)/) {}
-    elsif (/\\(twocolumns|oddsidemargin|evensidemargin|textwidth)/) {}
+    elsif (/\\(oddsidemargin|evensidemargin|textwidth)/) {}
     elsif (/\\(begin|end)\{/)	{} # other environments get ignored
     elsif (/\\ignore/)		{ getContent($_); }
 
@@ -628,6 +629,7 @@ sub deTeX {
 	   || $txt =~ /\{\\tt[ \t\n]/
 	   || $txt =~ /\{\\bf[ \t\n]/
 	   || $txt =~ /\\underline/
+	   || $txt =~ /\\ul/
 	   || $txt =~ /\\link/
 	   || $txt =~ /\\sub(sub)?section/
 	   ) {
@@ -648,6 +650,11 @@ sub deTeX {
 	}
 	if ($txt =~ /\\underline\{/) { 
 	    $txt =~ s/\\underline\{/$UL/; 
+	    while ($txt !~ /\}/) { $txt .= <STDIN>; }
+	    $txt =~ s/\}/$_UL/;
+	}
+	if ($txt =~ /\\ul\{/) { 
+	    $txt =~ s/\\ul\{/$UL/; 
 	    while ($txt !~ /\}/) { $txt .= <STDIN>; }
 	    $txt =~ s/\}/$_UL/;
 	}
