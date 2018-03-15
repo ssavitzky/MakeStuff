@@ -46,8 +46,9 @@ ALLSONGS := $(shell $(SORT_BY_TITLE)  $(filter-out $(REJECT),$(ASONGS)))
 # Directory names:
 #	DIRNAMES is the list of all song directories, sorted by title.  (We sort
 #	by title because eventually we'll want to build indices and such.)
-DIRNAMES = $(shell for f in $(subst .flk,,$(notdir $(ALLSONGS))); do \
-		   echo $$f | grep -v -e .orig -e --; done)
+#	It would be better if we could use filter-out, but it doesn't handle regexps
+DIRNAMES := $(shell for f in $(subst .flk,,$(notdir $(ALLSONGS))); do echo $$f; done \
+		    | grep -v -e .orig -e --)
 
 # Indices: all
 # 	1Index.html is the index web page, 1IndexTable.html is just the
@@ -64,7 +65,7 @@ ALLTEXT  = $(patsubst %,%/lyrics.txt,$(DIRNAMES))
 
 # Indices: web
 #	0Index* are the web-safe versions of the index files
-WEBINDICES = 0Index.html 0IndexTable.html 0IndexShort.html  # 0IndexLong.html
+WEBINDICES = 0Index.html 0IndexTable.html 0IndexShort.html
 SUBDIR_INDICES =  $(patsubst %,%/index.html, $(DIRNAMES))
 
 # At some point we can add 1Index*, after we add subdir indices that can handle
@@ -155,10 +156,7 @@ reportVars += LPATH ASONGS ALLSONGS DIRNAMES WEB_OK_TAGS MUSTACHE
 ### Targets
 ###
 
-all::	$(DIRNAMES) $(ALLHTML) $(ALLPDF) metadata webindices
-
-.PHONY: webindices metadata
-webindices: $(WEBINDICES)
+all::	$(DIRNAMES) $(ALLPDF) metadata $(ALLHTML)
 
 .PHONY: metadata
 metadata::	$(patsubst %,%/metadata.yml, $(DIRNAMES))
@@ -191,7 +189,7 @@ endif
 ### Lists:
 
 list-names:
-	@echo $(ALLNAMES)
+	@echo $(DIRNAMES)
 list-dirs: 
 	@echo $(DIRNAMES)
 list-allsongs: 
@@ -257,30 +255,24 @@ htmlclean::
 # trying to generate lists in the lyrics directory.  That gives us better
 # control over what's included.
 
-0List.html: $(WEBSONGS) $(WEBDIRS) | $(INDEX)
-	@echo building $@ from WEBLYRICS
-	@echo '<html>' 					>  $@
-	@echo '<head>'					>> $@
-	@echo '<title>Song List</title>'		>> $@
-	@echo '</head><body>'				>> $@
-	@echo '<h2><a href="/">steve.savitzky.net</a> '	>> $@
-	@echo '  / <a href="./">Songs</a>'		>> $@
-	@echo '  / Song List</h1>'			>> $@
-	@$(INDEX) -h  $(WEBSONGS)			>> $@
-	@echo '<h5>Last update: ' `date` '</h5>'	>> $@
-	@echo '</body>'					>> $@
-	@echo '</html>' 				>> $@
+WEBINDICES = 0Index.html 0IndexShort.html 0IndexTable.html
 
-0Index.html: $(WEBSONGS) $(WEBDIRS) | $(INDEX)
+.PHONY: webindices 
+webindices: $(WEBINDICES)
+
+# indices currently broken
+all:: webindices
+
+0Index.html: $(ALLSONGS) $(DIRNAMES) | $(INDEX)
 	@echo building $@ from WEBLYRICS
 	@echo '<html>' 					>  $@
 	@echo '<head>'					>> $@
 	@echo '<title>Song Index</title>'		>> $@
 	@echo '</head><body>'				>> $@
-	@echo '<h2><a href="/">steve.savitzky.net</a> '	>> $@
+	@echo '<h2><a href="/">[home]</a>'		>> $@
 	@echo '  / <a href="./">Songs</a>'		>> $@
 	@echo '  / Song Index</h2>'			>> $@
-	@$(INDEX) -t -h $(WEBSONGS)			>> $@
+	@$(INDEX) -t -h $(ALLSONGS)			>> $@
 	@echo '<h5>Last update: ' `date` '</h5>'	>> $@
 	@echo '</body>'					>> $@
 	@echo '</html>' 				>> $@
@@ -288,47 +280,17 @@ htmlclean::
 0IndexTable.html: | $(INDEX)
 	@echo building $@ from WEBLYRICS
 	@echo '<!-- begin $@ -->'			>  $@
-	@$(INDEX) -t -h $(WEBSONGS)			>> $@
+	@$(INDEX) -t -h $(ALLSONGS)			>> $@
 	@echo '<!-- end $@ -->'				>> $@
 
 0IndexShort.html: 
-	@echo building $@ from WEBNAMES
+	@echo building $@ from directory listing:
 	@echo '<!-- begin $@ -->'			>  $@
-	@for f in `echo $(WEBNAMES) | tr ' ' "\n" | sort | uniq`; do \
+	@for f in `echo $(DIRNAMES) | tr ' ' "\n" | sort | uniq`; do \
 		echo '<a href="'$$f/'">'$$f'</a>' >> $@; \
 	done
 	@echo '<!-- end $@ -->'				>> $@
 
+# Note that TrackInfo might not look at metadata to check whether it should include lyrics
 0IndexLong.html: 
-	$(TRACKINFO) --long --credits --sound -t format=list.html $(WEBNAMES) > $@
-
-1Index.html:
-	@echo building $@ from ALLLYRICS
-	@echo '<html>' 					>  $@
-	@echo '<head>'					>> $@
-	@echo '<title>Song Index</title>'		>> $@
-	@echo '</head><body>'				>> $@
-	@echo '<h2><a href="/">steve.savitzky.net</a> '	>> $@
-	@echo '  / <a href="./">Songs</a>'		>> $@
-	@echo '  / Complete Index</h2>'			>> $@
-	@$(INDEX) -t -h $(ALLSONGS)			>> $@
-	@echo '<h5>Last update: ' `date` '</h5>'	>> $@
-	@echo '</body>'					>> $@
-	@echo '</html>' 				>> $@
-
-1IndexTable.html: | $(INDEX)
-	@echo building $@ from ALLLYRICS
-	@echo '<!-- begin $@ -->'			>  $@
-	@$(INDEX) -t -h $(ALLSONGS)			>> $@
-	@echo '<!-- end $@ -->'				>> $@
-
-1IndexShort.html:
-	@echo building $@ 
-	@echo '<!-- begin $@ -->'			>  $@
-	@for f in `echo $(ALLSONGS) | tr ' ' "\n" | sort | uniq`; do \
-		echo '<a href="'$$f/'">'$$f'</a>' 	>> $@; \
-	done
-	@echo '<!-- end $@ -->'				>> $@
-
-1IndexLong.html:  | $(TRACKINFO)
-	$(TRACKINFO) --long --sound --credits -t format=list.html $(ALLNAMES) > $@
+	$(TRACKINFO) --long --credits --sound -t format=list.html $(DIRNAMES) > $@
