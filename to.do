@@ -21,28 +21,15 @@ WAV->FLAC
   o upgrade makefiles in older record directories.
 
 songs.make, Songs/ improvements:
+  o (0315) note that some, perhaps all, includes can be done in mustache at
+    template-expansion time.
   o BUG: etoolbox.sty not found on Dreamhost.
   ? lyrics--*.pdf probably not worth the trouble in most cases.
-  o make */Songs from */Lyrics* -- use tags or subdirs to identify which ones get visible
-    lyrics.  Pages want to be there even if the lyrics are hidden, because the
-    performances, notes, etc. are still needed.
   o eventually, make lyrics visible for logged-in band members; maybe fans.
   o web links for lyrics we don't own; on the songwriter's official site if possible. 
-  o options for lyrics:
-    -> build %/lyrics.pdf, which is what we do currently
-    - symlink %.flk into Songs/%, and do the build directly.  (loses information about
-      which directory it came from)
-  o %/index.html should #include lyrics.html, and only if we have rights.
-    in steve/Songs we can do this by lyrics directory, i.e. Lyrics and Lyrics-PD.  In lgf, use tags.
-    generate, which lets it include directly-linked audio files.  Put body text in an
-    editable include file which is generated only if missing (e.g. text.html)
+  o ?    generate, which lets it include directly-linked audio files.
   o header should be #included and auto-generated; that's the way to do title and
     navbar correctly - Songs/name currently aren't links.
-  o generate Songs/*/index.html from templates
-  @ <a href="http://httpd.apache.org/docs/current/expr.html"
-    >Expressions in Apache HTTP Server - Apache HTTP Server Version 2.4</a>
-    SSI can, for example, test variables set in  .htaccess.
-    Or, we can just have two different index file templates that we link to.
   o be nice to have a song index on the left; maybe hideable.
   o header/footer boilerplate should come from a template file
   o use songlist files instead of passing list on the command line ?
@@ -414,7 +401,26 @@ burning:  -> notes copied to tracks.make
     TrackInfo does too much; need a module that parses song files correctly.
     -> 0312 songinfo.
     -> Needs YAML and make options as well as shell.
-
+    
+0313Tu
+  * options for lyrics:
+    -> build %/lyrics.pdf, which is what we do currently
+    - symlink %.flk into Songs/%, and do the build directly.  (loses information about
+      which directory it came from, so not a good idea.)
+  * %/index.html should #include lyrics.html, and only if we have rights.
+    in steve/Songs we can do this by lyrics directory, i.e. Lyrics and Lyrics-PD.
+    In lgf, use tags.
+  * generate Songs/*/index.html from templates
+  @ <a href="http://httpd.apache.org/docs/current/expr.html"
+    >Expressions in Apache HTTP Server - Apache HTTP Server Version 2.4</a>
+    SSI can, for example, test variables set in  .htaccess.
+    Or, we can just have two different index file templates that we link to.
+  * make */Songs from */Lyrics* -- use tags or subdirs to identify which ones get visible
+    lyrics.  Pages want to be there even if the lyrics are hidden, because the
+    performances, notes, etc. are still needed.
+  * Put body text in an editable include file which is generated only if missing
+    (e.g. text.html) -> body-text.html
+    
 =now====Tools/to.do=====================================================================>|
 
 Local Variables:
