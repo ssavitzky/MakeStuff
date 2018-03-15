@@ -616,7 +616,11 @@ sub tableLine {
 }
 
 ### Remove LaTeX constructs.
-###	NOTE:  This code does not handle {...} blocks that are nested or split across lines.
+###    NOTE:  This code does not handle {...} blocks that are nested or split across lines.
+###    It's really crude; it would be better to parse the input into tokens and keep a stack
+###    that says what to do when we reach a chord or a closing brace.  Later.  Also, see
+###    songinfo for what to do about getting the content for things like \notice, which can
+###    be split across several lines.
 sub deTeX {
     my ($txt) = @_;		# input line
 
@@ -625,64 +629,37 @@ sub deTeX {
 	$txt .= <STDIN>;
      }
     # The tricky part is making sure that the block doesn't include a chord, because
-    # the parts before and after the chord end up in different <td> cells.  It may not
-    # be a problem anywhere but Secret of the Crossroads Devil at the moment.
-    while ($txt =~ /\{\\em[ \t\n]/
-	   || $txt =~ /\{\\tt[ \t\n]/
-	   || $txt =~ /\{\\bf[ \t\n]/
-	   || $txt =~ /\\underline/
-	   || $txt =~ /\\ul/
-	   || $txt =~ /\\link/
-	   || $txt =~ /\\sub(sub)?section/
-	   ) {
-	if ($txt =~ /\{\\em[ \t\n]/) {
-	    if ($tables && $txt =~ /\\em\{[^\}\[]*\[/) {
-		# we have a chord before the end of the block.  Split.
-		$txt =~ s/\[/\}\]/;
-		$txt =~ s/\]/\]\\e\{/;
-	    }	    
+    # the parts before and after the chord end up in different <td> cells.
+    while ($txt =~ /\{\\(em|tt|bf|)[ \t\n]/
+	   || $txt =~ /\\(ul|underline|link|subsection|subsubsection)\{/
+	   || $txt =~ /\\(subsection|subsubsection)\*[^\{]*\{/) {
+	my $tag = $1;
+	if ($tables && ($tag =~ /(em|bf|tt)/) && $txt =~ /\{\\$tag[^\[]*\[/) {
+	    # we have a chord before the end of the block.  Split.
+	    # em, bf, and tt all split the same way
+	    $txt =~ s/(\{\\$tag[^\[]*)(\[[^\]]*\])/$1\}$2\{\\$tag/;
+	}
+	if ($tag eq "em") {
 	    $txt =~ s/\{\\em[ \t\n]/$EM/; 
 	    $txt =~ s/\}/$_EM/;
 	}
-	if ($txt =~ /\{\\tt[ \t\n]/) {
-	    if ($tables && $txt =~ /\\tt\{[^\}\[]*\[/) {
-		# we have a chord before the end of the block.  Split.
-		$txt =~ s/\[/\}\]/;
-		$txt =~ s/\]/\]\\tt\{/;
-	    }	    
+	if ($tag eq "tt") {
 	    $txt =~ s/\{\\tt[ \t\n]/$TT/; 
-	    while ($txt !~ /\}/) { $txt .= <STDIN>; }
 	    $txt =~ s/\}/$_TT/;
 	}
-	if ($txt =~ /\{\\bf[ \t\n]/) { 
-	    if ($tables && $txt =~ /\\bf\{[^\}\[]*\[/) {
-		# we have a chord before the end of the block.  Split.
-		$txt =~ s/\[/\}\]/;
-		$txt =~ s/\]/\]\\bf\{/;
-	    }	    
+	if ($tag eq "bf") {
 	    $txt =~ s/\{\\bf[ \t\n]/$BF/; 
-	    while ($txt !~ /\}/) { $txt .= <STDIN>; }
 	    $txt =~ s/\}/$_BF/;
 	}
-	if ($txt =~ /\\underline\{/) {
-	    if ($tables && $txt =~ /\\underline\{[^\}\[]*\[/) {
+	if ($tag eq "ul" || $tag eq "underline") { 
+	    if ($tables && ($txt =~ /\\$tag\{[^\}\[]*\[/)) {
 		# we have a chord before the end of the block.  Split.
-		$txt =~ s/\[/\}\]/;
-		$txt =~ s/\]/\]\\underline\{/;
+		$txt =~ s/(\\$tag\{[^\}\[]*)(\[[^\]]*\])/$1\}$2\\$tag\{/;
 	    }	    
-	    $txt =~ s/\\underline\{/$UL/; 
+	    $txt =~ s/\\$tag\{/$UL/; # ul and underline have the same replacement text
 	    $txt =~ s/\}/$_UL/;
 	}
-	if ($txt =~ /\\ul\{/) { 
-	    if ($tables && ($txt =~ /\\ul\{[^\}\[]*\[/)) {
-		# we have a chord before the end of the block.  Split.
-		$txt =~ s/\[/\}\]/;
-		$txt =~ s/\]/\]\\ul\{/;
-	    }	    
-	    $txt =~ s/\\ul\{/$UL/; 
-	    $txt =~ s/\}/$_UL/;
-	}
-	if ($txt =~ /\\link/) {
+	if ($tag eq "link") {
 	    while ($txt !~ /\\link\{[^\}]*\}\{[^\}]*\}/) { $txt .= <STDIN>; }
 	    if ($html) {
 		$txt =~ s/\\link\{([^\}]*)\}\{([^\}]*)\}/<a href="$1">$2<\/a>/;
@@ -691,18 +668,15 @@ sub deTeX {
 		$txt =~ s/\\link\{([^\}]*)\}\{([^\}]*)\}/$2/;
 	    }
 	}
-	if ($txt =~ /\\subsection\*?\{/) {
+	if ($tag eq "subsection") {
 	    $txt =~ s/\\subsection\*?\{/$SUBSEC/;
-	    while ($txt !~ /\}/) { $txt .= <STDIN>; }
 	    $txt =~ s/\}/$_SUBSEC/;
 	}
-	if ($txt =~ /\\subsubsection\*?\{/) {
+	if ($tag eq "subsubsection") {
 	    $txt =~ s/\\subsubsection\*?\{/$SUBSUB/;
-	    while ($txt !~ /\}/) { $txt .= <STDIN>; }
 	    $txt =~ s/\}/$_SUBSUB/;
 	}
     }
-    $txt =~ s/\\clearpage//g;
     $txt =~ s/\\hfill//g;
     $txt =~ s/---/--/g;
     $txt =~ s/\\&/$AMP/g;
@@ -712,7 +686,9 @@ sub deTeX {
     $txt =~ s/\\\_/\_/g;
     $txt =~ s/\\\$/\$/g;
     $txt =~ s/\\\\/$NL/g;
+    $txt =~ s/\\clearpage/$NP/g;
     $txt =~ s/\\newpage/$NP/g;
+    $ext =~ s/\\columnbreak/$NP/g;
 
     return $txt
 }
