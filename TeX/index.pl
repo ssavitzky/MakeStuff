@@ -8,7 +8,6 @@ sub usage {
     print "$0 [options] infile[.flk] [outfile].ext\n";
     print "	-t	use tables\n";
     print "	-h	output html\n";
-    print "	-ps	put in links to .ps files\n";
     print "	-dsc	output .htaccess description lines\n";
     print "	-v	verbose\n";
     print "	-o fn	output file\n";
@@ -34,7 +33,6 @@ $doctype = "";			# document type (LaTeX or SGML)
 $options = "";			# LaTeX style options
 $tables  = 0;			# use tables for HTML?
 $verbose = 0;			# be verbose
-$ps	 = 0;			# make links to postscript files
 $prefix = "";
 $suffix = "";
 
@@ -78,7 +76,6 @@ while ($ARGV[0] =~ /^\-/) {
     elsif ($ARGV[0] eq "-p") { shift; $prefix = shift; }
     elsif ($ARGV[0] eq "-s") { shift; $suffix = shift; }
     elsif ($ARGV[0] eq "-h" || $ARGV[0] eq "-html") { shift; $html = 1; }
-    elsif ($ARGV[0] eq "-ps") { shift; $ps = 1; }
     elsif ($ARGV[0] eq "-dsc") { shift; $outfmt = "dsc"; }
     elsif ($ARGV[0] eq "-t"|| $ARGV[0] eq "-tables") { shift; $tables = 1; }
     elsif ($ARGV[0] eq "-v"|| $ARGV[0] eq "-verbose") { shift; $verbose = 1; }
@@ -196,7 +193,6 @@ if ($outfmt eq "dsc") {		# .htaccess description lines
     print "<table class='songlist'>\n";
     print "<tr><th>ogg</th><th>mp3</th><th>pdf</th><th align=left>file</th>"
 	. "<th>time</th>";
-    if ($ps) { print "<th>.ps</th>"; }
     print "<th align=left> Title </tr>\n ";
     for ($j = 0; $j < $i; $j++) {
 	$fn = $fnList[$j];
@@ -211,7 +207,6 @@ if ($outfmt eq "dsc") {		# .htaccess description lines
 	print "  <td valign='top'> <a href='$d$fn/lyrics.pdf'>pdf</a>	\n";
 	print "  <td valign='top'> <tt><a href='$d$fn/'>$fn</a></tt></td>\n";
 	print "  <td valign='top'> $times{$fn}	</td>";
-	if ($ps) { print "  <td> <a href='$d$fn.ps'>[ps]</a>	\n"; }
 	print "  <td valign='top'> <a href='$d$fn/'>", $titles{$fn};
 	if ($subtitles{$fn}) {print " <small>($subtitles{$fn})</small>"; }
 	print "</a> </td> </tr>\n";
@@ -224,7 +219,6 @@ if ($outfmt eq "dsc") {		# .htaccess description lines
 	$fn = $fnList[$j];
 	my $d = (-d $fn)? "" : "../Songs/";
 	print "  <li> ";
-	if ($ps) { print "<a href='$fn.ps'>[ps]</a>	"; }
 	print "<a href='$d$fn/lyrics.pdf'>[pdf]</a>	"; 
 	print "<a href='$d$fn/'>", $titles{$fn};
 	if ($subtitles{$fn}) {print " ($subtitles{$fn})"; }
