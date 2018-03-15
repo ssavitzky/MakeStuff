@@ -137,9 +137,14 @@ reportVars += LPATH ASONGS ALLSONGS DIRNAMES WEB_OK_TAGS MUSTACHE
 #	keep the resulting index.html files in git, and to make sure that we don't try to
 #	remake them if mustache isn't around.
 #
+ifneq ($(MUSTACHE),,)
 %/index.html: %/metadata.yml 1song-index.mustache
 	cd `dirname $@`;  $(MUSTACHE) metadata.yml ../1song-index.mustache > index.html
 	chmod +x $@
+else
+	touch $@
+endif
+
 
 # Ogg and mp3 files.  
 #	They have no dependencies to prevent their being constantly rebuilt.
