@@ -5,6 +5,15 @@ cleanup.  More ended up in wibnif.do, and should probably be consolidated here.
 
 =========================================================================
 
+BUGS:
+  o [scripts/init-deployment] make deployable doesn't work.
+  o [make/songs.make] indices are badly-formatted, don't need filenames anymore
+  o [TeX/songinfo] metadata files need descriptions.
+  o [make/songs.make] indices should indicate which songs have notes, audio, or postable
+    lyrics.  That will require actually looking at the metadata.
+  o [lgf, steve] need to build Songs after push.
+  o [deployment] post-update hooks are out of date; there should be a way to update them.
+
 Blogging:
   o probably useful to have a .do -> .html formatter, too.
   o be useful to have targets for both html and markdown, or else a command-line variable
@@ -27,7 +36,6 @@ songs.make, Songs/ improvements:
   ? lyrics--*.pdf probably not worth the trouble in most cases.
   o eventually, make lyrics visible for logged-in band members; maybe fans.
   o web links for lyrics we don't own; on the songwriter's official site if possible. 
-  o ?    generate, which lets it include directly-linked audio files.
   o header should be #included and auto-generated; that's the way to do title and
     navbar correctly - Songs/name currently aren't links.
   o be nice to have a song index on the left; maybe hideable.
@@ -107,11 +115,6 @@ songbook.make (proposed) - make plugin for Songbook directories
     compact should of course be filenames.
 
 index.pl, flktran.pl; Songs/Makefile
-  x move index.pl and flktran.pl into Tools from TeX; adjust paths.
-    -> no, they belong with the rest of the scripts that operate on .flk files
-  : index.pl is incredibly badly written (parses a file into global variables instead of a
-    hash!) and seems to have a preliminary version of the flktran chord parser as well!
-    And why am I not using it to sort song files by title?
   o flktex.pm song parser module would help a lot. 
   o (?)use TrackInfo instead of index.pl -- it's more recent.
   o add license and URL info to ogg, html, pdf files
@@ -420,7 +423,13 @@ burning:  -> notes copied to tracks.make
     performances, notes, etc. are still needed.
   * Put body text in an editable include file which is generated only if missing
     (e.g. text.html) -> body-text.html
-    
+
+0314Th
+  x move index.pl and flktran.pl into Tools from TeX; adjust paths.
+    -> no, they belong with the rest of the scripts that operate on .flk files
+  : index.pl is incredibly badly written (parses a file into global variables instead of a
+    hash!) and seems to have a preliminary version of the flktran chord parser as well!
+    And why am I not using it to sort song files by title?
 =now====Tools/to.do=====================================================================>|
 
 Local Variables:
