@@ -430,6 +430,9 @@ burning:  -> notes copied to tracks.make
     tracklists)  The present template hack has problems with multiple end
     lines.  -> use mustache templates or something bash or make based
 
+0316Fr
+  * take Songs/*/index.html out of git now that they can be made on the server.
+
 
 =now====Tools/to.do=====================================================================>|
 
