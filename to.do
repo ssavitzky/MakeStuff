@@ -153,10 +153,6 @@ Consider rewriting TrackInfo etc in Python or Haskell, possibly as a Pandoc plug
 Tracklist.cgi: like Setlist.cgi but builds album tracklists 
   o could probably merge both into TrackInfo using a format and template.
 
-o Need a program to replace an HTML element with a given id (mainly for
-  tracklists)  The present template hack has problems with multiple end
-  lines. 
-
 Should have a track.make template for [album]/Tracks/* directories
   o use Makefile in Tracks to cons up the Makefile, HEADER.html, notes, etc.
   o move ogg generation into track directories.
@@ -429,7 +425,12 @@ burning:  -> notes copied to tracks.make
     -> no, they belong with the rest of the scripts that operate on .flk files
   : index.pl is incredibly badly written (parses a file into global variables instead of a
     hash!) and seems to have a preliminary version of the flktran chord parser as well!
-    And why am I not using it to sort song files by title?
+    And why am I not using it to sort song files by title
+  x Need a program to replace an HTML element with a given id (mainly for
+    tracklists)  The present template hack has problems with multiple end
+    lines.  -> use mustache templates or something bash or make based
+
+
 =now====Tools/to.do=====================================================================>|
 
 Local Variables:
