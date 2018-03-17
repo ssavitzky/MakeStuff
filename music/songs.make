@@ -120,13 +120,13 @@ reportVars += LPATH ASONGS ALLSONGS DIRNAMES WEB_OK_TAGS MUSTACHE
 #	that may not be necessary at this point, but they can be used as alternative
 #	templating engines in a pinch.
 
-%/metadata.sh: %.flk | %
+%/metadata.sh: %.flk $(SONGINFO) | %
 	$(SONGINFO) --format=shell --ok='$(WEB_OK_TAGS)' $< > $@
 
-%/metadata.yml: %.flk | %
+%/metadata.yml: %.flk $(SONGINFO) | %
 	$(SONGINFO) --format=yaml --ok='$(WEB_OK_TAGS)' $< > $@
 
-%/metadata.make: %.flk | %
+%/metadata.make: %.flk $(SONGINFO) | %
 	$(SONGINFO) --format=make --ok='$(WEB_OK_TAGS)' $< > $@
 
 # The index.html files depend on the corresponding metadata.
@@ -138,8 +138,8 @@ reportVars += LPATH ASONGS ALLSONGS DIRNAMES WEB_OK_TAGS MUSTACHE
 #	remake them if mustache isn't around.
 #
 ifneq ($(MUSTACHE),)
-%/index.html: %/metadata.yml 1song-index.mustache
-	cd `dirname $@`;  $(MUSTACHE) metadata.yml ../1song-index.mustache > index.html
+%/index.html: %/metadata.yml 1subdir-index.mustache
+	cd `dirname $@`;  $(MUSTACHE) metadata.yml ../1subdir-index.mustache > index.html
 	chmod +x $@
 else
 	touch $@
@@ -268,7 +268,7 @@ webindices: $(WEBINDICES)
 # indices currently broken
 all:: webindices
 
-0Index.html: $(ALLSONGS) $(DIRNAMES) | $(INDEX)
+0Index.html: $(ALLSONGS) $(DIRNAMES) $(INDEX)
 	@echo building $@ from WEBLYRICS
 	@echo '<html>' 					>  $@
 	@echo '<head>'					>> $@
@@ -282,7 +282,7 @@ all:: webindices
 	@echo '</body>'					>> $@
 	@echo '</html>' 				>> $@
 
-0IndexTable.html: | $(INDEX)
+0IndexTable.html: $(INDEX)
 	@echo building $@ from WEBLYRICS
 	@echo '<!-- begin $@ -->'			>  $@
 	@$(INDEX) -t -h $(ALLSONGS)			>> $@
