@@ -193,7 +193,7 @@ sub getSongFileInfo {
     }
 
     $notice =~ s/\n/ /g;
-    $notice =~ s/\\SomeRightsReserved/CC-BY-SA/;
+    $notice =~ s/\\SomeRightsReserved/CC-by-sa/; # alternatively, deTeX makes it a link
     $notice =~ s/\\copyright/\&copy;/g;
 
     # Figure out the license.
@@ -204,13 +204,14 @@ sub getSongFileInfo {
     # Figure out whether it's ok to put these lyrics on our website
     for $t (split(' ', $ok_tags)) {
 	if ($tags =~ /$t/i) {
-	    $web_ok = "1";
+	    $web_ok = "true";
 	    last;
 	}
     }
     for $t (split(' ', $bad_tags)) {
 	if ($tags =~ /$t/i) {
-	    $web_ok = "";
+	    $web_ok = "";	# using empty for false means that we can grep for the field
+	                        # and use the exit code to tell whether it's there.
 	    last;
 	}
     }
@@ -247,8 +248,8 @@ sub printMetadata {
     printItem("title", $title);
     printItem("index_title", $index_title);
     printItem("subtitle", $subtitle) if $subtitle;
-    #printItem("dedication", $dedication); if $dedication;
-    #printItem("description", $description) if $description;
+    printItem("dedication", $dedication) if $dedication;
+    printItem("description", $description) if $description;
     printItem("notice", $notice) if $notice;
     printItem("license", $license) if $license;
     printItem("lyrics", $lyrics);
@@ -402,7 +403,6 @@ sub deTeX {
     $txt =~ s/\\flat/b/g;
 
     $txt =~ s/\n$//;
-    print STDERR "-> '$txt'\n";
     $txt =~ s/[{}]//g;
     return $txt
 }
@@ -411,7 +411,6 @@ sub deTeX {
 #
 sub getContent {
     my ($line) = @_;		# input line
-    print STDERR "getContent($line)";
     # Throw away everything up to the "{"
     $line =~ s/^[^{]*\{/\{/;
     # Suck in more lines if we haven't seen the closing brace
