@@ -7,12 +7,11 @@ cleanup.  More ended up in wibnif.do, and should probably be consolidated here.
 
 BUGS:
   o [scripts/init-deployment] make deployable doesn't work.
-  o [make/songs.make] indices are badly-formatted, don't need filenames anymore
-  o [TeX/songinfo] metadata files need descriptions.
   o [make/songs.make] indices should indicate which songs have notes, audio, or postable
     lyrics.  That will require actually looking at the metadata.
   o [lgf, steve] need to build Songs after push.
   o [deployment] post-update hooks are out of date; there should be a way to update them.
+  o [flktran] need to handle \singer; math $$ in some macros;
 
 Blogging:
   o probably useful to have a .do -> .html formatter, too.
@@ -432,6 +431,10 @@ burning:  -> notes copied to tracks.make
 
 0316Fr
   * take Songs/*/index.html out of git now that they can be made on the server.
+
+0317Sa
+  * [TeX/songinfo] metadata files need descriptions.
+  * [make/songs.make] indices are badly-formatted, don't need filenames anymore
 
 
 =now====Tools/to.do=====================================================================>|
