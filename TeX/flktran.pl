@@ -213,13 +213,13 @@ while (<STDIN>) {
     elsif (/\\arranger/)	{ $arranger = getContent($_); }
     elsif (/\\description/)	{ $description = getContent($_); }
     elsif (/\\ttto/)            { $ttto = getContent($_); }
-    elsif (/\\def/)             {  } # ignore macro definitionsgit 
+    elsif (/\\def/)             {  } # ignore macro definitions
 
     # Environments: 
 
     elsif (/\\begin\{refrain/)	{ begRefrain(); } # Refrain (deprecated)
     elsif (/\\end\{refrain/)	{ endRefrain(); }
-    elsif (/\\begin\{chorus/)	{ begRefrain(); } # chorus (same as refrain) for now)
+    elsif (/\\begin\{chorus/)	{ begRefrain(); } # chorus (same as refrain for now)
     elsif (/\\end\{chorus/)	{ endRefrain(); }
     elsif (/\\begin\{bridge/)	{ begBridge(); }  # Bridge
     elsif (/\\end\{bridge/)	{ endBridge(); }

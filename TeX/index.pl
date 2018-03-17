@@ -1,7 +1,7 @@
 #!/usr/bin/perl
-# $Id: index.pl,v 1.6 2010-10-14 06:48:15 steve Exp $
 # index [options] infile... 
 #	Perform indexing operations on filksong files
+#       FIXME:  This is obsolete now that we have metadata files.
 
 ### Print usage info:
 sub usage {
@@ -19,7 +19,6 @@ sub usage {
     print " Formats (extensions): \n";
     print "	flk	FlkTeX	(input; default)\n";
     print "	html	HTML\n";
-    print "	fxml	FLK-XML\n";
     print "	tex	LaTeX -- sources .flk file\n";
     print "	txt	plain text (default)\n";
 }
@@ -41,7 +40,6 @@ $suffix = "";
 
 $TABSTOP = 4;			# tabstop for indented constructs
 $WIDTH   = 72;			# line width for centering
-$AUTHOR  = "Stephen R. Savitzky"; # Author
 
 ### State variables:
 
