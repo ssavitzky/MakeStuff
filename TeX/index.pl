@@ -208,7 +208,6 @@ if ($outfmt eq "dsc") {		# .htaccess description lines
 	print "  <td valign='top'> $audio_o </td>";
 	print "  <td valign='top'> $audio_m </td>";
 	if ($lyrics) { print "  <td valign='top'> <a href='$d$fn/lyrics.pdf'>pdf</a>";}
-	print "  <td valign='top'> <tt><a href='$d$fn/'>$fn</a></tt></td>\n";
 	print "  <td valign='top'> $times{$fn}	</td>";
 	print "  <td valign='top'> <a href='$d$fn/'>", $titles{$fn};
 	if ($subtitles{$fn}) {print " <small>($subtitles{$fn})</small>"; }
