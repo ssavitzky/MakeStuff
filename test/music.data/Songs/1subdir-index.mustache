@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset='UTF-8'>
+<link rel="stylesheet" type="text/css" href="style.css" />
+<title>{{{title}}}</title>
+</head><body>
+<h3 class="breadcrumbs"><a href="/">steve.savitzky.net</a>
+ / <a href="/Songs">Songs</a>
+ / {{shortname}}
+</h3>
+<h1>{{{title}}}</h1>
+<h2>{{{subtitle}}}</h2>
+<h3>{{{notice}}}</h3>
+
+
+{{#dedication}}<p class="dedication">{{{dedication}}}</p>{{/dedication}}
+
+{{#description}}<p class="description"> {{{description}}}</p>{{/description}}
+
+<!--#config errmsg="" --> <!-- Don't complain if body-text.html isn't there. -->
+<!--#include virtual="body-text.html" -->
+
+{{#webok}} <!-- only include lyrics if it's ok to do so. -->
+<h3>Lyrics <a href="lyrics.pdf">[pdf]</a></h3>
+  <!--#include virtual="lyrics.html" -->
+{{/webok}}
+
+<!--#include virtual=/site/footer.inc -->
+
+</body></html>

@@ -1,0 +1,6 @@
+# .gitignore for /Songs
+#
+/0*
+lyrics.*
+metadata.*
+*/index.html
