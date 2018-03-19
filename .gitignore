@@ -37,6 +37,7 @@ core
 
 # Music-specific stuff.  
 # Ignore huge files and directories containing huge files
+# Should probably be generated for music directories during setup.
 
 Tracks
 Premaster
@@ -46,14 +47,6 @@ WAV
 *.aup
 *_data
 *.wav
-
-*.ogg
-*.mp3
-
-# generated files
-# songlist.txt
-0[Ii]ndex*
-1[Ii]ndex*
 
 # These are generated song files in Lyrics directories
 # suggested.txt isn't, but it's been moved to tempered-glass.info
