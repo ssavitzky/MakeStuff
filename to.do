@@ -13,10 +13,16 @@ BUGS:
   o [deployment] post-update hooks are out of date; there should be a way to update them.
   o [flktran] need to handle \singer; math $$ in some macros;
 
+General:
+  o in shared projects (e.g. github) make push should always happen on a feature branch,
+    and can use -f.  That would make it possible to filter out commits that are only used
+    for syncing between workstations.
+
 Blogging:
   o probably useful to have a .do -> .html formatter, too.
-  o be useful to have targets for both html and markdown, or else a command-line variable
-    maybe ff for file format.  ff=html (default), ff=md, etc.  ff is more versatile.
+  o It would be useful for make entry to have targets for both html and markdown, or else
+    a command-line variable maybe ff for file format.  ff=html (default), ff=md, etc.  ff
+    is more versatile. 
 
 WAV->FLAC
   o Move to a workflow that uses flac instead of wav.  Audacity can export it,
