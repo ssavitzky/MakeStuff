@@ -17,13 +17,14 @@ Annotated Contents
  [TeX/](TeX/) 
 :   LaTeX styles for formatting FilkTeX ("`.flk`") files, plus the tools
     for translating them into HTML (`flktran.pl`) and generating index
-    pages (`index.pl`). These are all showing their age, and need to be
-    given an honorable retirement. In particular the LaTeX styles need
-    to be updated for LaTeX 5e, and indexing needs to be done using Perl
-    scripts derived from `TrackInfo.pl`.
+    pages (`index.pl`).
+
+ [blogging](blogging/)
+:   `blogging.make` provides make targets for creating blog entries and
+    posting them to Dreamwidth (a Livejournal clone).
 
  [deployment](deployment/) 
-:   Git hooks and related tools for efficient website deployment.
+:   Git hooks and related tools for efficient website deployment.  
 
  [include](include/) 
 :   Files to be included in compilations or inserted into source code
@@ -36,8 +37,10 @@ Annotated Contents
 
  [music](music/) 
 :   The `*.make` files and associated scripts used in music- and
-    recording-related subdirectories and projects. Currently poorly
-    integrated with FilkTex, and lightly documented.
+    recording-related subdirectories and projects.  These makefiles manage
+    directories containing lyrics (in `.flk` format), and directories meant to
+    be published on a website.  The latter have a subdirectory for every song;
+    tags are used to determine which have web-visible lyrics.
 
  [scripts](scripts/) 
 :   Short scripts and fragments, mostly having to do with setting up and
@@ -76,15 +79,11 @@ The `Makefile` looks for the following local include files:
 
 ### HEADER.html
 
-Unlike most other directories on this website, where the `HEADER.html`
-file is hidden from casual browsing by an `index.html` file, *this*
-directory deliberately leaves `HEADER.html` out where you can see it.
-Whenever I have control over a programming project, I make its directory
-tree look like a website -- you will almost always find a `HEADER.html`
-file like this one, in every subdirectory. The
+In addition to being on GitHub, this tree is designed so that it can easily be
+published on a website.  The
 [Apache](http://httpd.apache.org/docs-2.0/) web server puts a
-`HEADER.html` file, if you have one, at the top of a directory listing.
-(It puts `README.html` at the bottom, after the file list.) With a
+`HEADER.html` file, if you have one, at the top of a directory listing;
+and puts `README.html` at the bottom, after the file list.  With a
 little tweaking you can get similar behavior with plain-text `HEADER`
 and `README`, but you can't always count on having enough control over a
 hosted website's configuration.
@@ -101,8 +100,7 @@ projects can be found in [../Src/](../Src/).)
     its contents.
 
  [`to.do`](to.do) 
-:   The to-do list for this directory. You can probably find some in
-    other directories if you look. The format is trivial: an open circle
+:   The to-do list for this project. The format is trivial: an open circle
     (lowercase "o") is something that's not finished yet; a filled
     circle (asterisk) is finished. "\~" indicates something I've decided
     not to do, and "?" indicates something I'm dithering about.
