@@ -1,4 +1,5 @@
-#.gitignore for test directory
+#.gitignore for tests
 
-# assume that all uppercase subdirectories are transient
-[A-Z]*/
+# directories built during tests:
+/Lyrics*
+/Songs

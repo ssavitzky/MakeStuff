@@ -1,0 +1,61 @@
+\begin{song}{The Programmer's Alphabet}
+\cvsid{$Id: alphabet.flk,v 1.4 2010-10-14 06:48:15 steve Exp $}
+\notice{    Lyrics \copyright 1981, 1984 Stephen Savitzky.  All rights reserved.
+            To the tune of ``Sweet Betsy from Pike''}
+\tags{computer, mine}
+\key{C}
+\timing{4:20}
+
+\small
+        [C]A is for ASCII, our [G7]Alphabet's [C]name
+        [C]B is the Bugs, for which [G7]we get the blame.
+        [C]C the Computer, which [F]never works [C]right, and
+        [C]D is Debugging, the [G7]rest of the [C]night.
+\begin{refrain}
+            [C]Programming, programming, [G7]all through the [C]night,
+            [C]We're stuck here until our new [G7]program works right.
+            [C]Programming, programming, [F]isn't it [C]fun?
+            [C]The maintainance starts when deb[G7]ugging is [C]done!
+\end{refrain}
+        E is the Elegant problems we're set
+        F is old Fortran we try to Forget.
+        G is the GOTO we're trying to kill, and
+        H is the Hacker who uses it still.
+\\
+        I is the Input we handle with care
+        J is the Jump to nobody knows where
+        K is the Kludge with which we got by, and
+        L is for Later to fix it we'll try.
+\\
+        M is the Memory, dropping a bit,
+        N the New version, that doesn't quite fit.
+        O is the Op'rating system we buy, and
+        P is the Patch to make our programs fly.
+\begin{bridge}
+If this was a real song
+This would be a bridge
+But this is a test.
+\end{bridge}
+        Q is for QWERTY, of typewriter lore,
+        R is the RAM that we used to call core.
+        S is the Standard we'll follow some day, and
+        T is the Teletype, banging away.
+\\
+        U is the User, that Unhappy man,
+        V is the Vengence he wreaks when he can.
+        W is Work, it's the manager's call, and
+        X is the Xerox machine down the hall.
+\\
+        Y is the Yes you reply by mistake, and
+        Z is the Zeros all over your tape.
+        There may be more verses they wanted to send,
+        But they've all gotten clobbered, so this is the end.
+\inset{no chorus after last verse}
+
+\begin{note}
+This is actually derived from
+\link{../songs/alphabet.html}{../songs/alphabet}.
+\end{note}
+\tailnote{Loosely inspired by various sailors' alphabet songs.}
+\end{song}
+

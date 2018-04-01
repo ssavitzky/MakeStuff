@@ -4,62 +4,85 @@ SUITE = music
 TESTS = 
 
 all::
-	echo available test suites: $(TESTS)
+	echo make targets for $(SUITE): run  = setup test teardown
 
-.PHONY: run setup teardown
+.PHONY: run setup test teardown
 
-run:: setup
+run:: setup test teardown
 	@echo running tests for $(SUITE).tests
 
-TEST_DIRS = Lyrics Lyrics-1 Songs
+TEST_DATA = music.data
+TEST_DIRS = $(shell ls $(TEST_DATA))
 LYRICS_DIRS = Lyrics Lyrics-1
 TEST_DIR_CONTENTS = $(addsuffix /Makefile, $(TEST_DIRS))
 TEST_FILES = $(TEST_DIR_CONTENTS)		 	\
-		$(addsuffix /song.sty, $(LYRICS_DIRS))  \
-		Lyrics/alphabet.flk Lyrics-1/alpha.flk  \
-		Lyrics/song.sty
+		Lyrics/alphabet.flk Lyrics-1/alpha.flk
 
 ### Tests
 
-run::
+test::
 	@echo testing basic functionality in Lyrics
-	cd Lyrics; make alphabet.ps
+	cd Lyrics; make alphabet.pdf
 	@echo Lyrics/alphabet.ps should exist
-	test -f Lyrics/alphabet.ps
+	test -f Lyrics/alphabet.pdf
 
-run::
-	@echo testing report-vars in Lyrics
-	cd Lyrics; make report-vars
+test::
+	@echo testing report-vars in Lyrics, looking at hasLyrics and NAMES
+	cd Lyrics; make report-vars > vars.log
+	grep -qe 'hasLyrics=lyrics.make' Lyrics/vars.log
+	grep -qe 'NAMES=alphabet tagged-wip' Lyrics/vars.log
 
-run::
+test::
 	@echo testing make all in Lyrics
 	cd Lyrics; make
-	@echo indices should exist
-	@for f in 1Index 1IndexShort 1IndexTable; do 				\
-		test -f Lyrics/$$f.html || (echo $$f.html not found; false) 	\
+	@echo pdf files should exist
+	@cd Lyrics; for f in *.flk; do g=`basename $$f .flk`;	\
+		test -f  $$g.pdf || (echo $$g.html not found; false) 	\
 	done
 
-run::
-	@echo testing report-vars in Songs
-	cd Songs; make report-vars
+SONGS_EXPECTED_SUBDIRS = alphabet alpha beta
+SONGS_REJECTED_SUBDIRS = work-in-progress tagged-work-in-progress
+SONG_SUBDIR_FILES = index.html lyrics.html lyrics.pdf metadata.sh metadata.yml
 
-expected_subdirs = alpha alphabet
-expected_files = lyrics.html lyrics.pdf
-
-run::
-	@echo testing make all in Songs
+test::
+	@echo testing in Songs.
 	cd Songs; make
-	@echo Songs should have subdirs with lyrics.html and lyrics.pdf
-	@for d in $(addprefix Songs/, $(expected_subdirs)); do			\
-		test -d $$d || (echo $$d not found; false);			\
-		for f in $(expected_files); do					\
-			test -f $$d/$$f || (echo $$d/$$f not found; false)	\
-		done								\
+	@echo song subdirs $(SONGS_EXPECTED_SUBDIRS) should exist
+	@for d in $(add-prefix Songs/, $(SONGS_EXPECTED_SUBDIRS)); do		\
+		test -d $$d || (echo $$d was not made; false) 			\
 	done
-	@echo Lyrics-1/alpha.ps should have been made and not deleted
-	test -f Lyrics-1/alpha.ps
+	@echo song subdirs $(SONGS_REJECTED_SUBDIRS) should NOT exist
+	@for d in $(add-prefix Songs/, $(SONGS_REJECTED_SUBDIRS)); do		\
+		[ ! -d $$d ] || (echo $$d was made in error; false)		\
+	done
+	@echo song subdirs should contain lyrics.{pdf,html}, metadata.{sh,yml}
+	@echo song subdirs should contain executable index.html
+	@cd Songs; for d in *; do						\
+		if test -d $$d; then for f in $(SONG_SUBDIR_FILES); do		\
+			test -f $$d/$$f || (echo $$d/$$f missing; false); 	\
+		done; fi;							\
+		test ! -d $$d -o -x $$d/index.html ||				\
+		(echo $$d/index.html not executable; false); 			\
+	done
+
+test::
+	@echo making sure that alpha/index.html includes lyrics
+	grep -q 'include virtual="lyrics.html"' Songs/beta/index.html 		\
+		|| echo beta/index.html should include lyrics
+	@echo making sure that beta/index.html does not include lyrics
+	grep -vq 'include virtual="lyrics.html"' Songs/beta/index.html 		\
+		|| echo beta/index.html should not include lyrics
+
+# TODO:
+#	test more tag handling:  PD, REJ, web-ok
+#	look at the song index files
+#	add some audio files
+#	At some point we may want to make 1subdir-index.mustache if it doesn't exist
 
 ### Files needed for setup
+
+#FIXME:  copy test lyrics from music.data/Lyrics;
+#	need music.data/Songs/1subdir-index.mustache for Songs
 
 %/alphabet.flk %/alpha.flk:
 	cp ../TeX/alphabet.flk $@
@@ -67,10 +90,10 @@ run::
 %/song.sty: | %/Makefile
 	cd `dirname $@`; make imports
 
-### boilerplate
-
 %/Makefile:
-	cd `dirname $@`; ln -s ../Makefile .
+	cd `dirname $@`; ln -s ../Makefile
+
+### boilerplate
 
 setup::
 	@echo setting up $(SUITE).tests
@@ -85,5 +108,5 @@ teardown::
 	rm -rf $(TEST_DIRS)
 
 $(TEST_DIRS):
-	mkdir $@
+	[ ! -d $(TEST_DATA)/$@ ] || cp -a $(TEST_DATA)/$@ .
 
