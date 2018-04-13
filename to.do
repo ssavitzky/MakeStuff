@@ -12,7 +12,9 @@ BUGS:
   o [lgf, steve] need to build Songs after push.
   o [deployment] post-update hooks are out of date; there should be a way to update them.
   o [flktran] need to handle \singer; math $$ in some macros;
-
+  o [flktran] need to be able to specify CC license subtype; in particular my songs need
+    to be CC-BY-SA-NC for monetization.
+    
 General:
   o in shared projects (e.g. github) make push should always happen on a feature branch,
     and can use -f.  That would make it possible to filter out commits that are only used
