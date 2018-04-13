@@ -1,4 +1,4 @@
-#Blogging with MakeStuff#
+## Blogging with MakeStuff
 
 The blogging rules are not loaded by default; you create a blog directory by
 making a file called `.config.make` with the following line:
@@ -14,7 +14,7 @@ make [entry|draft] name=<filename> [title="<title>"]
 make post [name=<filename>] [to=<post-url>]
 ```
 
-##Here's how it works:##
+### Here's how it works:
 
 Blog entries are stored in files (under the blog directory, although you can
 change this by setting `POST_ARCHIVE` in `.config.make`) with names like
