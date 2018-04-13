@@ -25,7 +25,9 @@ Blogging:
   o probably useful to have a .do -> .html formatter, too.
   o It would be useful for make entry to have targets for both html and markdown, or else
     a command-line variable maybe ff for file format.  ff=html (default), ff=md, etc.  ff
-    is more versatile. 
+    is more versatile, but targets like make draft.md may be feasible.
+  o should include the post's URL in the Posted: header, if the program returns it.
+  o it should be easy to crosspost.
 
 WAV->FLAC
   o Move to a workflow that uses flac instead of wav.  Audacity can export it,
