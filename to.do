@@ -14,6 +14,7 @@ BUGS:
   o [flktran] need to handle \singer; math $$ in some macros;
   o [flktran] need to be able to specify CC license subtype; in particular my songs need
     to be CC-BY-SA-NC for monetization.
+  o [make/songs.make] body text in other formats, e.g. markdown
     
 General:
   o in shared projects (e.g. github) make push should always happen on a feature branch,
