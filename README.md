@@ -14,12 +14,7 @@ Annotated Contents
 
 ### Directories
 
- [TeX/](TeX/) 
-:   LaTeX styles for formatting FilkTeX ("`.flk`") files, plus the tools
-    for translating them into HTML (`flktran.pl`) and generating index
-    pages (`index.pl`).
-
- [blogging](blogging/)
+ [blogging](blogging/) (see blogging/README.md for details.)
 :   `blogging.make` provides make targets for creating blog entries and
     posting them to Dreamwidth (a Livejournal clone).
 
@@ -29,8 +24,10 @@ Annotated Contents
  [include](include/) 
 :   Files to be included in compilations or inserted into source code
     and documentation. Mostly contains various forms of license notice,
-    in a format suitable for use with `boilermaker.pl`, and templates
-    for use with `replace-template-file.pl`.
+    in a format suitable for use with `boilermaker.pl` (makes mass changes to
+    license boilerplate in code files), and templates
+    for use with `replace-template-file.pl` (does template replacement in
+    place, the effect is similar to using server-side includes).
 
  [make](make/) 
 :   The general-purpose `*.make` files included by `Makefile`.
@@ -45,6 +42,11 @@ Annotated Contents
  [scripts](scripts/) 
 :   Short scripts and fragments, mostly having to do with setting up and
     maintaining subprojects using git.
+
+ [TeX/](TeX/) 
+:   LaTeX styles for formatting FilkTeX ("`.flk`") files, plus tools
+    for translating them into HTML (`flktran.pl`) and generating index
+    pages (`index.pl`).
 
 ### Makefile
 
@@ -70,12 +72,13 @@ The `Makefile` looks for the following local include files:
     for specific targets with dependencies.
 
  `*/[.]config.make` 
-:   Only in the top-level directory; this contains make rules,
-    definitions, and dependencies that apply to the entire tree.
+:   This contains make rules, definitions, and dependencies that apply to the
+    current directory.
 
  `*/[.]depends.make` 
-:   This also contains targets; if you have both, you can use this one
-    for specific targets with dependencies.
+:   This contains make rules, definitions, and dependencies that apply to the
+    current directory.  If you have both `config.make` and `depends.make`, you
+    should use `depends.make` for specific targets with dependencies.
 
 ### HEADER.html
 
@@ -87,11 +90,6 @@ and puts `README.html` at the bottom, after the file list.  With a
 little tweaking you can get similar behavior with plain-text `HEADER`
 and `README`, but you can't always count on having enough control over a
 hosted website's configuration.
-
-This particular directory contains tools for working on website- and
-music-related projects: the tools used on *this website* and the
-projects you find here. (Source code for other, unrelated open-source
-projects can be found in [../Src/](../Src/).)
 
 ### Other Files
 
