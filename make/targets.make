@@ -193,18 +193,13 @@ makeable:
 	   echo linking to $(TOOLREL)/Makefile			\
 	   ln -s $(TOOLREL)/Makefile .; 			\
 	   git add Makefile; 					\
-	   git commit -m "Makefile linked from Tools"; 		\
+	   git commit -m "Makefile linked from MakeStuff";	\
 	fi
 
 ### site-wide targets and depends:
 
 ifdef SITEDIR
-  ifneq ($(wildcard $(SITEDIR)/targets.make),)
-    include $(SITEDIR)/targets.make
-  endif
-  ifneq ($(wildcard $(SITEDIR)/depends.make),)
-    include $(SITEDIR)/depends.make
-  endif
+  -include $(SITEDIR)/targets.make $(SITEDIR)/depends.make
 endif
 
 ###### end of targets.make ######
