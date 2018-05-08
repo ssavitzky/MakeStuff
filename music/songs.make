@@ -61,7 +61,8 @@ INDICES= 1Index.html 1IndexTable.html 1IndexShort.html   # 1IndexLong.html
 # Lists.  Just the ones we actually need
 ALLPDF   = $(patsubst %,%/lyrics.pdf,$(DIRNAMES))
 ALLHTML  = $(patsubst %,%/lyrics.html,$(DIRNAMES))
-ALLTEXT  = $(patsubst %,%/lyrics.txt,$(DIRNAMES))
+ALLTEXT  = $(patsubst %,%/lyrics.txt,$(DIRNAMES)) \
+	   $(patsubst %,%/lyrics.chords.txt,$(DIRNAMES))
 
 # Indices: web
 #	0Index* are the web-safe versions of the index files
@@ -114,6 +115,10 @@ reportVars += LPATH ASONGS ALLSONGS DIRNAMES WEB_OK_TAGS MUSTACHE
 %/lyrics.txt: %.flk | %
 	WEBSITE=$(WEBSITE) WEBDIR=$(MYNAME) $(FLKTRAN) $< $@
 
+%/lyrics.chords.txt: %.flk | %
+	WEBSITE=$(WEBSITE) WEBDIR=$(MYNAME) $(FLKTRAN) -c $< $@
+
+
 # We can generate several types of metadata.
 #	metadata.yml is an input to the mustache template engine
 # 	metadata.sh and metadata.make can be included in shell scripts and makefiles;
@@ -161,7 +166,7 @@ endif
 ### Targets
 ###
 
-all::	$(DIRNAMES) $(ALLPDF) metadata $(ALLHTML)
+all::	$(DIRNAMES) $(ALLPDF) metadata $(ALLHTML) $(ALLTEXT)
 
 .PHONY: metadata
 metadata::	$(patsubst %,%/metadata.yml, $(DIRNAMES))
