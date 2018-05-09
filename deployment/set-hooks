@@ -1,25 +1,27 @@
 #!/bin/sh
 # Set post-update deployment hooks in git repositories
-
-# Assumes Tools is a symlink in ~/git
+# use absolute paths and copies the hook files rather than linking,
+# It relies on the fact that we can get the location of the destination
+# working tree by s/git/vv/ in the path.
 
 HOOKS="post-update"
+GITROOT=git
+DSTROOT=vv
+
+# $here is where both this script and the appropriate hooks are located
+here=$(dirname $0)
 
 for repo in $*; do
     (
-	cd $repo
-	pwd=`pwd`
-	name=`basename $pwd .git`
-	dest=`dirname $pwd | sed -e 's/git/vv/'`/$name
+	echo setting up hooks in $repo
+	# dest is the deployment directory - see whether it exists
+	dest=$(dirname $repo | sed s/$GITROOT/$DSTROOT/)/$(basename $repo .git)
 	if [ -d $dest ]; then
-	    echo Installing hooks in $pwd/hooks.
-	    cd hooks
-	    d=../../Tools/deployment
-	    while [ ! -d $d ]; do d=../$d; done
-	    # force in case things moved
-	    for hook in $HOOKS; do ln -sf $d/$hook .; done
+	    echo Installing hooks in $repo/hooks.
+	    for hook in $HOOKS; do cp $here/$hook $repo/hooks; done
 	else
-	    echo $dest does not exist.  Remove old hooks if necessary
+	    echo $dest does not exist.  Removing hooks.
+	    (cd $repo/hooks/; rm -f $HOOKS)
 	fi
     )
 done
