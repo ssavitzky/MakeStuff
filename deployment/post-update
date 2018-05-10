@@ -1,11 +1,11 @@
-#!/bin/sh
+#!/bin/bash
 # Called once after update, with list of refs pushed in the arguments.
 
 # Files to search for a post-deployment make target
 PD_FILES="Makefile .depends.make depends.make site/depends.make config.make .config.make"
 
 for ref in $*; do
-    if [[ $ref =~ .*/master$ ]]; then
+    if [ "$ref" = refs/heads/master ]; then
 	unset GIT_DIR; export GIT_DIR
 	repo=`pwd`
 	name=`basename $repo .git`

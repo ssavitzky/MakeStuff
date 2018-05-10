@@ -1,0 +1,104 @@
+### Test suite for deployment  -*-Makefile-*-
+
+SUITE = deployment
+TESTS = 
+
+all::
+	echo make targets for $(SUITE): run  = setup test teardown
+
+.PHONY: run setup test teardown
+
+run:: setup test teardown
+	@echo running tests for $(SUITE).tests
+
+TEST_DATA = deployment.data
+TEST_DIRS = $(shell ls $(TEST_DATA))
+TEST_REPOS = $(addprefix git/, t1.git t1/t11.git t2.git t2/t21.git)
+TEST_TREES = t1 t2 t1/t11 t2/t21
+TEST_WORK_TREES = $(addprefix ww/, $(TEST_TREES))
+
+# These are the destinations:  note that the trees under t2 don't get deployed
+TEST_DEST_TREES = $(addprefix vv/, t1 t1/t11 )
+
+### Setup
+###	start with test directories vv and git, and prototype working tree ww
+###	create git/t1.git, t2.git, t1/t11.git, t2/t12.git
+
+setup:: $(TEST_DIRS) $(TEST_REPOS) $(TEST_WORK_TREES) $(TEST_DEST_TREES)
+
+## make the shared repos; they start out bare.
+$(TEST_REPOS):: 
+	mkdir -p $@
+	cd $@; git init --bare
+
+## make the working trees that are going to be deployed:
+# 	ww starts out initialized with files in all its subdirectories, but not
+#	the .gitignore files because we want to check in all of deployment.data
+# 	Push each new work tree to the corresponding repo.
+$(TEST_WORK_TREES):: 
+	echo '*/' > $@/.gitignore
+	cd $@; git init; git add .; git commit -m "initial commit in $@"
+	cd $@; git remote add origin `pwd -P | sed -e s/ww/git/`.git
+	cd $@; git push origin master
+
+$(TEST_DEST_TREES):: | $(TEST_REPOS)
+	cd vv; git clone ../git/t1.git
+	cd vv/t1; git clone ../../git/t1/t11.git
+
+### Tests
+
+## Attempt to add post-update hooks to t1 and t2.
+#	t2 has no destination, so it shouldn't get a hook.
+test::
+	@echo testing basic functionality: set-hooks and post-update
+	MakeStuff/deployment/set-hooks git/t1.git git/t2.git
+	@[ -x git/t1.git/hooks/post-update ] || (echo hook should be set in t1; false)
+	@[ ! -e git/t1/t11.git/hooks/post-update ] || \
+		(echo hook should not be set in t1/t11; false)
+	@[ ! -e git/t2.git/hooks/post-update ] || \
+		(echo hook should not be set in t2; false)
+	MakeStuff/deployment/set-hooks git/t1.git
+	@[ -x git/t1.git/hooks/post-update ] || \
+		(echo setting a hook should be idempotent; false)
+
+## try pushing changes from t1, t1/t11, and t2
+#	t1 is the only one that should actually deploy somewhere
+#	there is no hook for t1/t11, and no destination directory for t2
+
+test::
+	@for f in t1 t1/t11 t2; do 				\
+		( cd ww/$$f					\
+		; echo $$f > test-file				\
+		; git add test-file				\
+		; git commit -m "adding test-file in $$f"	\
+		; git push origin master			\
+		)						\
+	done
+	@echo expecting deployment only to t1
+	@[ -e vv/t1/test-file ] || \
+		(echo vv/t1/test-file should have been pulled; false)
+	@[ ! -e vv/t1/t11/test-file ] || \
+		(echo vv/t1/t11/test-file should not exist; false)
+
+### boilerplate
+
+setup::
+	@echo setting up $(SUITE).tests
+
+setup:: | $(TEST_DIRS) $(TEST_FILES)
+	echo $(TEST_FILES)
+
+teardown::
+	@echo tearing down $(SUITE).tests
+
+teardown::
+	rm -rf $(TEST_DIRS)
+
+$(TEST_DIRS):
+	[ ! -d $(TEST_DATA)/$@ ] || cp -a $(TEST_DATA)/$@ .
+
+
+### reports:
+
+all::
+	@echo TEST_REPOS = $(TEST_REPOS)
