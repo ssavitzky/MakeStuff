@@ -68,12 +68,15 @@ test::
 	@[ ! -e git/t1/t11.git/hooks/post-update ] || \
 		(echo hook should not be set in t1/t11; false)
 
-## try pushing changes from t1, t1/t11, and t2
+## try pushing changes from t1, t1/t11, t2, and t21
 #	t1 is the only one that should actually deploy somewhere
-#	there is no hook for t1/t11, and no destination directory for t2
+#	there is no hook for t1/t11, and no destination directory for t2 or t2/t21
+#	add a hook to t2/t21 to prove that nothing bad happens if we have a
+#	hook but no target directory
 
 test::
-	@for f in t1 t1/t11 t2; do 				\
+	cp MakeStuff/deployment/post-update git/t2/t21.git/hooks
+	@for f in t1 t1/t11 t2 t2/t21; do			\
 		( cd ww/$$f					\
 		; echo $$f > test-file				\
 		; git add test-file				\
