@@ -61,6 +61,13 @@ test::
 	@[ -x git/t1.git/hooks/post-update ] || \
 		(echo setting a hook should be idempotent; false)
 
+test::
+	@echo making sure that set-hooks works from the git directory
+	cd git; ../MakeStuff/deployment/set-hooks ./t1.git ./t2.git
+	@[ -x git/t1.git/hooks/post-update ] || (echo hook should be set in t1; false)
+	@[ ! -e git/t1/t11.git/hooks/post-update ] || \
+		(echo hook should not be set in t1/t11; false)
+
 ## try pushing changes from t1, t1/t11, and t2
 #	t1 is the only one that should actually deploy somewhere
 #	there is no hook for t1/t11, and no destination directory for t2
