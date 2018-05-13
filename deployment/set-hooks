@@ -14,8 +14,9 @@ here=$(dirname $0)
 for repo in $*; do
     (
 	echo setting up hooks in $repo
+	absrepo=$(cd -P $repo; pwd)
 	# dest is the deployment directory - see whether it exists
-	dest=$(dirname $repo | sed s/$GITROOT/$DSTROOT/)/$(basename $repo .git)
+	dest=$(dirname $absrepo | sed s/$GITROOT/$DSTROOT/)/$(basename $repo .git)
 	if [ -d $dest ]; then
 	    echo Installing hooks in $repo/hooks.
 	    for hook in $HOOKS; do cp $here/$hook $repo/hooks; done
