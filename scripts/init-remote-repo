@@ -3,18 +3,20 @@
 
 if [ ! -z `git remote` ]; then echo `pwd` origin exists; exit; fi
 
-# This works only because our forest is rooted at /vv on nova.
+# This works only because we root the working trees at either
+# /vv or ~/vv, and the shared corresponding repos at ~/git.
 cwd=`pwd -P`
 name=`basename $cwd`
 site=savitzky.net
 
-parent=`dirname $cwd | sed -e 's/\/vv/git/'`
+# kill the whole path up to vv, and replace vv with git
+parent=`dirname $cwd | sed -e 's/.*\/vv/git/'`
 path=$parent/$name.git
 
 url=$site:$path
 echo $url
 
-ssh -x $site "mkdir $path && cd $path && git init --bare"
+ssh -x $site "mkdir -P $path && cd $path && git init --bare"
 git remote add origin -m master $url
 git push -f origin master
 git branch --set-upstream-to master origin/master
