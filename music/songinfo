@@ -193,7 +193,7 @@ sub getSongFileInfo {
     }
 
     $notice =~ s/\n/ /g;
-    $notice =~ s/\\SomeRightsReserved/CC-by-sa/; # alternatively, deTeX makes it a link
+    $notice =~ s/\\SomeRightsReserved/CC-by-nc-sa/; # alternatively, deTeX makes it a link
     $notice =~ s/\\copyright/\&copy;/g;
 
     # Figure out the license.
