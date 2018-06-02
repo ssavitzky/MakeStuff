@@ -8,18 +8,17 @@
 
 ### MakeStuff:  Figure out where we are and where the MakeStuff is: 
 #   BASEDIR is the directory that contains it, possibly as a symlink.
-#   Note that the former name of MakeStuff was Tools, and most of the
-#   tree still refers to it that way.
+#   Note that the former name of MakeStuff was Tools, but now that all active instances
+#        have been fixed it's safe not to look for it.
 #
 MYPATH := $(shell pwd -P)
 MYNAME := $(notdir $(MYPATH))
 MYDIR  := $(dir $(MYPATH))
-BASEDIR:= $(shell d=$(MYPATH); 						\
-		  while [ ! -d $$d/MakeStuff/make ] && [ ! -d $$d/Tools/make ] && \
-			[ ! $$d = / ]; do				\
-			d=`dirname $$d`;				\
+BASEDIR:= $(shell d=$(MYPATH); 						 \
+		  while [ ! -d $$d/MakeStuff/make ] && [ ! $$d = / ]; do \
+			d=`dirname $$d`;				 \
 		  done; echo $$d)
-# Make sure we actually found Tools, because we can't proceed without it.
+# Make sure we actually found MakeStuff, because we can't proceed without it.
 ifeq ($(BASEDIR),/)
      $(error Cannot find MakeStuff directory.  You need a symlink to it.)
 endif

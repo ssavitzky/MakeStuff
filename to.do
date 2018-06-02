@@ -81,11 +81,8 @@ TeX improvements
     o Uppercase style names to distinguish;
     * Separate packages for context-specific (i.e. scripting) macros. -> zingers
   o LaTeX2e
-    * documentclass.  May want broadside and songbook classes.
-    * 0619 multicol for columns.  Redefine the twocolumns environment, for minimum upset.
-    * 0619 fancyhdr for headers.
     . clean up obsolete constructs
-    o \comment instead of \ignore
+    * 0527 \comment instead of \ignore
     o parametrize page size and layout, e.g. for tablets.  See
       <a href="https://en.wikibooks.org/wiki/LaTeX/Page_Layout#Page_size_for_tablets"
       >LaTeX/Page Layout # Page size for tablets</a> 
@@ -349,6 +346,11 @@ burning:  -> notes copied to tracks.make
     but can use .inf files with -useinfo.  see icedax(0)
   = it is necessary to eject and reload the disk before reading the msinfo
 
+  * LaTeX2e
+    * documentclass.  May want broadside and songbook classes.
+    * 0619 multicol for columns.  Redefine the twocolumns environment, for minimum upset.
+    * 0619 fancyhdr for headers.
+    
 0624Sa
   * cleanup.  remove TeX/1song.tex, which is obsolete.
     remove obsolete \Centered and \Indented macros.
@@ -453,3 +455,4 @@ burning:  -> notes copied to tracks.make
 Local Variables:
     fill-column:90
 End:
+?
