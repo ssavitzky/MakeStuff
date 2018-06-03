@@ -50,22 +50,17 @@ ALLSONGS := $(shell $(SORT_BY_TITLE)  $(filter-out $(REJECT),$(ASONGS)))
 DIRNAMES := $(shell for f in $(subst .flk,,$(notdir $(ALLSONGS))); do echo $$f; done \
 		    | grep -v -e .orig -e --)
 
-# Indices: all
-# 	1Index.html is the index web page, 1IndexTable.html is just the
-#	 <table> element, for use in template replacement.
-#	1IndexShort.html is the raw list of names linked to subdirs
-#	1IndexLong.html is the long table with descriptions
-#
-INDICES= 1Index.html 1IndexTable.html 1IndexShort.html   # 1IndexLong.html
-
 # Lists.  Just the ones we actually need
 ALLPDF   = $(patsubst %,%/lyrics.pdf,$(DIRNAMES))
 ALLHTML  = $(patsubst %,%/lyrics.html,$(DIRNAMES))
 ALLTEXT  = $(patsubst %,%/lyrics.txt,$(DIRNAMES)) \
 	   $(patsubst %,%/lyrics.chords.txt,$(DIRNAMES))
 
-# Indices: web
-#	0Index* are the web-safe versions of the index files
+# Indices: 
+# 	0Index.html is the index web page, 0IndexTable.html is just the
+#	 <table> element, for use in template replacement.
+#	0IndexShort.html is the raw list of names linked to subdirs
+#	0IndexLong.html is the long table with descriptions
 WEBINDICES = 0Index.html 0IndexTable.html 0IndexShort.html
 SUBDIR_INDICES =  $(patsubst %,%/index.html, $(DIRNAMES))
 
@@ -254,8 +249,7 @@ htmlclean::
 ### Website indices:
 
 # FIXME: At the moment neither $(INDEX) and $(TRACKINFO) is able to handle
-# multiple lyrics directories.  trackinfo can probably be fixed by giving
-# it 
+# multiple lyrics directories. 
 
 # We used to generate complete HTML files, but that's not nearly versatile
 # enough.  What we do now is generate HTML fragments that get included in
@@ -265,7 +259,7 @@ htmlclean::
 # trying to generate lists in the lyrics directory.  That gives us better
 # control over what's included.
 
-WEBINDICES = 0Index.html 0IndexShort.html 0IndexTable.html
+WEBINDICES = 0Index.html 0IndexShort.html 0IndexTable.html 0IndexLong.html
 
 .PHONY: webindices 
 webindices: $(WEBINDICES)
@@ -273,15 +267,19 @@ webindices: $(WEBINDICES)
 # indices currently broken
 all:: webindices
 
-0Index.html: $(ALLSONGS) $(DIRNAMES) $(INDEX)
+# 0Index.html is a kludge -- don't link to it!
+#	The right thing to do is make a page called, e.g., SongIndex.html that #includes
+#	either 0IndexTable or 0IndexLong
+0Index.html: $(ALLSONGS) $(DIRNAMES) $(INDEX) $(TOOLDIR)/music/songs.make
 	@echo building $@ from WEBLYRICS
 	@echo '<html>' 					>  $@
 	@echo '<head>'					>> $@
 	@echo '<title>Song Index</title>'		>> $@
+	@echo '<link href="../site/style.css" rel="stylesheet" type="text/css">' >> $@
 	@echo '</head><body>'				>> $@
-	@echo '<h2><a href="/">[home]</a>'		>> $@
-	@echo '  / <a href="./">Songs</a>'		>> $@
-	@echo '  / Song Index</h2>'			>> $@
+	@echo '<nav><a href="/">[home]</a>'		>> $@
+	@echo '  / <a href="../Songs">Songs</a>'	>> $@
+	@echo '  / <a href="./">Song Index</a></nav>'	>> $@
 	@$(INDEX) -t -h $(ALLSONGS)			>> $@
 	@echo '<h5>Last update: ' `date` '</h5>'	>> $@
 	@echo '</body>'					>> $@
