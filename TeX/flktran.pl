@@ -149,7 +149,7 @@ if ($html) {
     $SP  = "&nbsp;";
     $AMP = "&amp;";
     # it might be more sensible to use the cellpadding to space the verses.
-    $BVERSE = ($tables)? "<table cellpadding=0 cellspacing=0>\n<tr>" : "<pre>\n";
+    $BVERSE = ($tables)? "<table cellpadding=0 cellspacing=0 class='verse'>\n<tr>" : "<pre class='verse'>\n";
     $EVERSE = ($tables)? "</tr></table>\n" : "</pre>\n";
     $FLKTRAN = "<a href='/Tools/TeX/flktran.html'><code>flktran</code></a>";
     # Creative Commons copyright notice
@@ -343,8 +343,10 @@ sub doTailnote {
 
 ### Begin a refrain:
 sub begRefrain {
+    my ($isBridge) = @_;
+    my $cssClass = $isBridge? "bridge" : "chorus";
     if ($vlines) { endVerse(); }
-    if ($html) { print "<blockquote>\n" if ($tables); }
+    if ($html) { print "<blockquote class='$cssClass'>\n" if ($tables); }
     $indent += $TABSTOP;
     # Note that begVerse will get called when the first line appears,
     # so we don't have to deal with verse count, line count, or <pre>.
@@ -363,7 +365,7 @@ sub endRefrain {
 
 ### Begin a bridge:
 sub begBridge {
-    begRefrain();
+    begRefrain(1);
     if ($html) { print "<blockquote>\n" if ($tables); }
     $indent += $TABSTOP;
     # Note that begVerse will get called when the first line appears,
