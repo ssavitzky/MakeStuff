@@ -21,14 +21,6 @@ Annotated Contents
  [deployment](deployment/) 
 :   Git hooks and related tools for efficient website deployment.  
 
- [include](include/) 
-:   Files to be included in compilations or inserted into source code
-    and documentation. Mostly contains various forms of license notice,
-    in a format suitable for use with `boilermaker.pl` (makes mass changes to
-    license boilerplate in code files), and templates
-    for use with `replace-template-file.pl` (does template replacement in
-    place, the effect is similar to using server-side includes).
-
  [make](make/) 
 :   The general-purpose `*.make` files included by `Makefile`.
 
