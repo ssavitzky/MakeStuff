@@ -1,7 +1,7 @@
-MakeStuff/music
+# MakeStuff/music
 
 This directory contains makefile templates, include files, and scripts
-related to music -- lyrics, recordings, and so on. The templates
+related to music -- lyrics, recordings, and so on. The "templates"
 (capitalized) are meant to be symlinked as `Makefile`s; the include
 files (lower case) are meant to be included. The generic include files
 in [../make](../make) were a later development, but will be used in the
@@ -11,8 +11,7 @@ Note that everything here has been moved from [Tools/](../); it will
 take a while before they all get moved here and converted to the new
 Makefile system. In the mean time, symlinks have been left in place.
 
-Annotated Contents
-------------------
+## Annotated Contents
 
 ### Templates
 
@@ -75,7 +74,6 @@ auto-generated .depends.make, at this point.
 
 ------------------------------------------------------------------------
 
-**Copyright © HyperSpace Express**\
-[]()
+**Copyright © HyperSpace Express**
 
 ------------------------------------------------------------------------
