@@ -11,42 +11,36 @@ Note that everything here has been moved from [Tools/](../); it will
 take a while before they all get moved here and converted to the new
 Makefile system. In the mean time, symlinks have been left in place.
 
-## Annotated Contents
+## Contents
 
-### Templates
+### Makefiles
 
 [~~Album.make~~](Album.make) (deprecated)
-
-The old album makefile. Can't simply be replaced because of some differences
-in directory layout.  This will be removed once the directories that use it
-have been tracked down and converted. Record.make has already been replaced,
-and Concert.make and Practice.make have been moved to the only working
-directory where they are used.
+: The old album makefile. Can't simply be replaced because of some differences
+  in directory layout.  This will be removed once the directories that use it
+  have been tracked down and converted. Record.make has already been replaced
+  (by tracks.make), and Concert.make and Practice.make have been moved to the
+  only working directory where they are used.
 
 ### Include Files
 
-[lyrics.make](lyrcs.make)
+ [`lyrics.make`](lyrcs.make)
+:  Rules and targets for a directory containing song lyrics in FlkTex format
+   (see [../TeX](../TeX)).  Generates printable PDF files and index files, as
+   well as combining lyrics into songbooks.
 
-Replacement for \*/Lyrics/Makefile. None of these are symlinked; they
-have subtle differences that will make conversion a bit challenging. In
-addition, future plans require multiple lyrics directories, to allow
-songbooks with appropriate rights to be distributed via public git
-repositories.
+ [`songs.make`](songs.make)
+:   Rules and targets for `\*/Songs`.  This is used to build an online songbook
+    on a website -- see [this one](https://steve.savitzky.net/Songs/).
 
-[record.make](record.make)
+ [`track-depends.make`](track-depends.make)
+:  Used in `Albums.make` and `tracks.make` to build a secondary makefile,
+   `mytracks.make`, that makes ogg and mp3 files from wav files in the
+    Premaster subdirectory.
 
-Replacement for Record.make (which in turn is symlinked from
-../record.make) meant to be included from a `config.make`
-
-[songs.make](songs.make)
-
-Include for \*/Songs. Currently only users/steve has a Songs directory.
-
-[track-depends.make](track-depends.make)
-
-Rules for use in a Tracks subdirectory; the makefile there is
-auto-generated. This could be replaced with a Makefile symlink and an
-auto-generated .depends.make, at this point.
+ [`tracks.make`](tracks.make)
+:   Rules and targets for a directory containing recorded tracks.  Included
+    automatically if a `\*.songs` file exists.
 
 ### Scripts
 
@@ -71,9 +65,5 @@ auto-generated .depends.make, at this point.
  [`transpose`](transpose) 
 :   Transpose a file that contains chord symbols in square brackets:
     ChordPro, FlkTran, etc.
-
-------------------------------------------------------------------------
-
-**Copyright © HyperSpace Express**
 
 ------------------------------------------------------------------------
