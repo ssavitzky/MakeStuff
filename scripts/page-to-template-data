@@ -13,8 +13,6 @@ import argparse
 #   The contents of the title tag are put in the Subject: header, and each
 #   <meta name="x" contents="y"> becomes x: y
 #
-#   At some point we may want to do something with the nav tag.
-#
 #   It's an open question whether to put the headers in a separate
 #   file -- that would simplify template substitution but make it harder
 #   to move things around.  We'll probably make it an option.
@@ -83,8 +81,9 @@ def extract_metadata(file):
             continue
         try:                    # readline just returns an empty string at EOF.
             line = next(file)   # so we use the file as an iterator
-        except StopIteration:   # which raises an exception when it's done.
-            break               # otherwise we would hang if there's no </head>
+        except StopIteration:   # and handle the exception we get when it's done
+            print("No </head> tag found", file=sys.stderr)
+            exit(1)             # otherwise we would hang if there's no </head>
         
     # If the <body> tag starts on the same line as </head>, remove it.
     if re.search(r'<body', line):
@@ -92,9 +91,9 @@ def extract_metadata(file):
     return metadata
 
 # Extract the contents of the <body> element, and return it as a list of lines.
-#   The </body> and </html> tags are omitted, as are server-side includes.  We
-#   make the assumption that the end tags and SSI comments are not continued onto
-#   other lines.  The <body> tag is deleted in extract_metadata
+#   The <body>, </body>, and </html> tags and server-side includes are skipped.
+#   We assume that the end tags and SSI comments are not continued onto other lines.
+#   The <body> tag is skipped in extract_metadata if it's on the same line as </head>.
 def extract_body_contents(file):
     body_text = []
     for line in file:
