@@ -1,0 +1,36 @@
+#!/usr/bin/python3
+# 
+import os
+import sys
+import re
+import argparse
+
+### page-to-template-data:
+#   This program converts a web page to a file consisting of an RFC-822(ish)
+#   header followed by the contents of the body tag.  Server-side includes
+#   are removed.
+#
+#   The contents of the title tag are put in the Subject: header, and each
+#   <meta name="x" contents="y"> becomes x: y
+#
+#   At some point we may want to do something with the nav tag.
+#       
+long_description = '''
+
+This is a rather hacky python program that converts a web page
+(typically index.html) into a body-contents fragment with an email-style
+Subject: header derived from the title.  It is used for converting a
+complete page into input for a templating engine (e.g. mustache).
+
+RFC822-style headers are used in part because we're already using them
+for blog posts (see MakeStuff/blogging), and in part because they don't
+have to be quoted.  Note that there's no real point in making the header
+into YAML frontmatter, because the body isn't the outermost template,
+and more metadata is going to be added at build time.
+'''
+
+argparser = argparse.ArgumentParser(description="convert web page to html fragment with metadata")
+argparser.add_argument('-o', '--output', help='output file name; defaults to stdout')
+argparser.add_argument('input', help='input file')
+argparser.parse_args()
+
