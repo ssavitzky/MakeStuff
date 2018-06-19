@@ -14,8 +14,13 @@ import argparse
 #   <meta name="x" contents="y"> becomes x: y
 #
 #   At some point we may want to do something with the nav tag.
-#       
-long_description = '''
+#
+#   It's an open question whether to put the headers in a separate
+#   file -- that would simplify template substitution but make it harder
+#   to move things around.  We'll probably make it an option.
+#
+
+long_description = '''Convert web page to html fragment with metadata.
 
 This is a rather hacky python program that converts a web page
 (typically index.html) into a body-contents fragment with an email-style
@@ -23,14 +28,119 @@ Subject: header derived from the title.  It is used for converting a
 complete page into input for a templating engine (e.g. mustache).
 
 RFC822-style headers are used in part because we're already using them
-for blog posts (see MakeStuff/blogging), and in part because they don't
-have to be quoted.  Note that there's no real point in making the header
-into YAML frontmatter, because the body isn't the outermost template,
-and more metadata is going to be added at build time.
+for blog posts (see MakeStuff/blogging), and in part because they're
+actually a subset of yaml, but allow cat to be used to add additional
+metadata before splitting.  The --metafile option lets you direct the
+metadata to a different file.
 '''
 
-argparser = argparse.ArgumentParser(description="convert web page to html fragment with metadata")
-argparser.add_argument('-o', '--output', help='output file name; defaults to stdout')
-argparser.add_argument('input', help='input file')
-argparser.parse_args()
+# Note that we make no attempt to actually parse the HTML
+
+argparser = argparse.ArgumentParser(description=long_description)
+argparser.add_argument('-o', '--outfile', help='output file name - default stdout')
+argparser.add_argument('-m', '--metafile', help='metadata file name - default outfile')
+argparser.add_argument('infile', help='input file')
+
+args = argparser.parse_args()
+
+input_file_name = args.infile
+output_file_name = args.outfile
+meta_file_name = args.metafile
+
+##########################################################################
+# Functions:
+
+# Extend line with additional lines from file until regex.search succeeds.
+#   This is used to get a complete tag or element assuming that the start
+#   tag is contained in the line.
+#   Return (line, match) where line is whatever remains after the match.
+def get_complete_tag(regex, line, file):
+    while True:
+        match = regex.search(line)
+        if match:
+            return (line[match.end()+1:], match)
+        re.sub(r'\n', ' ', line)
+        line = line + file.readline()
+
+# Extract metadata from the <head> element of the file.
+#   The metadata is returned as a dict.
+def extract_metadata(file):
+    metadata = {}
+    end_head = re.compile('</head>')
+    title = re.compile('<title>')
+    get_title = re.compile('<title>(.*)</title>')
+    meta = re.compile('<meta\s')
+    get_meta = re.compile(r'<meta\s+name="([^"]*)"\s+content="([^"]*)"\s*>')
+    line = file.readline()
+    while not end_head.search(line):
+        if title.search(line):
+            (line, match) = get_complete_tag(get_title, line, file)
+            metadata['Subject'] = match.group(1)
+            continue
+        if meta.search(line):
+            (line, match) = get_complete_tag(get_meta, line, file)
+            metadata[match.group(1)] = match.group(2)
+            continue
+        try:                    # readline just returns an empty string at EOF.
+            line = next(file)   # so we use the file as an iterator
+        except StopIteration:   # which raises an exception when it's done.
+            break               # otherwise we would hang if there's no </head>
+        
+    # If the <body> tag starts on the same line as </head>, remove it.
+    if re.search(r'<body', line):
+        get_complete_tag(re.compile(r'<body[^>]*>'), line, file)
+    return metadata
+
+# Extract the contents of the <body> element, and return it as a list of lines.
+#   The </body> and </html> tags are omitted, as are server-side includes.  We
+#   make the assumption that the end tags and SSI comments are not continued onto
+#   other lines.  The <body> tag is deleted in extract_metadata
+def extract_body_contents(file):
+    body_text = []
+    for line in file:
+        if re.search(r'<body', line):
+            get_complete_tag(re.compile(r'<body[^>]*>'), line, file)
+            continue
+        if re.search(r'<!--#|</body|</html', line): continue
+        body_text.append(line)
+        
+    return body_text
+
+def put_metadata(metadata, file):
+    for key in sorted(metadata.keys()):
+        print(key+":", metadata[key], file=file)
+
+def put_body_contents(lines, file):
+    for line in lines:
+        print(line, end='', file=file)
+        
+############################################################################
+# main
+
+# I would normally like to define the functions _after_ the main program that
+# calls them, but it appears that Python doesn't like that.
+
+with open(input_file_name, 'r') as file:
+    metadata = extract_metadata(file)
+    body_text = extract_body_contents(file)
+
+if meta_file_name:
+    with open(meta_file_name, 'w') as meta_file:
+        put_metadata(metadata, meta_file)
+
+if output_file_name:
+    with open(output_file_name, 'w') as out_file:
+        if not meta_file_name:
+            put_metadata(metadata, out_file)
+            print("", file=out_file)
+        put_body_contents(body_text, out_file)
+else:
+    if not meta_file_name:
+        put_metadata(metadata, sys.stdout)
+        print("", file=sys.stdout)
+    put_body_contents(body_text, sys.stdout)
+
+
+    
+    
 
