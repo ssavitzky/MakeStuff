@@ -32,7 +32,7 @@ PRINT_DUPLEX = lp -o sides=two-sided-long-edge
 #   This works in lgf and tg because we're not using Steve's
 #   cryptic shortnames.
 #   Note that template files start with a digit, so the wildcard skips them
-ASONGS := $(shell $(SORT_BY_TITLE) $(wildcard [a-z]*.flk))
+ASONGS := $(shell $(SORT_BY_TITLE) $(wildcard [a-z]*.flk) $(wildcard [1-9][0-9]*.flk))
 
 # REJECT = work in progress and other songs we don't want in the songbook
 #	Note that we have to guard against the possibility that there are no
@@ -160,7 +160,7 @@ $(DESTDIR)/%.dvi:	%.flk
 		$(SONG_PREAMBLE) '\begin{document}\input{$<}\end{document}'
 	cd $(DESTDIR); rm -f $*.log $*.aux
 
-reportVars += TRANSPOSED NAMES ALLNAMES ZNAMES REJECT
+reportVars += TEXDIR ASONGS TRANSPOSED NAMES ALLNAMES ZNAMES REJECT
 
 ########################################################################
 ###
@@ -171,7 +171,7 @@ reportVars += TRANSPOSED NAMES ALLNAMES ZNAMES REJECT
 # the website at this point.  HTML and PDF songbooks _will_ be built here
 # eventually.
 
-all::
+all::	$(ALLPDF)
 	@echo building PDF files
 all::	$(PRINT)
 
