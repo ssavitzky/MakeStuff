@@ -33,8 +33,9 @@ VPATH = $(LPATH)
 # someone is performing with an instrument that can't be capoed.
 #
 # ASONGS is just the song files sorted by pathname
-#   Note that template files start with a digit, so the wildcard skips them
-ASONGS := $(shell for d in $(LPATH); do ls $$d/[a-z]*.flk; done)
+#   It's almost impossible to write a glob that rejects template files at this point,
+#   but they get filtered out in ALLSONGS because they have an empty song title.
+ASONGS := $(shell for d in $(LPATH); do ls $$d/*.flk; done)
 
 # REJECT = work in progress and other songs we don't want on the web at all.
 #
@@ -47,6 +48,7 @@ ALLSONGS := $(shell $(SORT_BY_TITLE)  $(filter-out $(REJECT),$(ASONGS)))
 #	DIRNAMES is the list of all song directories, sorted by title.  (We sort
 #	by title because eventually we'll want to build indices and such.)
 #	It would be better if we could use filter-out, but it doesn't handle regexps
+#	Similarly, we need the loop because grep needs each name on a separate line.
 DIRNAMES := $(shell for f in $(subst .flk,,$(notdir $(ALLSONGS))); do echo $$f; done \
 		    | grep -v -e .orig -e --)
 
@@ -66,7 +68,6 @@ SUBDIR_INDICES =  $(patsubst %,%/index.html, $(DIRNAMES))
 
 # At some point we can add 1Index*, after we add subdir indices that can handle
 # directories without visible lyrics.
-
 
 reportVars += LPATH ASONGS ALLSONGS DIRNAMES WEB_OK_TAGS MUSTACHE
 
