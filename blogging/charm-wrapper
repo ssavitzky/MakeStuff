@@ -6,6 +6,14 @@
 #  https://stackoverflow.com/questions/6980090/how-to-read-from-a-file-or-stdin-in-bash
 #  This is a quick hack because I'm too lazy to add the functionality to charm.
 
+# Note for testing.  charm won't let you post two in a row with the same subject!
+# It does not appear to be a problem for cross-posting, though.  It looks like
+# charm only archives the second (crossposted) post.
+
+# A simple test script:
+# (echo Access: private; echo Subject: test3; echo Tags: test, software; \
+#  echo "--text follows this line--" ; echo test headers) | ljpost
+
 if [ "-n" == "$1" ]; then
     ACTION=no_action
     shift
@@ -20,47 +28,61 @@ no_action () {
 
 shopt -s extglob # Required to trim whitespace; see below
 
-{
-while IFS=':' read key value; do
-    # trim whitespace in "value"
-    value=${value##+([[:space:]])}; value=${value%%+([[:space:]])}
+read_headers () {
+    while IFS=':' read key value; do
+	# trim whitespace in "value"
+	value=${value##+([[:space:]])}; value=${value%%+([[:space:]])}
 
-    [ -z "$key" ] && break	# the separator line between headers and body
-    
-    case "$key" in
-        Subject) SUBJECT="$value"
-                ;;
-        Music) MUSIC="$value"
-                ;;
-        Tags) TAGS="$value"
-              ;;
-	Mood) MOOD="$value"
-	      ;;
-	Picture) PICTURE="$value"
-		 ;;
-	Location) LOCATION="$value"
+	[ -z "$key" ] && break	# the separator line between headers and body
+
+	case "$key" in
+	    Subject) SUBJECT="$value"
+		    ;;
+	    Music) MUSIC="$value"
+		    ;;
+	    Tags) TAGS="$value"
 		  ;;
-	Access) PERMISSION="$value"
-		;;
-	Permission) PERMISSION="$value"
-		;;
-	
-	"--text follows this line--") break  # Handle emacs's separator
-				    ;;
-    esac
-done
+	    Mood) MOOD="$value"
+		  ;;
+	    Picture) PICTURE="$value"
+		     ;;
+	    Location) LOCATION="$value"
+		      ;;
+	    Access) PERMISSION="$value"
+		    ;;
+	    Permission) PERMISSION="$value"
+		    ;;
+	    Journal) JOURNAL="$value" # Journal to post to instead of default
+		    ;;
+	    Crosspost) XPOST="$value" # Journal to post to *in addition to* default
+		    ;;
 
-# posts with local access don't get posted
-# This is in contrast to "private", which get posted but are only visible to the user
+	    "--text follows this line--") break  # Handle emacs's separator
+					;;
+	esac
+    done
+}
 
-if [ "local" == "$PERMISSION" ]; then cat > /dev/null; exit; fi
-				     
-# Note for testing.  charm won't let you post two in a row with the same subject!
-# A simple test script:
-# (echo Access: private; echo Subject: test3; echo Tags: test, software; \
-#  echo "--text follows this line--" ; echo test headers) | ljpost
+{
+    read_headers
+    # posts with local access don't get posted
+    # This is in contrast to "private", which get posted but are only visible to the user
 
-$ACTION charm -q --subject "$SUBJECT" --mood "$MOOD" --pic "$PICTURE"\
-      --tag "$TAGS" --permit "$PERMISSION" --location "$LOCATION"
+    if [ "local" == "$PERMISSION" ]; then cat > /dev/null; exit; fi
+
+    $ACTION charm -q --subject "$SUBJECT" --mood "$MOOD" --pic "$PICTURE"\
+	    --tag "$TAGS" --permit "$PERMISSION" --location "$LOCATION"\
+	    --journal "$JOURNAL"
 
 } < "${1:-/dev/stdin}"
+
+if [ ! -z "$XPOST" ]; then
+    (cat $1; echo '(crossposted from mdlbear)' ) | {
+	read_headers
+	JOURNAL=$XPOST
+	SUBJECT="$SUBJECT"
+	$ACTION charm -q --subject "$SUBJECT" --mood "$MOOD" --pic "$PICTURE"\
+		--tag "$TAGS" --permit "$PERMISSION" --location "$LOCATION"\
+		--journal "$JOURNAL"
+    } # < $1 # NOTE:  crossposting won't work when posting from STDIN.
+fi
