@@ -30,11 +30,15 @@ for blog posts (see MakeStuff/blogging), and in part because they're
 actually a subset of yaml, but allow cat to be used to add additional
 metadata before splitting.  The --metafile option lets you direct the
 metadata to a different file.
+
+The --jekyll option produces Jekyll frontmatter, preceeded and followed
+by ---.  
 '''
 
 # Note that we make no attempt to actually parse the HTML
 
 argparser = argparse.ArgumentParser(description=long_description)
+argparser.add_argument('-j', '--jekyll', action='store_true', help='generate Jekyll metadata')
 argparser.add_argument('-o', '--outfile', help='output file name - default stdout')
 argparser.add_argument('-m', '--metafile', help='metadata file name - default outfile')
 argparser.add_argument('infile', help='input file')
@@ -44,6 +48,9 @@ args = argparser.parse_args()
 input_file_name = args.infile
 output_file_name = args.outfile
 meta_file_name = args.metafile
+jekyll = args.jekyll
+
+title_key = 'title' if jekyll else 'Subject'
 
 ##########################################################################
 # Functions:
@@ -73,7 +80,7 @@ def extract_metadata(file):
     while not end_head.search(line):
         if title.search(line):
             (line, match) = get_complete_tag(get_title, line, file)
-            metadata['Subject'] = match.group(1)
+            metadata[title_key] = match.group(1)
             continue
         if meta.search(line):
             (line, match) = get_complete_tag(get_meta, line, file)
@@ -106,8 +113,12 @@ def extract_body_contents(file):
     return body_text
 
 def put_metadata(metadata, file):
+    if jekyll:
+        print('---', file=file)
     for key in sorted(metadata.keys()):
         print(key+":", metadata[key], file=file)
+    if jekyll:
+        print('---', file=file)
 
 def put_body_contents(lines, file):
     for line in lines:
