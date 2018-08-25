@@ -1,0 +1,20 @@
+### Mixin for "Thankful Thursday" posts.
+#
+# Setup:	include $(TOOLDIR)/blogging/thanks.make
+# Usage:	make thanks
+
+.phony: thanks
+thanks:
+	$(MAKE) entry PFX=thx_ name=thankful-$(shell date +%A | tr [:upper:] [:lower:])
+
+# NOTE:  PFX is normally not defined, so we end it with an underscore.
+define thx_TEMPLATE
+Subject: Thankful $(shell date +%A)
+Tags: thanks, 
+Picture: turkey
+Music: 
+Mood: grateful
+
+<p> 
+endef
+export thx_TEMPLATE
