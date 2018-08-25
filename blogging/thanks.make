@@ -3,7 +3,7 @@
 # Setup:	include $(TOOLDIR)/blogging/thanks.make
 # Usage:	make thanks
 
-.phony: thanks
+.PHONY: thanks
 thanks:
 	$(MAKE) entry PFX=thx_ name=thankful-$(shell date +%A | tr [:upper:] [:lower:])
 
