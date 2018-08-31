@@ -23,9 +23,6 @@ General:
 
 Blogging:
   o probably useful to have a .do -> .html formatter, too.
-  o It would be useful for make entry to have targets for both html and markdown, or else
-    a command-line variable maybe ff for file format.  ff=html (default), ff=md, etc.  ff
-    is more versatile, but targets like make draft.md may be feasible.
   o should include the post's URL in the Posted: header, if the program returns it.
   o it should be easy to crosspost.
 
@@ -449,6 +446,11 @@ burning:  -> notes copied to tracks.make
   * [TeX/songinfo] metadata files need descriptions.
   * [make/songs.make] indices are badly-formatted, don't need filenames anymore
 
+0825Sa
+  * It would be useful for make entry to have targets for both html and markdown, or else
+    a command-line variable maybe ff for file format.  ff=html (default), ff=md, etc.  ff
+    is more versatile, but targets like make draft.md may be feasible.
+    -> EXT; can be defined in .config.make or, e.g., jekyll.make
 
 =now====Tools/to.do=====================================================================>|
 

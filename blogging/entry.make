@@ -5,7 +5,8 @@
 ### Targets:
 #	draft:	makes a draft entry in the top-level directory.  name-required
 #	entry:	makes an entry directly in the destination directory.  symlinks .draft
-#		to it so that you can post without specifying a name.
+#		to it so that you can post without specifying a name.  Typically used
+#		when you are reasonably sure that you will be posting the same day.
 #       post:	post an entry.  Define POSTCMD if you have your own posting client.
 #		if name isn't defined, uses the link in .draft.
 #
@@ -14,14 +15,22 @@
 #
 # Tweakable Parameters:
 #	DEFAULT_NAME - if defined, it's used if name is not defined on the command line
-#	POST_ARCHIVE - if defined, this is the path to the yyyy/... post archive directories.
-#		       Typically this will be ../ (slash required)
-#	PFX	     - prepended to the template name
+#	POST_ARCHIVE - if defined, this is the path to the yyyy/... post archive directory
+#		       Typically this will be ../ (slash required).  If not defined, the
+#		       current directory is used.
+#	EXT	     - Filename extension.  Default is html; md is a popular alternative.
+#	PFX	     - prepended to the template name.  See thanks.make for an example.
+
+### Defaults
+
+ifndef EXT
+	EXT = html
+endif
 
 linked_draft := $(shell readlink .draft)
 ifndef ENTRY
   ifdef name
-    ENTRY := $(POST_ARCHIVE)$(DAYPATH)--$(name).html
+    ENTRY := $(subst .$(EXT).$(EXT),.$(EXT),$(POST_ARCHIVE)$(DAYPATH)--$(name).$(EXT))
     ifndef title
 	title := $(name)
     endif
@@ -30,12 +39,12 @@ ifndef ENTRY
   else ifeq ($(DEFAULT_NAME),)
       ENTRY := $(POST_ARCHIVE)$(DAYPATH)
   else
-      ENTRY := $(POST_ARCHIVE)$(DAYPATH)--$(DEFAULT_NAME).html
+      ENTRY := $(POST_ARCHIVE)$(DAYPATH)--$(DEFAULT_NAME).$(EXT)
   endif
 endif
 
 ifdef name
-  DRAFT	:= $(name).html
+  DRAFT	:= $(subst .$(EXT).$(EXT),.$(EXT),$(name).$(EXT))
 endif
 
 HELP  	  := make [entry|draft] name=<filename> [title="<title>"]

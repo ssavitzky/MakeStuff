@@ -43,6 +43,26 @@ reader.  `TEMPLATE` can be overridden by a definition in `.config.make`.
 Posting an entry is done using `$(POSTCMD)`.  It should be prepared to take an
 HTML fragment with an email-style header, so it's usually a wrapper around
 whatever program actually makes the post.  Before committing the post, a
-`Posted:` header is written into it.
+`Posted:` header is written into it.  Of course, if you're working directly in
+the blog website you can just use `POSTCMD=true`, which makes it a no-op.
+
+### Jekyll:
+
+Jekyll blogs work a little differently:
+
+* drafts are in `_drafts`, and posts are in `_posts`.
+* the front-matter is in YAML format, with `title:` and `tags` fields instead
+  of `Subject` and `Tags`.
+* The date prefix is `yyyy-mm-dd-` instead of `yyyy/mm/dd--`.
+* Posts are markdown rather than HTML.
+* entries are posted by copying them into the `_posts` directory; no command
+  is needed.
+
+You can get the entire package of Jekyll options by using `jekyll.make`
+instead of `entry.make`.
+
+### Other Blogging Systems:
+
+
 
 TODO items are in `../to.do`.

@@ -160,7 +160,7 @@ $(DESTDIR)/%.dvi:	%.flk
 		$(SONG_PREAMBLE) '\begin{document}\input{$<}\end{document}'
 	cd $(DESTDIR); rm -f $*.log $*.aux
 
-reportVars += TEXDIR ASONGS TRANSPOSED NAMES ALLNAMES ZNAMES REJECT
+reportVars += TEXDIR ASONGS TRANSPOSED NAMES ALLNAMES ZNAMES REJECT ALLPDF
 
 ########################################################################
 ###
