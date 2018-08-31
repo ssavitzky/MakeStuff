@@ -18,7 +18,7 @@ $key = "";
 $timing = "";
 $created = "";
 $cvsid = "";
-$verbose = "";
+$verbose = 0;
 
 
 ### Accumulate titles:
@@ -27,6 +27,7 @@ $i = 0;
 while ($ARGV[0]) { 
     $infile = shift;
     if ($infile eq "-v") {
+	$verbose ++;
 	next;
     }
     $title = "";
@@ -39,20 +40,16 @@ while ($ARGV[0]) {
     $infile = "../Lyrics/$infile" unless -f $infile;	
 
     open(STDIN, $infile);
-    getTitle();
+    $title=getTitle();
     close(STDIN);
-
-    if ($verbose) {
-	print STDERR " $infile:	$title\n";
-    }
 
     if ($title) {
 	$fn = $infile;
 	$title =~ s/^(A|An|The) //;             # remove leading articles
 
 	# concatenate titles with filenames to handle the case of variants with the same title
-	$titleList[$i] = "$title::$fn";
-
+	$titleList[$i] = "${title}::$fn";
+	if ($verbose) { print STDERR "$titleList[$i]\n"; }
 	$i++;
     }
 }
@@ -93,7 +90,7 @@ sub getTitle {
 	elsif (/\\notice/)  	{ $notice = getContent($_); }
 	elsif (/\\cvsid/)	{ $cvsid = getContent($_); }
 
-	elsif ($title) { return; }
+	elsif ($title) { return $title; }
     }
 }
 
