@@ -87,7 +87,7 @@ filteredStrs = $(foreach v, $(reportStrs), $(if $($(v)), $(v)))
 report-vars::
 	@echo "" $(foreach v,$(varsLine1), $(v)=$($(v)) )
 	@echo "" $(foreach v,$(varsLine2), $(v)=$($(v)) )
-	@echo -n "" $(foreach v,$(filteredVars),$(v)=$($(v)) "\n")
+	@echo -ne "" $(foreach v,$(filteredVars),$(v)=$($(v)) "\n")
 	@echo "" $(foreach v,$(filteredStrs),$(v)=\"$($(v))\" "\n")
 #
 ###### End of Tools/Makefile.  Thanks for playing. ######
