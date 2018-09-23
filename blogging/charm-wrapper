@@ -36,27 +36,30 @@ read_headers () {
 	[ -z "$key" ] && break	# the separator line between headers and body
 
 	case "$key" in
-	    Subject) SUBJECT="$value"
+	    [sS]ubject|[tT]itle) SUBJECT="$value"
 		    ;;
-	    Music) MUSIC="$value"
+	    [mM]usic) MUSIC="$value"
 		    ;;
-	    Tags) TAGS="$value"
+	    [tT]ags) TAGS="$value"
 		  ;;
-	    Mood) MOOD="$value"
+	    [Mm]ood) MOOD="$value"
 		  ;;
-	    Picture) PICTURE="$value"
+	    [Pp]icture) PICTURE="$value"
 		     ;;
-	    Location) LOCATION="$value"
+	    [Ll]ocation) LOCATION="$value"
 		      ;;
-	    Access) PERMISSION="$value"
+	    [Aa]ccess) PERMISSION="$value"
 		    ;;
-	    Permission) PERMISSION="$value"
+	    [Pp]ermission) PERMISSION="$value"
 		    ;;
-	    Journal) JOURNAL="$value" # Journal to post to instead of default
+	    [Jj]ournal) JOURNAL="$value" # Journal to post to instead of default
 		    ;;
-	    Crosspost) XPOST="$value" # Journal to post to *in addition to* default
+	    [Cc]rosspost) XPOST="$value" # Journal to post to *in addition to* default
 		    ;;
-
+	    ---)
+		[ -z $yaml_started ] && break;
+		yaml_started=1
+		;;
 	    "--text follows this line--") break  # Handle emacs's separator
 					;;
 	esac
