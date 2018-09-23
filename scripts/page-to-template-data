@@ -4,36 +4,37 @@ import os
 import sys
 import re
 import argparse
+import string
 
 ### page-to-template-data:
-#   This program converts a web page to a file consisting of an RFC-822(ish)
-#   header followed by the contents of the body tag.  Server-side includes
-#   are removed.
 #
-#   The contents of the title tag are put in the Subject: header, and each
+#   This program converts a web page or blog post to a file consisting
+#   of an YAML header followed by the contents of the body tag.
+#   Server-side includes are removed.
+#
+#   The contents of the title tag are put in the title: header, and each
 #   <meta name="x" contents="y"> becomes x: y
 #
-#   It's an open question whether to put the headers in a separate
-#   file -- that would simplify template substitution but make it harder
-#   to move things around.  We'll probably make it an option.
+#   The headers can be output to a separate file.
 #
 
-long_description = '''Convert web page to html fragment with metadata.
+long_description = '''Convert web page or blog post to html fragment with metadata.
 
 This is a rather hacky python program that converts a web page
-(typically index.html) into a body-contents fragment with an email-style
-Subject: header derived from the title.  It is used for converting a
-complete page into input for a templating engine (e.g. mustache).
+(typically index.html) or an HTML fragment with an RF822 (email)
+header into a body-contents fragment with a YAML header.  The main use
+is converting web pages and blog posts to something that can be the
+input to a templating engine (e.g. mustache) or site generator
+(e.g. Jekyll).
 
-RFC822-style headers are used in part because we're already using them
-for blog posts (see MakeStuff/blogging), and in part because they're
-actually a subset of yaml, but allow cat to be used to add additional
-metadata before splitting.  The --metafile option lets you direct the
-metadata to a different file.
+RFC822-style headers are currently used in blog posts.  The --metafile
+option lets you direct the metadata to a different file.
 
-The --jekyll option produces Jekyll frontmatter, preceeded and followed
-by ---.  
-'''
+The --jekyll option produces Jekyll frontmatter, preceeded and
+followed by ---.  If the input is a blog post with an RFC822 header, a
+jekyll header is the default.  This program cannot convert a YAML
+header to RFC822.
+ '''
 
 # Note that we make no attempt to actually parse the HTML
 
@@ -50,8 +51,6 @@ output_file_name = args.outfile
 meta_file_name = args.metafile
 jekyll = args.jekyll
 
-title_key = 'title' if jekyll else 'Subject'
-
 ##########################################################################
 # Functions:
 
@@ -63,29 +62,42 @@ def get_complete_tag(regex, line, file):
     while True:
         match = regex.search(line)
         if match:
-            return (line[match.end()+1:], match)
+            return (line[match.end():], match)
         re.sub(r'\n', ' ', line)
         line = line + file.readline()
 
+# remove backslashes from a string.
+#   We need this because our mail-like headers get quoted in shell scripts,
+#   and contain backslash-escaped single quotes.
+def unescape_string(s):
+    return s.replace('\\', '')
+
 # Extract metadata from the <head> element of the file.
 #   The metadata is returned as a dict.
-def extract_metadata(file):
+#   If the file starts out looking like a mail header, use extract_mail_metadata
+def extract_metadata(vfile):
     metadata = {}
     end_head = re.compile('</head>')
     title = re.compile('<title>')
     get_title = re.compile('<title>(.*)</title>')
     meta = re.compile('<meta\s')
     get_meta = re.compile(r'<meta\s+name="([^"]*)"\s+content="([^"]*)"\s*>')
+    
     line = file.readline()
+    if re.search(r'^(\w)+:', line):
+        # If it looks like we have a header, use extract_mail_metadata
+        return extract_mail_metadata(line, file)
+    
     while not end_head.search(line):
         if title.search(line):
             (line, match) = get_complete_tag(get_title, line, file)
-            metadata[title_key] = match.group(1)
+            metadata['title'] = match.group(1)
             continue
         if meta.search(line):
             (line, match) = get_complete_tag(get_meta, line, file)
-            metadata[match.group(1)] = match.group(2)
+            metadata[match.group(1).lower()] = match.group(2)
             continue
+        
         try:                    # readline just returns an empty string at EOF.
             line = next(file)   # so we use the file as an iterator
         except StopIteration:   # and handle the exception we get when it's done
@@ -97,28 +109,74 @@ def extract_metadata(file):
         get_complete_tag(re.compile(r'<body[^>]*>'), line, file)
     return metadata
 
+# Extract metadata from an email (rfc822) header
+#   This gets called in case the file looks like a DW post
+#   In that case, we also want to set jekyll to true.
+def extract_mail_metadata(line, file):
+    global jekyll
+    jekyll = True;
+    metadata = {}
+    get_header = re.compile(r'^(\w+):\s*([^\s].*)$')
+    while not re.search(r'^\s*$', line):
+        match = get_header.search(line)
+        # Subject -> title.  All keys to lowercase.
+        if 'Subject' == match.group(1):
+            metadata['title'] = match.group(2)
+        else:
+            metadata[match.group(1).lower()] = unescape_string(match.group(2))
+        try:                    # readline just returns an empty string at EOF.
+            line = next(file)   # so we use the file as an iterator
+        except StopIteration:   # and handle the exception we get when it's done
+            print("No body found", file=sys.stderr)
+            exit(1)             # otherwise we would hang if there's no </head>
+    return metadata
+
 # Extract the contents of the <body> element, and return it as a list of lines.
 #   The <body>, </body>, and </html> tags and server-side includes are skipped.
 #   We assume that the end tags and SSI comments are not continued onto other lines.
 #   The <body> tag is skipped in extract_metadata if it's on the same line as </head>.
 def extract_body_contents(file):
     body_text = []
-    for line in file:
+    start_cut = re.compile(r'<cut\s')
+    get_cut = re.compile(r'^(.*)<cut\s+text="([^"]*)"[^>]*>')
+    end_cut = re.compile(r'^(.*)</cut\s*>')
+    line = file.readline()
+    while True:
         if re.search(r'<body', line):
             get_complete_tag(re.compile(r'<body[^>]*>'), line, file)
             continue
         if re.search(r'<!--#|</body|</html', line): continue
-        body_text.append(line)
-        
+        if start_cut.search(line):
+            (line, match) = get_complete_tag(get_cut, line, file)
+            body_text.append(match.group(1))
+            continue
+        if end_cut.search(line):
+            (line, match) = get_complete_tag(end_cut, line, file)
+            body_text.append(match.group(1))
+            continue;
+        # we also ought to replace <user name=NAME> and <lj user=NAME>
+        # doing that right would require a more sophisticated parser.
+        body_text.append(line)        
+        try:                    # readline just returns an empty string at EOF.
+            line = next(file)   # so we use the file as an iterator
+        except StopIteration:   # and handle the exception we get when it's done
+            break
     return body_text
 
+# Output the metadata, in either Jekyll or DW format.
 def put_metadata(metadata, file):
     if jekyll:
         print('---', file=file)
-    for key in sorted(metadata.keys()):
-        print(key+":", metadata[key], file=file)
-    if jekyll:
+        for key in sorted(metadata.keys()):
+            if key == 'tags':
+                print('tags: [ ' + metadata[key] + ']', file=file)
+                continue
+            print (key +  ": " + metadata[key], file=file)
         print('---', file=file)
+    else:
+        # TODO: Really, we ought to convert Jekyll metadata to DW here
+        for key in sorted(metadata.keys()):
+            print(key.capitalize() + ": ", metadata[key], file=file)
 
 def put_body_contents(lines, file):
     for line in lines:
