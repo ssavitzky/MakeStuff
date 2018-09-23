@@ -9,7 +9,6 @@ BUGS:
   o [scripts/init-deployment] make deployable doesn't work.
   o [make/songs.make] indices should indicate which songs have notes, audio, or postable
     lyrics.  That will require actually looking at the metadata.
-  o [lgf, steve] need to build Songs after push.
   o [deployment] post-update hooks are out of date; there should be a way to update them.
   o [flktran] need to handle \singer; math $$ in some macros;
   o [flktran] need to be able to specify CC license subtype; in particular my songs need
@@ -24,7 +23,10 @@ General:
 Blogging:
   o probably useful to have a .do -> .html formatter, too.
   o should include the post's URL in the Posted: header, if the program returns it.
-  o it should be easy to crosspost.
+    -> the way DW archive pages are named, /yyyy/mm/dd/, can be used to get the URL of the
+       most recent one.  (as long as it's public) Need to parametrize with how archived
+       posts are listed -- mine is most recent last; some people use blog order.
+  . it should be easy to crosspost.
 
 WAV->FLAC
   o Move to a workflow that uses flac instead of wav.  Audacity can export it,
@@ -445,6 +447,9 @@ burning:  -> notes copied to tracks.make
 0317Sa
   * [TeX/songinfo] metadata files need descriptions.
   * [make/songs.make] indices are badly-formatted, don't need filenames anymore
+
+0510
+  * 0510 [lgf, steve] need to build Songs after push.
 
 0825Sa
   * It would be useful for make entry to have targets for both html and markdown, or else
