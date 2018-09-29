@@ -135,6 +135,10 @@ def extract_mail_metadata(line, file):
 #   The <body>, </body>, and </html> tags and server-side includes are skipped.
 #   We assume that the end tags and SSI comments are not continued onto other lines.
 #   The <body> tag is skipped in extract_metadata if it's on the same line as </head>.
+#
+#   TODO:  This should be rewritten using a real parser, e.g. <a
+#   href="https://www.crummy.com/software/BeautifulSoup/" >Beautiful Soup.</a>
+#
 def extract_body_contents(file):
     body_text = []
     start_cut = re.compile(r'<cut\s')
