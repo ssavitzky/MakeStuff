@@ -80,7 +80,7 @@ def extract_metadata(vfile):
     end_head = re.compile('</head>')
     title = re.compile('<title>')
     get_title = re.compile('<title>(.*)</title>')
-    meta = re.compile('<meta\s')
+    meta = re.compile(r'<meta\s+name')
     get_meta = re.compile(r'<meta\s+name="([^"]*)"\s+content="([^"]*)"\s*>')
     
     line = file.readline()
@@ -97,7 +97,6 @@ def extract_metadata(vfile):
             (line, match) = get_complete_tag(get_meta, line, file)
             metadata[match.group(1).lower()] = match.group(2)
             continue
-        
         try:                    # readline just returns an empty string at EOF.
             line = next(file)   # so we use the file as an iterator
         except StopIteration:   # and handle the exception we get when it's done
@@ -105,8 +104,9 @@ def extract_metadata(vfile):
             exit(1)             # otherwise we would hang if there's no </head>
         
     # If the <body> tag starts on the same line as </head>, remove it.
+    # (note that it might continue for several lines)
     if re.search(r'<body', line):
-        get_complete_tag(re.compile(r'<body[^>]*>'), line, file)
+        (line, match) = get_complete_tag(re.compile(r'<body[^>]*>'), line, file)
     return metadata
 
 # Extract metadata from an email (rfc822) header
@@ -147,9 +147,11 @@ def extract_body_contents(file):
     line = file.readline()
     while True:
         if re.search(r'<body', line):
-            get_complete_tag(re.compile(r'<body[^>]*>'), line, file)
+            (line, match) = get_complete_tag(re.compile(r'<body[^>]*>'), line, file)
             continue
-        if re.search(r'<!--#|</body|</html', line): continue
+        if re.search(r'<!--#|</body|</html', line):
+            line=''
+            continue
         if start_cut.search(line):
             (line, match) = get_complete_tag(get_cut, line, file)
             body_text.append(match.group(1))
