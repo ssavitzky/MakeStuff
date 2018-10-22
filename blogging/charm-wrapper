@@ -14,12 +14,22 @@
 # (echo Access: private; echo Subject: test3; echo Tags: test, software; \
 #  echo "--text follows this line--" ; echo test headers) | ljpost
 
+POST=charm
+MARKDOWN='kramdown -i GFM --no-hard-wrap'
+
 if [ "-n" == "$1" ]; then
     ACTION=no_action
     shift
 else
     ACTION=""
 fi
+
+case "$1" in
+    *.md) FILTER="$MARKDOWN"
+	  ;;
+    *) FILTER=cat
+       ;;
+esac
 
 no_action () {
     echo -- $*
@@ -40,7 +50,7 @@ read_headers () {
 		    ;;
 	    [mM]usic) MUSIC="$value"
 		    ;;
-	    [tT]ags) TAGS="$value"
+	    [tT]ags) TAGS="${value//[\[\]]/}" # remove brackets from tag list
 		  ;;
 	    [Mm]ood) MOOD="$value"
 		  ;;
@@ -57,7 +67,7 @@ read_headers () {
 	    [Cc]rosspost) XPOST="$value" # Journal to post to *in addition to* default
 		    ;;
 	    ---)
-		[ -z $yaml_started ] && break;
+		[ ! -z $yaml_started ] && break;
 		yaml_started=1
 		;;
 	    "--text follows this line--") break  # Handle emacs's separator
@@ -73,7 +83,7 @@ read_headers () {
 
     if [ "local" == "$PERMISSION" ]; then cat > /dev/null; exit; fi
 
-    $ACTION charm -q --subject "$SUBJECT" --mood "$MOOD" --pic "$PICTURE"\
+    $FILTER | $ACTION $POST -q --subject "$SUBJECT" --mood "$MOOD" --pic "$PICTURE"\
 	    --tag "$TAGS" --permit "$PERMISSION" --location "$LOCATION"\
 	    --journal "$JOURNAL"
 
