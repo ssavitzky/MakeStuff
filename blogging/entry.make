@@ -23,9 +23,22 @@
 
 ### Defaults
 
+# The default default extension is html; this lets us override the default in .config.make
+DEFAULT_EXT ?= html
+
+#DONT_COMMIT_DRAFT = true
+
+## figure out what the extension for posts should be.
 ifndef EXT
-	EXT = html
+  ifdef name
+    # take the extension from the name, if it has one.
+    ifneq "$(suffix $(name))" ""
+      EXT = $(subst .,,$(suffix $(name)))
+    endif
+  endif
 endif
+# if not passed in or taken from the name, use the default.
+EXT ?= $(DEFAULT_EXT)
 
 linked_draft := $(shell readlink .draft)
 ifndef ENTRY
@@ -45,6 +58,7 @@ endif
 
 ifdef name
   DRAFT	:= $(subst .$(EXT).$(EXT),.$(EXT),$(name).$(EXT))
+  name  := $(subst .$(EXT),,$(notdir $(DRAFT)))
 endif
 
 HELP  	  := make [entry|draft] name=<filename> [title="<title>"]
@@ -84,7 +98,13 @@ $(ENTRY):
 $(DRAFT):
 	@echo "$$$(PFX)TEMPLATE" > $@
 	git add $@
-	git commit -m "$(MYNAME): started entry $(ENTRY)" $@
+	[ ! -z $(DONT_COMMIT_DRAFT) ] || 			\
+	   git commit -m "$(MYNAME): started entry $(ENTRY)" $@
+
+## Validation dependencies for posting:
+#
+#	Multiple drafts can occur if drafts are kept in a separate directory;
+#	that's the case in Jekyll blogs for example.
 
 name-required:
 	@if [ -z $(name) ]; then \
@@ -99,21 +119,36 @@ name-or-entry-required:
 draft-or-entry-required:
 	@if [ ! -f $(DRAFT) ] && [ ! -e $(ENTRY) ]; then			\
 	    echo 'You need to "make draft|entry name=$(name)" first'; false;	\
+	elif [ "multiple-drafts" == "$(DRAFT)" ]; then				\
+	   echo 'More than one file in _drafts;'				\
+		'Specify one with name='; false; 				\
+	fi
+
+# This would be used by import.
+from-required:
+	@if [ -z $(from) ]; then 			\
+	   echo '$$(from) not defined."'; false; 	\
 	fi
 
 # pre-post:  move the entry to the correct location (yyyy/mm/dd--name) if necessary
-#	The entry is not committed; that's done in post
+#	The entry is not committed; that's done in post, but if it hasn't been added
+#	git mv will fail and we do a plain mv followed by git add.
 pre-post:	name-or-entry-required draft-or-entry-required
-	if [ ! -f $(ENTRY) ]; then mkdir -p $(MONTHPATH); git mv $(DRAFT) $(ENTRY); fi
+	if [ ! -f $(ENTRY) ]; then mkdir -p $(MONTHPATH); 			   \
+	   git mv $(DRAFT) $(ENTRY) || ( mv  $(DRAFT) $(ENTRY); git add $(ENTRY) ) \
+	fi
 
 # post an entry.
 #	The date is recorded in the entry; it would be easy to modify this to
 #	add the url if POSTCMD was able to return it.
+#
+#	commit with -a because the draft might have been added but not committed
+#
 post:	pre-post
 	$(POSTCMD) $(ENTRY)
 	sed -i -e '1,/^$$/ s/^$$/Posted:  $(POSTED)\n/' $(ENTRY)
 	git add $(ENTRY)
-	git commit -m "posted $(ENTRY)"
+	git commit -m "posted $(ENTRY)" -a
 	rm -f .draft
 
 posted:
