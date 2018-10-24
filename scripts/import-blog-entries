@@ -1,0 +1,73 @@
+#!/bin/bash
+#
+echo
+
+if [ -z "$1" ]; then
+   cat <<EOF
+$0: -d directory pathname...
+   Import MakeStuff blog entries into a Jekyll _posts directory.
+   The entries are of the form ./yy/mm/dd--name.ext; -d specifies the
+   directory they are contained in.  Files that already exist are skipped.
+
+   Filenames are converted from yyyy/mm/dd--name to yyyy-mm-dd-name format,
+   and the front matter is put into YAML format no matter what format it
+   had originally.
+
+   The "Subject" header is converted to "title", tags get surrounded by
+   brackets to make a list, and tags of "curmudgeon" are removed from the
+   list.  (That last could be generalized, but that can wait.)
+EOF
+   exit 1
+fi
+
+case $1 in
+    -d) shift; DIR=$1/; shift
+	;;
+esac
+
+shopt -s extglob # Required to trim whitespace; see below
+read_headers () {
+    while IFS=':' read key value; do
+	# trim whitespace in "value"
+	value=${value##+([[:space:]])}; value=${value%%+([[:space:]])}
+
+	[ -z "$key" ] && break	# the separator line between headers and body
+
+	case "$key" in
+	    [sS]ubject|[tT]itle) SUBJECT="$value"
+		    ;;
+	    [tT]ags) TAGS="${value//[\[\]]/}" # remove brackets from tag list, if any
+		     ;;
+	    ---)
+		[ ! -z $yaml_started ] && break;
+		yaml_started=1
+		;;
+	    "--text follows this line--") break  # Handle emacs's separator
+					  ;;
+	    *) if [ -z "$REST" ]; then
+		   REST="${key,,}: $value"
+	       else
+		   REST="$REST\n${key,,}: $value"
+	       fi
+	       ;;
+	esac
+    done
+}
+
+for f in $*; do
+    g=`echo $f | sed -e 's/\//-/g' -e s/--/-/ -e s/.-//`
+    if [ -e $g ]; then
+	echo $g exists, skipping $f
+    else
+	echo $DIR/$f '->' $g
+	{
+	    echo ---
+	    read_headers
+	    echo title: $SUBJECT
+	    echo tags: \[ `echo $TAGS | sed -e 's/, curmudgeon/,/' -e 's/curmudgeon,//'` \]
+	    echo -e "$REST"
+	    echo ---
+	    cat
+	} < $DIR/$f > $g
+    fi
+done
