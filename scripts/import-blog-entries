@@ -27,14 +27,19 @@ esac
 
 shopt -s extglob # Required to trim whitespace; see below
 read_headers () {
+    REST=
     while IFS=':' read key value; do
 	# trim whitespace in "value"
 	value=${value##+([[:space:]])}; value=${value%%+([[:space:]])}
 
 	[ -z "$key" ] && break	# the separator line between headers and body
 
+	# values with colons or brackets need to be escaped/quoted
+	#        Start by just double quoting everything except tags, which are safe
+	#        and need special treatment anyway.
+
 	case "$key" in
-	    [sS]ubject|[tT]itle) SUBJECT="$value"
+	    [sS]ubject|[tT]itle) SUBJECT="\"$value\""
 		    ;;
 	    [tT]ags) TAGS="${value//[\[\]]/}" # remove brackets from tag list, if any
 		     ;;
@@ -45,9 +50,9 @@ read_headers () {
 	    "--text follows this line--") break  # Handle emacs's separator
 					  ;;
 	    *) if [ -z "$REST" ]; then
-		   REST="${key,,}: $value"
+		   REST="${key,,}: \"$value\""
 	       else
-		   REST="$REST\n${key,,}: $value"
+		   REST="$REST\n${key,,}: \"$value\""
 	       fi
 	       ;;
 	esac
@@ -68,6 +73,9 @@ for f in $*; do
 	    echo -e "$REST"
 	    echo ---
 	    cat
+	    # FIXME:  take out any "another fine post" colophon.  Possibly not needed
+	    #         now that we've imported all the original curmudgeon posts.
+	    #         sed -i -e '/Another fine/,/The Computer Curmudgeon/d'
 	} < $DIR/$f > $g
     fi
 done
