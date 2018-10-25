@@ -14,18 +14,19 @@
 #	A default name can be defined in .config.make and overridden on the command line.
 #
 # Tweakable Parameters:
-#	DEFAULT_NAME - if defined, it's used if name is not defined on the command line
-#	POST_ARCHIVE - if defined, this is the path to the yyyy/... post archive directory
-#		       Typically this will be ../ (slash required).  If not defined, the
-#		       current directory is used.
-#	EXT	     - Filename extension.  Default is html; md is a popular alternative.
-#	PFX	     - prepended to the template name.  See thanks.make for an example.
+#       DONT_COMMIT_DRAFT if defined, just add the draft without committing it.
+#	POST_ARCHIVE 	- if defined, this is the path to the yyyy/... post archive directory
+#		          Typically this will be ../ (slash required).  If not defined, the
+#		       	  current directory is used.
+#	DRAFTS	     	- if defined, directory where we keep drafts.  Used with Jekyll blogs.
+#	EXT	     	- Filename extension.  Default is html; md is a popular alternative.
+#	PFX	     	- prepended to the template name.  See thanks.make for an example.
 
 ### Defaults
 
 # The default default extension is html; this lets us override the default in .config.make
 DEFAULT_EXT ?= html
-
+POSTCMD	?= ljpost
 #DONT_COMMIT_DRAFT = true
 
 ## figure out what the extension for posts should be.
@@ -39,6 +40,11 @@ ifndef EXT
 endif
 # if not passed in or taken from the name, use the default.
 EXT ?= $(DEFAULT_EXT)
+
+ifdef name
+  DRAFT	:= $(subst .$(EXT).$(EXT),.$(EXT),$(name).$(EXT))
+  name  := $(subst .$(EXT),,$(notdir $(DRAFT)))
+endif
 
 linked_draft := $(shell readlink .draft)
 ifndef ENTRY
@@ -56,17 +62,10 @@ ifndef ENTRY
   endif
 endif
 
-ifdef name
-  DRAFT	:= $(subst .$(EXT).$(EXT),.$(EXT),$(name).$(EXT))
-  name  := $(subst .$(EXT),,$(notdir $(DRAFT)))
-endif
-
 HELP  	  := make [entry|draft] name=<filename> [title="<title>"]
 POST_HELP := make post [name=<filename>] [to=<post-url>]
 POSTED	  := $(shell date) $(to)
 
-# The command to post a file.
-POSTCMD	= ljpost
 
 ### Targets ###
 
