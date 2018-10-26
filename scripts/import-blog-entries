@@ -71,6 +71,7 @@ for f in $*; do
 	    echo title: $SUBJECT
 	    echo tags: \[ `echo $TAGS | sed -e 's/, curmudgeon/,/' -e 's/curmudgeon,//'` \]
 	    echo -e "$REST"
+	    echo layout: post # needed because Jekyll's default mechanism appears to be broken
 	    echo ---
 	    cat
 	    # FIXME:  take out any "another fine post" colophon.  Possibly not needed
