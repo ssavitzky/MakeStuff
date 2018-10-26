@@ -60,7 +60,7 @@ read_headers () {
 }
 
 for f in $*; do
-    g=`echo $f | sed -e 's/\//-/g' -e s/--/-/ -e s/.-//`
+    g=`echo $f | sed -e 's/\\//-/g' -e s/--/-/ -e s/[.]-//`
     if [ -e $g ]; then
 	echo $g exists, skipping $f
     else
