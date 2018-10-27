@@ -1,6 +1,11 @@
 #!/bin/sh
 #  Convert a CVS-based directory to git.
 #
+#  Unlike the more modern method involving cvs2git and git fast-import,
+#  this can be used with an existing CVS working directory, even if it
+#  contains locally-modified files.  However, you could use the same
+#  trick of creating the clone and moving the resulting git repo into
+#  the old CVS tree.
 
 if [ -d CVS ]; then
     root=`cat CVS/Root`
