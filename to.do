@@ -6,6 +6,8 @@ cleanup.  More ended up in wibnif.do, and should probably be consolidated here.
 =========================================================================
 
 BUGS:
+  o [scripts/import-blog-entries] need to slugify tags, too.  Keep ", "
+  o [scripts/import-blog-entries] should replace cut and user tags.
   o [scripts/init-deployment] make deployable doesn't work.
   o [make/songs.make] indices should indicate which songs have notes, audio, or postable
     lyrics.  That will require actually looking at the metadata.
@@ -26,7 +28,6 @@ Blogging:
     -> the way DW archive pages are named, /yyyy/mm/dd/, can be used to get the URL of the
        most recent one.  (as long as it's public) Need to parametrize with how archived
        posts are listed -- mine is most recent last; some people use blog order.
-  . it should be easy to crosspost.
 
 WAV->FLAC
   o Move to a workflow that uses flac instead of wav.  Audacity can export it,
@@ -456,6 +457,10 @@ burning:  -> notes copied to tracks.make
     a command-line variable maybe ff for file format.  ff=html (default), ff=md, etc.  ff
     is more versatile, but targets like make draft.md may be feasible.
     -> EXT; can be defined in .config.make or, e.g., jekyll.make
+
+1027Sa
+  * it should be easy to crosspost. => going to mark this done:
+  * import-blog-entries working modulo spaces and punctuation in tags.
 
 =now====Tools/to.do=====================================================================>|
 

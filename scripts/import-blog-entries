@@ -4,18 +4,21 @@ echo
 
 if [ -z "$1" ]; then
    cat <<EOF
-$0: -d directory pathname...
-   Import MakeStuff blog entries into a Jekyll _posts directory.
+$0: [-d directory] pathname...
+   Import MakeStuff blog entries or lj posts into a Jekyll _posts directory.
    The entries are of the form ./yy/mm/dd--name.ext; -d specifies the
-   directory they are contained in.  Files that already exist are skipped.
+   directory they are contained in, and defaults to ~/.ljarchive.  
 
    Filenames are converted from yyyy/mm/dd--name to yyyy-mm-dd-name format,
-   and the front matter is put into YAML format no matter what format it
+   and names ending in _dddd have that replaced by SLUG.html.
+   The front matter is put into YAML format no matter what format it
    had originally.
 
    The "Subject" header is converted to "title", tags get surrounded by
    brackets to make a list, and tags of "curmudgeon" are removed from the
-   list.  (That last could be generalized, but that can wait.)
+   list.  (That last could be generalized, but it can wait.)
+
+   Files that have already been imported are skipped.
 EOF
    exit 1
 fi
@@ -24,6 +27,9 @@ case $1 in
     -d) shift; DIR=$1/; shift
 	;;
 esac
+if [ -z $DIR ]; then
+    DIR=~/.ljarchive
+fi
 
 shopt -s extglob # Required to trim whitespace; see below
 read_headers () {
@@ -59,12 +65,31 @@ read_headers () {
     done
 }
 
-for f in $*; do
-    g=`echo $f | sed -e 's/\\//-/g' -e s/--/-/ -e s/[.]-//`
+slug () {
+     echo "$1" | sed -e 's/Subject: *//' -e 's/"//g' -e 's/\[.*\]//' \
+     	  -e 's/[ ]\+/-/g' -e 's/^-*//'  -e s/-*$// \
+	  -e 's/[^-a-zA-Z0-9]//g' | tr '[A-Z]' '[a-z]'
+}
+
+for ff in $*; do
+    if [ -e $ff ]; then
+	f=`basename $ff`
+	d=`dirname $ff`
+    else
+	f=$ff
+	d=$DIR
+    fi
+    g=`echo $f | sed -e 's/\\//-/g' -e s/--/-/ -e s/[.]-// -e s/_[0-9]*$//`
+    if echo $f | grep -se '_[0-9]*$'; then
+       # the filename ends in a sequence number, so it must be an archived LJ post
+       # extract the subject and slugify it.
+       subj="`sed -n -e '/Subject:/p' -e '/Subject:/q' $DIR/$f`"
+       g=$g-`slug "$subj"`.html
+    fi
     if [ -e $g ]; then
 	echo $g exists, skipping $f
     else
-	echo $DIR/$f '->' $g
+	echo $d/$f '->' $g
 	{
 	    echo ---
 	    read_headers
@@ -77,6 +102,6 @@ for f in $*; do
 	    # FIXME:  take out any "another fine post" colophon.  Possibly not needed
 	    #         now that we've imported all the original curmudgeon posts.
 	    #         sed -i -e '/Another fine/,/The Computer Curmudgeon/d'
-	} < $DIR/$f > $g
+	} < $d/$f > $g
     fi
 done
