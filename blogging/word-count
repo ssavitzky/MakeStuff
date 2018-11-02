@@ -1,0 +1,28 @@
+#!/bin/bash
+#    Get a reasonably accurate word count for posts in the current month
+
+cd ~/vv/users/$USER/Private/blogging
+
+count-words () {
+    files=`ls ${1}* 2>/dev/null`
+
+    total=0
+    count=0
+    for f in $files ; do
+	# dashes in the output get counted as words;
+	# pandoc uses them as list bullets.
+	wc=`pandoc -i $f -t plain | tr -- " -" "  " | wc -w`
+	total=$(( $total + $wc))
+	count=$(( $count + 1))
+	if [[ ! -z $2 ]]; then
+	    echo -e "`printf %7d $wc`"  $f
+	fi
+    done
+    [[ -z $2 ]] || echo $2
+}
+
+count-words `date '+%Y/%m/'` --------
+echo -e  "`printf %7d $total`" words in $count posts this month
+
+count-words `date '+%Y/%m/$d'` 
+echo -e  "`printf %7d $total`" words in $count posts today
