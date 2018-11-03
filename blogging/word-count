@@ -24,5 +24,6 @@ count-words () {
 count-words `date '+%Y/%m/'` --------
 echo -e  "`printf %7d $total`" words in $count posts this month
 
-count-words `date '+%Y/%m/$d'` 
-echo -e  "`printf %7d $total`" words in $count posts today
+count-words `date '+%Y/%m/%d'`
+if [ $count == 1 ]; then s=" "; else s=s; fi
+echo -e  "`printf %7d $total`" words in $count post$s today
