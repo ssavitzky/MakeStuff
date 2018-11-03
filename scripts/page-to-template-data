@@ -70,7 +70,10 @@ def get_complete_tag(regex, line, file):
 #   We need this because our mail-like headers get quoted in shell scripts,
 #   and contain backslash-escaped single quotes.
 def unescape_string(s):
-    return s.replace('\\', '')
+    if not s:
+        return ""
+    else:
+        return s.replace('\\', '')
 
 # Extract metadata from the <head> element of the file.
 #   The metadata is returned as a dict.
@@ -116,7 +119,7 @@ def extract_mail_metadata(line, file):
     global jekyll
     jekyll = True;
     metadata = {}
-    get_header = re.compile(r'^(\w+):\s*([^\s].*)$')
+    get_header = re.compile(r'^(\w+):\s*([^\s].*)?$')
     while not re.search(r'^\s*$', line):
         match = get_header.search(line)
         if not match: break;
