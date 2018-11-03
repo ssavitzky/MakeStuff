@@ -41,6 +41,15 @@ endif
 # if not passed in or taken from the name, use the default.
 EXT ?= $(DEFAULT_EXT)
 
+ifndef name			# if we don't have a name
+  ifdef title			# but we do have a title, slugfy it.
+	name = $(shell echo "$(title)" | 		\
+	  sed  -e 's/"//g' -e 's/\[.*\]//' 		\
+          -e 's/[ ]\+/-/g' -e 's/^-*//'  -e s/-*$$// 	\
+          -e 's/[^-a-zA-Z0-9]//g' -e 's/^the//i' | tr '[A-Z]' '[a-z]')
+  endif
+endif
+
 ifdef name
   DRAFT	:= $(subst .$(EXT).$(EXT),.$(EXT),$(name).$(EXT))
   name  := $(subst .$(EXT),,$(notdir $(DRAFT)))
