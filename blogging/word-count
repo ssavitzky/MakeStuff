@@ -22,7 +22,8 @@ count-words () {
 }
 
 count-words `date '+%Y/%m/'` --------
-echo -e  "`printf %7d $total`" words in $count posts this month
+avg=$(($total / $count))
+echo -e  "`printf %7d $total`" words in $count posts this month "(average $avg/post)"
 
 count-words `date '+%Y/%m/%d'`
 if [ $count == 1 ]; then s=" "; else s=s; fi
