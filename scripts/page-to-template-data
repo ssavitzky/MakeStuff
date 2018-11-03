@@ -119,6 +119,7 @@ def extract_mail_metadata(line, file):
     get_header = re.compile(r'^(\w+):\s*([^\s].*)$')
     while not re.search(r'^\s*$', line):
         match = get_header.search(line)
+        if not match: break;
         # Subject -> title.  All keys to lowercase.
         if 'Subject' == match.group(1):
             metadata['title'] = match.group(2)
