@@ -21,7 +21,7 @@ count-words () {
     [[ -z $2 ]] || echo $2
 }
 
-count-words `date '+%Y/%m/'` --------
+count-words `date '+%Y/%m/'` '-------- NaBloPoMo stats:'
 avg=$(($total / $count))
 echo -e  "`printf %7d $total`" words in $count posts this month "(average $avg/post)"
 
