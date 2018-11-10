@@ -151,6 +151,7 @@ pre-post:	name-or-entry-required draft-or-entry-required
 #	add the url if POSTCMD was able to return it.
 #
 #	commit with -a because the draft might have been added but not committed
+#	make a symlink from .posted to the most recent entry, to make it easy to edit
 #
 post:	pre-post
 	$(POSTCMD) $(ENTRY)
@@ -158,6 +159,7 @@ post:	pre-post
 	git add $(ENTRY)
 	git commit -m "posted $(ENTRY)" -a
 	rm -f .draft
+	ln -sf $(ENTRY) .posted
 
 posted:
 	sed -i -e '1,/^$$/ s/^$$/Posted:  $(POSTED)\n/' $(ENTRY)
