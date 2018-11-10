@@ -87,6 +87,17 @@ push-r::
 		 echo pushing in $$d;					\
 		 if grep -qs deploy: Makefile;				\
 		    then make push-this push-r;				\
+		 fi)							\
+	    fi; 							\
+	done
+
+# push-R recursively pushes every git repo it can find.
+push-R::
+	@for d in $(GITDIRS); do 					\
+	    if [ -d $$d/.git/refs/remotes/origin ]; then (cd $$d;	\
+		 echo pushing in $$d;					\
+		 if grep -qs deploy: Makefile;				\
+		    then make push-this push-r;				\
 		    else git push|tee /dev/null; fi)			\
 	    fi; 							\
 	done
