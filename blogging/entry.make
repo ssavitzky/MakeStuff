@@ -141,19 +141,23 @@ from-required:
 # pre-post:  move the entry to the correct location (yyyy/mm/dd--name) if necessary
 #	The entry is not committed; that's done in post, but if it hasn't been added
 #	git mv will fail and we do a plain mv followed by git add.
+#
+#	Make a symlink from .post to the most recent entry, to make it easy to edit.
+#	Done in pre-post so that you can separate the two steps to do something like
+#	a word-count.  This works because pre-post is idempotent.
+#
 pre-post:	name-or-entry-required draft-or-entry-required
 	if [ ! -f $(ENTRY) ]; then mkdir -p $(POST_ARCHIVE)$(MONTHPATH); 	   \
 	   git mv $(DRAFT) $(ENTRY) || ( mv  $(DRAFT) $(ENTRY); git add $(ENTRY) ) \
 	fi
 	rm -f .draft
-	ln -sf $(ENTRY) .posted
+	ln -sf $(ENTRY) .post
 
 # post an entry.
 #	The date is recorded in the entry; it would be easy to modify this to
 #	add the url if POSTCMD was able to return it.
 #
 #	commit with -a because the draft might have been added but not committed
-#	make a symlink from .posted to the most recent entry, to make it easy to edit
 #
 post:	pre-post
 	$(POSTCMD) $(ENTRY)
