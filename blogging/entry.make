@@ -142,9 +142,11 @@ from-required:
 #	The entry is not committed; that's done in post, but if it hasn't been added
 #	git mv will fail and we do a plain mv followed by git add.
 pre-post:	name-or-entry-required draft-or-entry-required
-	if [ ! -f $(ENTRY) ]; then mkdir -p $(MONTHPATH); 			   \
+	if [ ! -f $(ENTRY) ]; then mkdir -p $(POST_ARCHIVE)$(MONTHPATH); 	   \
 	   git mv $(DRAFT) $(ENTRY) || ( mv  $(DRAFT) $(ENTRY); git add $(ENTRY) ) \
 	fi
+	rm -f .draft
+	ln -sf $(ENTRY) .posted
 
 # post an entry.
 #	The date is recorded in the entry; it would be easy to modify this to
@@ -158,8 +160,6 @@ post:	pre-post
 	sed -i -e '1,/^$$/ s/^$$/Posted:  $(POSTED)\n/' $(ENTRY)
 	git add $(ENTRY)
 	git commit -m "posted $(ENTRY)" -a
-	rm -f .draft
-	ln -sf $(ENTRY) .posted
 
 posted:
 	sed -i -e '1,/^$$/ s/^$$/Posted:  $(POSTED)\n/' $(ENTRY)
