@@ -3,28 +3,45 @@
 
 cd ~/vv/users/$USER/Private/blogging
 
+m=$(date "+%m")
+
+# TODO: -m option
+if [ ! -z $1 ]; then m=$1; fi
+
+echo -n '<pre>'
 count-words () {
     files=`ls ${1}* 2>/dev/null`
-
     total=0
     count=0
+    missed=0
+    last=0
     for f in $files ; do
 	# dashes in the output get counted as words;
 	# pandoc uses them as list bullets.
 	wc=`pandoc -i $f -t plain | tr -- " -" "  " | wc -w`
 	total=$(( $total + $wc))
 	count=$(( $count + 1))
+	day=`echo $f | head -c10 | tail -c2 | sed s/^0//`
 	if [[ ! -z $2 ]]; then
 	    echo -e "`printf %7d $wc`"  $f
 	fi
+	if (( $day > $last + 1 )); then
+	    missed=$(( $missed + 1 ))
+	fi
+	last=$day
     done
     [[ -z $2 ]] || echo $2
 }
 
-count-words `date '+%Y/%m/'` '-------- NaBloPoMo stats:'
+count-words `date "+%Y/$m/"` '-------- NaBloPoMo stats:'
 avg=$(($total / $count))
+missed_days=$missed
 echo -e  "`printf %7d $total`" words in $count posts this month "(average $avg/post)"
 
-count-words `date '+%Y/%m/%d'`
+count-words `date "+%Y/$m/%d"`
 if [ $count == 1 ]; then s=" "; else s=s; fi
 echo -e  "`printf %7d $total`" words in $count post$s today
+if (( $missed_days != 0 )); then
+    echo -e "`printf %7d $missed_days`" days missed
+fi
+echo '</pre>'
