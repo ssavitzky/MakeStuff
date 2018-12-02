@@ -1,14 +1,32 @@
 #!/bin/bash
 #    Get a reasonably accurate word count for posts in the current month
 
-cd ~/vv/users/$USER/Private/blogging
+cd ~/vv/users/$USER/Private/Journals
 
-m=$(date "+%m")
+m=$(date "+%m"); this_month=$m
+y=$(date "+%Y")
+
+while :; do
+    case $1 in
+	-v) verbose=-------;
+	    shift
+	    ;;
+    esac
+    break
+done
 
 # TODO: -m option
 if [ ! -z $1 ]; then m=$1; fi
 
-echo -n '<pre>'
+
+stats=Posting
+if (( $m == 11 )); then
+    stats=NaBloPoMo
+else
+    stats=Posting
+fi
+echo "<pre>$stats stats:"
+
 count-words () {
     files=`ls ${1}* 2>/dev/null`
     total=0
@@ -33,15 +51,31 @@ count-words () {
     [[ -z $2 ]] || echo $2
 }
 
-count-words `date "+%Y/$m/"` '-------- NaBloPoMo stats:'
-avg=$(($total / $count))
+# Count words and posts so far this month
+count-words $y/$m/ $verbose
+if (($count == 0)); then
+    avg=0
+else
+    avg=$(($total / $count))
+fi
+
+# If we're in a different month, add missed days past the last date seen:
+if (( $this_month != $m )); then
+    while [[ $m == $(date -d "$y/$m/$last + 1day" +%m) ]]; do
+	missed=$(( $missed + 1))
+	last=$(( $last + 1 ))
+    done
+fi
 missed_days=$missed
+
 echo -e  "`printf %7d $total`" words in $count posts this month "(average $avg/post)"
 
-count-words `date "+%Y/$m/%d"`
-if [ $count == 1 ]; then s=" "; else s=s; fi
-echo -e  "`printf %7d $total`" words in $count post$s today
+if (( $m == $this_month )); then
+    count-words `date "+$y/$m/%d"`
+    if [ $count == 1 ]; then s=" "; else s=s; fi
+    echo -e  "`printf %7d $total`" words in $count post$s today
+fi
 if (( $missed_days != 0 )); then
-    echo -e "`printf %7d $missed_days`" days missed
+    echo -e "`printf %7d $missed_days`" days with no posts
 fi
 echo '</pre>'
