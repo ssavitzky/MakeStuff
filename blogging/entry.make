@@ -78,8 +78,8 @@ POSTED	  := $(shell date) $(to)
 
 ### Targets ###
 
-.PHONY: draft entry draft-or-entry-required name-or-entry-required name-required
-.PHONY: pre-post post 
+.PHONY: draft entry pre-pot post
+.PHONY: from-required draft-or-entry-required name-or-entry-required name-required
 
 all:: 
 	@echo To draft an entry, '$(HELP)'
@@ -127,7 +127,7 @@ name-or-entry-required:
 draft-or-entry-required:
 	@if [ ! -f $(DRAFT) ] && [ ! -e $(ENTRY) ]; then			\
 	    echo 'You need to "make draft|entry name=$(name)" first'; false;	\
-	elif [ "multiple-drafts" == "$(DRAFT)" ]; then				\
+	elif [ "multiple-drafts" = "$(DRAFT)" ]; then				\
 	   echo 'More than one file in _drafts;'				\
 		'Specify one with name='; false; 				\
 	fi
@@ -146,11 +146,13 @@ from-required:
 #	Done in pre-post so that you can separate the two steps to do something like
 #	a word-count.  This works because pre-post is idempotent.
 #
+#	.draft stays around until you "make post" so that it won't require a name=
+#	if you make pre-post separately, e.g. for word count.
+#
 pre-post:	name-or-entry-required draft-or-entry-required
 	if [ ! -f $(ENTRY) ]; then mkdir -p $(POST_ARCHIVE)$(MONTHPATH); 	   \
 	   git mv $(DRAFT) $(ENTRY) || ( mv  $(DRAFT) $(ENTRY); git add $(ENTRY) ) \
 	fi
-	rm -f .draft
 	ln -sf $(ENTRY) .post
 
 # post an entry.
@@ -160,6 +162,7 @@ pre-post:	name-or-entry-required draft-or-entry-required
 #	commit with -a because the draft might have been added but not committed
 #
 post:	pre-post
+	rm -f .draft
 	$(POSTCMD) $(ENTRY)
 	sed -i -e '1,/^$$/ s/^$$/Posted:  $(POSTED)\n/' $(ENTRY)
 	git add $(ENTRY)
@@ -174,8 +177,19 @@ posted:
 	if [ -L $@ ]; then rm $@; else true; fi
 	ln -s $< $@
 
-reportVars := $(reportVars) name ENTRY DRAFT
+### reporting
 
+.PHONY: report-template wc wc-month wc-prev
+wc:
+	$(TOOLDIR)/blogging/word-count
+
+wc-v:
+	$(TOOLDIR)/blogging/word-count -v
+
+wc-last:
+	$(TOOLDIR)/blogging/word-count -v `date -d "today - 1month" +%m`
+
+reportVars := $(reportVars) name ENTRY DRAFT
 report-template:
 	@echo "$$TEMPLATE"
 
