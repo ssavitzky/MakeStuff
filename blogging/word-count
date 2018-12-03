@@ -3,21 +3,37 @@
 
 cd ~/vv/users/$USER/Private/Journals
 
+### Default values
+
 m=$(date "+%m"); this_month=$m
 y=$(date "+%Y")
 
+### get options
+
 while :; do
     case $1 in
-	-v) verbose=-------;
+	-v) # -v provides a second argument to count-words, which is printed
+	    #    after the file list.
+	    verbose=-------
 	    shift
 	    ;;
+	-r) # remove stats
+	    remove_stats=1
+	    shift
+	    ;;
+	-j) # -j uses Jekyll-format filenames:  yyyy-mm-dd-SLuG <<TODO
+	    sep="-"
+	    shift
+	    ;;
+	*) break
+	   ;;
     esac
-    break
 done
 
 # TODO: -m option
 if [ ! -z $1 ]; then m=$1; fi
 
+### Stats header:  special label for NaBloPoMo (November)
 
 stats=Posting
 if (( $m == 11 )); then
@@ -25,8 +41,10 @@ if (( $m == 11 )); then
 else
     stats=Posting
 fi
+
 echo "<pre>$stats stats:"
 
+### count-words GLOB [sep]
 count-words () {
     files=`ls ${1}* 2>/dev/null`
     total=0
@@ -34,9 +52,14 @@ count-words () {
     missed=0
     last=0
     for f in $files ; do
-	# dashes in the output get counted as words;
-	# pandoc uses them as list bullets.
-	wc=`pandoc -i $f -t plain | tr -- " -" "  " | wc -w`
+	# pandoc uses dashes as list bullets, so we have to take them out
+	if [[ ! -z $remove_stats ]] && [[ "$f" != "${f%.html}" ]]; then
+	    # optionally remove stats ("<pre>....stats:" - "</pre>") from html files
+	    wc=$(sed -e '/^<pre>[a-zA-Z]* stats\:$/,/^<\/pre>/d' $f | 
+		 pandoc -f html -t plain | tr -- " -" "  " | wc -w  )
+	else
+	    wc=$(pandoc -i $f -t plain | tr -- " -" "  " | wc -w)
+	fi
 	total=$(( $total + $wc))
 	count=$(( $count + 1))
 	day=`echo $f | head -c10 | tail -c2 | sed s/^0//`
@@ -76,6 +99,7 @@ if (( $m == $this_month )); then
     echo -e  "`printf %7d $total`" words in $count post$s today
 fi
 if (( $missed_days != 0 )); then
-    echo -e "`printf %7d $missed_days`" days with no posts
+    if [ $missed_days == 1 ]; then s=" "; else s=s; fi
+    echo -e "`printf %7d $missed_days`" day$s with no posts
 fi
 echo '</pre>'
