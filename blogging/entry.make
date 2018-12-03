@@ -75,6 +75,7 @@ HELP  	  := make [entry|draft] name=<filename> [title="<title>"]
 POST_HELP := make post [name=<filename>] [to=<post-url>]
 POSTED	  := $(shell date) $(to)
 
+export POST_ARCHIVE
 
 ### Targets ###
 

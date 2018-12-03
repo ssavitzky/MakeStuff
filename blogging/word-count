@@ -1,17 +1,34 @@
 #!/bin/bash
 #    Get a reasonably accurate word count for posts in the current month
 
-cd ~/vv/users/$USER/Private/Journals
+usage="$0 [options] [month] print word counts for posts in a given month
+  Options:
+	-d | -C  -- change directory
+	-h   	 -- help
+	-j   	 -- use Jekyll-style dates (yyyy-mm-dd)
+	-m month -- set month
+	-y year	 -- set year
+	-r 	 -- remove (don't count) postng statistics
+	-v	 -- verbose: print word count for each post
+"
 
 ### Default values
 
 m=$(date "+%m"); this_month=$m
-y=$(date "+%Y")
+y=$(date "+%Y"); this_year=$y
 
 ### get options
 
 while :; do
     case $1 in
+	-d | -C) # set directory
+	    shift; POST_ARCHIVE=$1
+	    shift
+	    ;;
+	-h) # help
+	    echo "$usage"
+	    exit
+	    ;;
 	-v) # -v provides a second argument to count-words, which is printed
 	    #    after the file list.
 	    verbose=-------
@@ -19,6 +36,14 @@ while :; do
 	    ;;
 	-r) # remove stats
 	    remove_stats=1
+	    shift
+	    ;;
+	-m) # set month
+	    shift; m=$1
+	    shift
+	    ;;
+	-y) # set year
+	    shift; y=$1
 	    shift
 	    ;;
 	-j) # -j uses Jekyll-format filenames:  yyyy-mm-dd-SLuG <<TODO
@@ -30,8 +55,14 @@ while :; do
     esac
 done
 
-# TODO: -m option
-if [ ! -z $1 ]; then m=$1; fi
+m=${1:-$m}
+sep=${sep:-/}
+
+if [[ ! -z ${POST_ARCHIVE} ]]; then
+    cd ${POST_ARCHIVE}; 
+elif [[ ! -d $y ]]; then
+   cd ~/vv/users/$USER/Private/Journals
+fi
 
 ### Stats header:  special label for NaBloPoMo (November)
 
@@ -75,26 +106,28 @@ count-words () {
 }
 
 # Count words and posts so far this month
-count-words $y/$m/ $verbose
+count-words $y$sep$m$sep $verbose
 if (($count == 0)); then
     avg=0
 else
     avg=$(($total / $count))
 fi
 
-# If we're in a different month, add missed days past the last date seen:
-if (( $this_month != $m )); then
-    while [[ $m == $(date -d "$y/$m/$last + 1day" +%m) ]]; do
-	missed=$(( $missed + 1))
-	last=$(( $last + 1 ))
-    done
+# Add missing days after the last date seen.
+if (( $this_month == $m && $this_year == $y)); then    # We're doing this month
+    end=$(date +%d)
+    in="this month"
+else
+    end=$(date -d "$y/$m/1 +1month -1day" +%d)
+    in=$(date -d "$y/$m/1" +"in %B")
+    if (( $this_year != $y )); then in="$in of $y"; fi
 fi
-missed_days=$missed
+missed_days=$(( $missed + $end - $last ))
 
-echo -e  "`printf %7d $total`" words in $count posts this month "(average $avg/post)"
+echo -e  "`printf %7d $total`" words in $count posts $in "(average $avg/post)"
 
-if (( $m == $this_month )); then
-    count-words `date "+$y/$m/%d"`
+if (( $m == $this_month && $y == $this_year)); then
+    count-words `date "+$y$sep$m$sep%d"`
     if [ $count == 1 ]; then s=" "; else s=s; fi
     echo -e  "`printf %7d $total`" words in $count post$s today
 fi
