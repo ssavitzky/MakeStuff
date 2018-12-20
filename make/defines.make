@@ -136,9 +136,9 @@ endif
 #	to be revised.  For the moment, look for Tracks or one or the other of
 #	*.songs or *.tracks (the latter indicating an album's recording directory)
 #
-hasLyrics = $(if $(wildcard *.flk),lyrics.make)
 hasSongs  = $(if $(findstring /Songs,$(MYPATH))$(wildcard *.songs),songs.make)
 hasTracks = $(if $(wildcard *songs *.tracks Tracks),tracks.make)
+hasLyrics = $(if $(hasTracks),,$(if $(wildcard *.flk),lyrics.make))
 # Note that MUSIC_D may need to be changed later.
 MUSIC_D := $(if $(hasSongs)$(hasLyrics)$(hasTracks),$(TOOLDIR)/music)
 MUSIC_D_INCLUDES := $(hasLyrics) $(hasSongs) $(hasTracks)
