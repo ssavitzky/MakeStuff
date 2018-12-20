@@ -22,6 +22,7 @@
 %%%	  \lyrics{lyricist}			% specifies theLyricist
 %%%	  \music{composer}			% specifies theComposer
 %%%	  \arranger{arranger}			% specifies theArranger
+%%%	  \performer{performer}			% specifies thePerformer
 %%%	  \credits{credits}			% specifies theCredits
 %%%       \performance{performance notes}       % specifies perf. notes
 %%%
@@ -120,6 +121,7 @@ Attribution-Noncommercial-Share Alike 4.0 License.}
 \def\lyrics#1{\global\def\theLyricist{#1}}\def\theLyricist{}
 \def\music#1{\global\def\theComposer{#1}}\def\theComposer{}
 \def\arranger#1{\global\def\theArranger{#1}}\def\theArranger{}
+\def\performer#1{\global\def\thePerformer{#1}}\def\thePerformer{}
 \def\credits#1{\global\def\theCredits{#1}}\def\theCredits{}
 \def\performance#1{\global\def\thePerformance{#1}}\def\thePerformance{}
 
