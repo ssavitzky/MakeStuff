@@ -42,6 +42,8 @@ $performer = "";		# performer
 $lyrics = "";			# lyricist
 $music = "";			# composer
 $arranger = "";			# arranger
+$performer = "";		# performer
+
 			      ## derived:
 $index_title = "";		# title without leading A/The
 $filename  = "";		# filename.flk
@@ -163,6 +165,7 @@ sub getSongFileInfo {
 	elsif (/\\music/)	{ $music     = getContent($_); }
 	elsif (/\\lyrics/)	{ $lyrics    = getContent($_); }
 	elsif (/\\arranger/)	{ $arranger  = getContent($_); }
+	elsif (/\\performer/)	{ $performer = getContent($_); }
 	elsif (/\\credits/)	{ $credits   = getContent($_); }
 	elsif ($title) { 
 	    # everything's at the top, so we have it all now.
@@ -256,6 +259,7 @@ sub printMetadata {
     printItem("lyrics", $lyrics);
     printItem("music", $music) if $music;
     printItem("arranger", $arranger) if $arranger;
+    printItem("performer", $performer) if $performer;
     printItem("timing", $timing) if $timing;
     printItem("tags", $tags) if $tags;
     printItem("key", $key) if $key;

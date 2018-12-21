@@ -367,6 +367,7 @@ sub getSongFileInfo {
 	elsif (/\\music/)	{ $music     = getContent($_); }
 	elsif (/\\lyrics/)	{ $lyrics    = getContent($_); }
 	elsif (/\\arranger/)	{ $arranger  = getContent($_); }
+	elsif (/\\performer/)	{ $performer = getContent($_); }
 	elsif (/\\credits/)	{ $credits   = getContent($_); }
 	elsif ($title) { 
 	    # everything's at the top, so we have it all now.

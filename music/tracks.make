@@ -33,6 +33,8 @@
 
 ifeq ($(wildcard Lyrics), Lyrics)
   LYRICDIR := ./Lyrics
+else ifneq ($(wildcard *.flk),,)
+  LYRICDIR := .
 else
   LYRICDIR := $(shell d=$(MYDIR); 					\
 		  while [ ! -d $$d/Lyrics ] && [ ! $$d = / ]; do	\
