@@ -593,23 +593,27 @@ $(SHORTNAME).$(yyyymmdd).tracks: $(SHORTNAME).tracks
 #	the disk before reading the msinfo.
 #
 
-#SPEED=--speed 8
+SPEED=--speed 8
 .PHONY: cdr
 cdr: $(BASEPFX)toc
 	@[ `whoami` = "root" ] || (echo "cdrdao should be run by root")
-	/usr/bin/time $(CDRDAO) write --driver generic-mmc-raw --eject \
+	/usr/bin/time $(CDRDAO) write --driver generic-mmc --buffers 128 --eject \
 	  --device /dev/sr0 $(SPEED) $(BASEPFX)toc
 
 .PHONY: try-cdr
 try-cdr: $(BASEPFX)toc
 	@[ `whoami` = "root" ] || (echo "cdrdao should be run by root")
-	/usr/bin/time $(CDRDAO) write --driver generic-mmc-raw --simulate \
-	  --device /dev/sr0 $(BASEPFX)toc
+	/usr/bin/time $(CDRDAO) write --driver generic-mmc --buffers 128 --simulate \
+	  --device /dev/sr0 $(SPEED) $(BASEPFX)toc
 
 .PHONY: tao
 tao: 	
 	@[ `whoami` = "root" ] || (echo "wodim should be run by root")
 	$(WODIM) -pad -tao -audio $(TRACK_DATA)
+
+try-tao: 	
+	@[ `whoami` = "root" ] || (echo "wodim should be run by root")
+	$(WODIM) -pad -tao -audio --dummy $(TRACK_DATA)
 
 ### Setup
 
