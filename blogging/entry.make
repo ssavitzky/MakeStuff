@@ -163,8 +163,8 @@ pre-post:	name-or-entry-required draft-or-entry-required
 #	commit with -a because the draft might have been added but not committed
 #
 post:	pre-post
-	rm -f .draft
 	$(POSTCMD) $(ENTRY)
+	rm -f .draft
 	sed -i -e '1,/^$$/ s/^$$/Posted:  $(POSTED)\n/' $(ENTRY)
 	git add $(ENTRY)
 	git commit -m "posted $(ENTRY)" -a
