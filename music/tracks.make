@@ -215,7 +215,6 @@ ifneq ($(SONGFILES),)
 	$(subst .songs,.long.html, $(SONGFILES)) \
 	$(subst .songs,.extras.html, $(SONGFILES)) 
 
-  SUBMAKES += $(subst .songs,.make, $(SONGFILES))
   RIPDIRS += $(subst .songs,.rips, $(SONGFILES)) 
 else
   # no songfiles -- set the default so setup: can make it later.
@@ -262,16 +261,14 @@ endif
 %.mp3s: %.names
 	(for f in `cat $<`; do echo $$f.mp3; done) > $@
 
-%.rips: %.names %.make %.oggs %.mp3s
+%.rips: %.names %.oggs %.mp3s
 	[ -d $@ ] || mkdir $@
 	rm -f $@/[0-9][0-9]-*
-	make -f $*.make
 	$(TRACKINFO) format=symlinks dir=$@ @$*.names
 
-%.re-rip: %.names %.make %.oggs %.mp3s
+%.re-rip: %.names %.oggs %.mp3s
 	[ -d $*.rips ] || mkdir $*.rips
 	rm -f $*.rips/[0-9][0-9]-*
-	make -f $*.make
 	$(TRACKINFO) format=symlinks dir=$*.rips @$*.names
 
 ## rules to make ogg and mp3 files
@@ -350,7 +347,7 @@ re-list:
 .PHONY:	toc-file
 toc-file: $(BASEPFX)toc
 
-# FIXME: track lengths are bad.
+# FIXME: some track lengths are bad.
 $(BASEPFX)toc: $(TRACKFILE) $(TRACK_DATA)
 	$(TRACKINFO) -cd $(TOC_FLAGS) title="$(TITLE)" $(SONGS) > $@
 	$(CDRDAO) show-toc $(BASEPFX)toc | tail -1
@@ -534,8 +531,8 @@ Premaster:
 
 ### Normalization:
 # 	Probably don't want the --mix flag on normalize.
-#	That would make bring everything to the same average level,
-#	rather than maximizing each track separately.  
+#	That would bring everything to the same average level,	rather than
+#	maximizing each track separately.  
 #	Probably don't want -q, either -- it's a long time to go without
 #	output, and we'll almost always be doing it from the command line.
 
@@ -583,12 +580,10 @@ $(SHORTNAME).$(yyyymmdd).tracks: $(SHORTNAME).tracks
 #	you don't get the advantage of realtime scheduling if you're not.
 #	Speed is parametrized, default 8:  you can get away with just about 
 #	anything for data, but audio is more picky.  I've never had any
-#	problems with 8, and _have_ had problems with 24.
+#	problems with 8, and _have_ had problems with 24.  8 seems to be
+#	cdrdao's minimum these days.
 #
-#	Make masters at 4 or lower.  verify with qpxtool (plextor drives) or
-#	readom -c2scan dev=ATA:1,1,0
-#
-# 	Note that it is no longer necessary to specify a device
+# 	Note that it is no longer necessary to specify a device for wodim
 #	Note that if you want to burn a mixed disk, you MUST eject and reload
 #	the disk before reading the msinfo.
 #
