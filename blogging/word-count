@@ -8,6 +8,7 @@ usage="$0 [options] [month] print word counts for posts in a given month
 	-j   	 -- use Jekyll-style dates (yyyy-mm-dd)
 	-m month -- set month
 	-y year	 -- set year
+	-Y 	 -- count words in the entire year
 	-r 	 -- remove (don't count) postng statistics
 	-v	 -- verbose: print word count for each post
 "
@@ -16,6 +17,7 @@ usage="$0 [options] [month] print word counts for posts in a given month
 
 m=$(date "+%m"); this_month=$m
 y=$(date "+%Y"); this_year=$y
+allYear=false
 
 ### get options
 
@@ -45,6 +47,9 @@ while :; do
 	-y) # set year
 	    shift; y=$1
 	    shift
+	    ;;
+	-Y) # count words in year to date
+	    shift; allYear=true
 	    ;;
 	-j) # -j uses Jekyll-format filenames:  yyyy-mm-dd-SLuG <<TODO
 	    sep="-"
@@ -78,6 +83,7 @@ echo "<pre>$stats stats:"
 ### count-words GLOB [sep]
 count-words () {
     files=`ls ${1}* 2>/dev/null`
+
     total=0
     count=0
     missed=0
@@ -102,16 +108,36 @@ count-words () {
 	fi
 	last=$day
     done
+    if (($count == 0)); then
+	avg=0
+    else
+	avg=$(($total / $count))
+    fi
     [[ -z $2 ]] || echo $2
 }
 
+if $allYear; then
+    echo all of $y by month:
+    yearWords=0
+    yearCount=0
+    for month in `seq 1 12`; do
+	mm=$(printf "%02d" $month)
+	count-words $y$sep$mm$sep $verbose
+	yearWords=$(( $yearWords + $total ))
+	yearCount=$(( $yearCount + $count ))
+	echo -e  "`printf %7d $total`" words in "`printf %2d $count`" posts"\t"  \
+	     in $y/$mm "(average $avg/post)"
+    done
+    avg=$(($yearWords / $yearCount))
+    echo '----------------------------------'
+    echo -e  "`printf %7d $yearWords`" words in $yearCount posts total \
+	 in $y "(average $avg/post)"
+    echo '</pre>'
+    exit
+fi
+
 # Count words and posts so far this month
 count-words $y$sep$m$sep $verbose
-if (($count == 0)); then
-    avg=0
-else
-    avg=$(($total / $count))
-fi
 
 # Add missing days after the last date seen.
 if (( $this_month == $m && $this_year == $y)); then    # We're doing this month
