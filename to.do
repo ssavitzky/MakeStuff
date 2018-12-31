@@ -20,14 +20,20 @@ BUGS:
 General:
   o in shared projects (e.g. github) make push should always happen on a feature branch,
     and can use -f.  That would make it possible to filter out commits that are only used
-    for syncing between workstations.
+    for syncing between workstations.  Use "git merge --squash"
 
 Blogging:
   o probably useful to have a .do -> .html formatter, too.
   o should include the post's URL in the Posted: header, if the program returns it.
     -> the way DW archive pages are named, /yyyy/mm/dd/, can be used to get the URL of the
-       most recent one.  (as long as it's public) Need to parametrize with how archived
+       most recent one.  (as long as it's public)  Ought to parametrize with how archived
        posts are listed -- mine is most recent last; some people use blog order.
+  o Each entry starts with [h3 class="entry-title"][a title="..." href="POSTED_URL"
+    That's all you need to find the permalink URL of the entry.  Use the following:
+    wget -O - https://mdlbear.dreamwidth.org/$(date +%Y/%m/%d/)  \
+       | grep 'class="entry-title"' | tail -1                    \
+       | sed -E 's/^<[^>]*><[^>]*href="([^"]*)".*$/\1/'
+  o DW field size limits:  custom mood: 38, Music: 80, Location 80
 
 WAV->FLAC
   o Move to a workflow that uses flac instead of wav.  Audacity can export it,
