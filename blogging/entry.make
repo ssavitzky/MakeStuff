@@ -73,7 +73,7 @@ endif
 
 HELP  	  := make [entry|draft] name=<filename> [title="<title>"]
 POST_HELP := make post [name=<filename>] [to=<post-url>]
-POSTED	  := $(shell date) $(to)
+POSTED	  := $(subst /,-,$(DAYPATH))$(to)
 
 export POST_ARCHIVE
 
@@ -157,20 +157,23 @@ pre-post:	name-or-entry-required draft-or-entry-required
 	ln -sf $(ENTRY) .post
 
 # post an entry.
-#	The date is recorded in the entry; it would be easy to modify this to
-#	add the url if POSTCMD was able to return it.
+#	The date is recorded in the entry, followed by the url returned by $(POSTCMD)
 #
 #	commit with -a because the draft might have been added but not committed
 #
 post:	pre-post
-	$(POSTCMD) $(ENTRY)
+	url=$$($(POSTCMD) $(ENTRY)); \
+	   sed -i -e "1,/^$$/ s@^$$@Posted:  $(POSTED) $$url\\\\n@" $(ENTRY)
 	rm -f .draft
-	sed -i -e '1,/^$$/ s/^$$/Posted:  $(POSTED)\n/' $(ENTRY)
 	git add $(ENTRY)
 	git commit -m "posted $(ENTRY)" -a
 
+POST_URL=$(shell wget -q -O - https://$(JOURNAL)/$(DAYPATH)  	\
+       | grep 'class="entry-title"' | tail -1                   \
+       | sed -E 's/^<[^>]*><[^>]*href="([^"]*)".*$$/\1/')
+
 posted:
-	sed -i -e '1,/^$$/ s/^$$/Posted:  $(POSTED)\n/' $(ENTRY)
+	sed -i -e "1,/^$$/ s@^$$@Posted:  $(POSTED) $(POST_URL)\\\\n@" $(ENTRY)
 	git commit -m "posted $(ENTRY)" $(ENTRY)
 
 # make .draft point to today's entry
