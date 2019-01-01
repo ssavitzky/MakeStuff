@@ -81,11 +81,11 @@ read_headers () {
     # posts with local access don't get posted
     # This is in contrast to "private", which get posted but are only visible to the user
 
-    if [ "local" == "$PERMISSION" ]; then cat > /dev/null; exit; fi
+    if [ "local" == "$PERMISSION" ]; then cat > /dev/null; echo $1; exit; fi
 
     $FILTER | $ACTION $POST -q --subject "$SUBJECT" --mood "$MOOD" --pic "$PICTURE"\
 	    --tag "$TAGS" --permit "$PERMISSION" --location "$LOCATION"\
-	    --music "$MUSIC" --journal "$JOURNAL"
+	    --music "$MUSIC" --journal "$JOURNAL" > /dev/null
 
 } < "${1:-/dev/stdin}"
 
@@ -96,7 +96,7 @@ if [ ! -z "$XPOST" ]; then
 	SUBJECT="$SUBJECT"
 	$ACTION charm -q --subject "$SUBJECT" --mood "$MOOD" --pic "$PICTURE"\
 		--tag "$TAGS" --permit "$PERMISSION" --location "$LOCATION"\
-		--music "$MUSIC" --journal "$JOURNAL"
+		--music "$MUSIC" --journal "$JOURNAL" > /dev/null
     } # < $1 # NOTE:  crossposting won't work when posting from STDIN.
 fi
 
