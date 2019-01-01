@@ -85,7 +85,7 @@ read_headers () {
 
     $FILTER | $ACTION $POST -q --subject "$SUBJECT" --mood "$MOOD" --pic "$PICTURE"\
 	    --tag "$TAGS" --permit "$PERMISSION" --location "$LOCATION"\
-	    --journal "$JOURNAL"
+	    --music "$MUSIC" --journal "$JOURNAL"
 
 } < "${1:-/dev/stdin}"
 
@@ -96,6 +96,14 @@ if [ ! -z "$XPOST" ]; then
 	SUBJECT="$SUBJECT"
 	$ACTION charm -q --subject "$SUBJECT" --mood "$MOOD" --pic "$PICTURE"\
 		--tag "$TAGS" --permit "$PERMISSION" --location "$LOCATION"\
-		--journal "$JOURNAL"
+		--music "$MUSIC" --journal "$JOURNAL"
     } # < $1 # NOTE:  crossposting won't work when posting from STDIN.
 fi
+
+# print out the url of the last thing we posted:
+#  Note: this may not work if the post isn't public; it might if one puts
+#  the appropriate credentials in .netrc
+
+wget -q -O - https://mdlbear.dreamwidth.org/$(date +%Y/%m/%d/) \
+   | grep 'class="entry-title"' | tail -1                      \
+   | sed -E 's/^<[^>]*><[^>]*href="([^"]*)".*$/\1/'
