@@ -162,8 +162,8 @@ pre-post:	name-or-entry-required draft-or-entry-required
 #	commit with -a because the draft might have been added but not committed
 #
 post:	pre-post
-	url=$$($(POSTCMD) $(ENTRY)); \
-	   sed -i -e "1,/^$$/ s@^$$@Posted:  $(POSTED) $$url\\\\n@" $(ENTRY)
+	url=$$($(POSTCMD) $(ENTRY)); 	\
+	   sed -i -e '1,/^$$/ s@^$$@Posted:  $(POSTED) '"$$url"'\n@' $(ENTRY)
 	rm -f .draft
 	git add $(ENTRY)
 	git commit -m "posted $(ENTRY)" -a
@@ -178,8 +178,7 @@ posted:
 
 # make .draft point to today's entry
 .draft:: $(ENTRY)
-	if [ -L $@ ]; then rm $@; else true; fi
-	ln -s $< $@
+	ln -sf $< $@
 
 ### reporting
 
