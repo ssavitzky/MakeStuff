@@ -169,11 +169,11 @@ post:	pre-post
 	git commit -m "posted $(ENTRY)" -a
 
 POST_URL=$(shell wget -q -O - https://$(JOURNAL)/$(DAYPATH)  	\
-       | grep 'class="entry-title"' | tail -1                   \
-       | sed -E 's/^<[^>]*><[^>]*href="([^"]*)".*$$/\1/')
+         | grep 'class="entry-title"' | tail -1                 \
+         | sed -E 's/^<[^>]*><[^>]*href="([^"]*)".*$$/\1/')
 
 posted:
-	sed -i -e "1,/^$$/ s@^$$@Posted:  $(POSTED) $(POST_URL)\\\\n@" $(ENTRY)
+	sed -i -e '1,/^$$/ s@^$$@Posted:  $(POSTED) $(POST_URL)\n@' $(ENTRY)
 	git commit -m "posted $(ENTRY)" $(ENTRY)
 
 # make .draft point to today's entry
