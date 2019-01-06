@@ -178,10 +178,13 @@ def put_metadata(metadata, file):
     if jekyll:
         print('---', file=file)
         for key in sorted(metadata.keys()):
+            # quote all the tags -- some may look numbers rather than strings
             if key == 'tags':
-                print('tags: [ ' + metadata[key] + ']', file=file)
+                print('tags: [ "' + metadata[key] + '" ]', file=file)
                 continue
-            print (key +  ": " + metadata[key], file=file)
+            # quote the value, which might contain colons or single quotes.
+            # FIXME:  check value for double quotes and escape them.
+            print (key +  ': "' + metadata[key] + '"', file=file)
         print('---', file=file)
     else:
         # TODO: Really, we ought to convert Jekyll metadata to DW here
