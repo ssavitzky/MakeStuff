@@ -79,7 +79,7 @@ export POST_ARCHIVE
 
 ### Targets ###
 
-.PHONY: draft entry pre-pot post
+.PHONY: draft entry pre-post post
 .PHONY: from-required draft-or-entry-required name-or-entry-required name-required
 
 all:: 
@@ -204,7 +204,7 @@ Access: public
 Tags: 
 Music: 
 Mood: 
-Location:
+Location: $(DEFAULT_LOCATION)
 Picture:
 
 <p> 
