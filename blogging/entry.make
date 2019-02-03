@@ -15,10 +15,9 @@
 #
 # Tweakable Parameters:
 #       DONT_COMMIT_DRAFT if defined, just add the draft without committing it.
-#	POST_ARCHIVE 	- if defined, this is the path to the yyyy/... post archive directory
-#		          Typically this will be ../ (slash required).  If not defined, the
-#		       	  current directory is used.
-#	DRAFTS	     	- if defined, directory where we keep drafts.  Used with Jekyll blogs.
+#	POST_ARCHIVE 	- if defined, this is the path to yyyy/...; it must end in /
+#		          Typically this will be ../ (slash required).  Defaults to .
+#	DRAFTS	     	- if defined, directory where we keep drafts.  Used with Jekyll.
 #	EXT	     	- Filename extension.  Default is html; md is a popular alternative.
 #	PFX	     	- prepended to the template name.  See thanks.make for an example.
 
@@ -43,7 +42,7 @@ EXT ?= $(DEFAULT_EXT)
 
 ifndef name			# if we don't have a name
   ifdef title			# but we do have a title, slugfy it.
-	name = $(shell echo "$(title)" | 		\
+	name := $(shell echo "$(title)" | 		\
 	  sed  -e 's/"//g' -e 's/\[.*\]//' 		\
           -e 's/[ ]\+/-/g' -e 's/^-*//'  -e s/-*$$// 	\
           -e 's/[^-a-zA-Z0-9]//g' -e 's/^the-//i' | tr '[A-Z]' '[a-z]')
@@ -71,9 +70,8 @@ ifndef ENTRY
   endif
 endif
 
-HELP  	  := make [entry|draft] name=<filename> [title="<title>"]
-POST_HELP := make post [name=<filename>] [to=<post-url>]
-POSTED	  := $(subst /,-,$(DAYPATH))$(to)
+HELP  	  := make [entry|draft|post] [name=<filename>] [title="<title>"]
+POSTED	   = $(subst /,-,$(DAYPATH)) $(HRTIME)
 
 export POST_ARCHIVE
 
@@ -83,8 +81,7 @@ export POST_ARCHIVE
 .PHONY: from-required draft-or-entry-required name-or-entry-required name-required
 
 all:: 
-	@echo To draft an entry, '$(HELP)'
-	@echo ... then to post: ' $(POST_HELP)'
+	@echo usage: '$(HELP)'
 
 ## entry:  make an entry for today, and link .draft
 #	The commit gives us a record of the starting time.
@@ -167,6 +164,7 @@ post:	pre-post
 	rm -f .draft
 	git add $(ENTRY)
 	git commit -m "posted $(ENTRY)" -a
+	grep Posted: $(ENTRY) | head -1
 
 POST_URL=$(shell wget -q -O - https://$(JOURNAL)/$(DAYPATH)  	\
          | grep 'class="entry-title"' | tail -1                 \
@@ -175,6 +173,7 @@ POST_URL=$(shell wget -q -O - https://$(JOURNAL)/$(DAYPATH)  	\
 posted:
 	sed -i -e '1,/^$$/ s@^$$@Posted:  $(POSTED) $(POST_URL)\n@' $(ENTRY)
 	git commit -m "posted $(ENTRY)" $(ENTRY)
+	grep Posted: $(ENTRY) | head -1
 
 # make .draft point to today's entry
 .draft:: $(ENTRY)
@@ -192,7 +191,7 @@ wc-v:
 wc-last:
 	$(TOOLDIR)/blogging/word-count -v `date -d "today - 1month" +%m`
 
-reportVars := $(reportVars) name ENTRY DRAFT
+reportVars := $(reportVars) name title ENTRY DRAFT
 report-template:
 	@echo "$$TEMPLATE"
 
