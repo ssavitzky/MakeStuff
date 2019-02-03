@@ -12,6 +12,7 @@ SIZE = 12pt,
 ### Utility programs:
 TEXDIR	  = $(TOOLDIR)/TeX
 LATEX	  = latex -file-line-error
+FLKTRAN   = $(TEXDIR)/flktran.pl
 PDFLATEX  = pdflatex -file-line-error
 SORT_BY_TITLE = $(TEXDIR)/sort-by-title
 PRINT_DUPLEX = lp -o sides=two-sided-long-edge
@@ -151,6 +152,15 @@ SONG_LOOSELEAF= '\documentclass[$(SIZE)letterpaper,twoside]{article}'		\
 	echo q | $(LATEX) $(TEXOPTS) -jobname $*				\
 		$(SONG_PREAMBLE) '\begin{document}\input{$<}\end{document}'
 	rm -f $*.log $*.aux
+
+%.txt:	%.flk
+	$(FLKTRAN) $< $@
+
+%.chords.txt: %.flk | %
+	WEBSITE=$(WEBSITE) WEBDIR=$(MYNAME) $(FLKTRAN) -c $< $@
+
+%.html: %.flk | %
+	WEBSITE=$(WEBSITE) WEBDIR=$(MYNAME) $(FLKTRAN) -t -b $< $@
 
 # Build into another directory, for constructing websites and songbooks.
 #	Note that the target directory has to be specified directly as well as
