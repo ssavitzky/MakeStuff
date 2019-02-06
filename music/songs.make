@@ -133,16 +133,25 @@ reportVars += LPATH ASONGS ALLSONGS DIRNAMES WEB_OK_TAGS MUSTACHE
 # The index.html files depend on the corresponding metadata.
 #	Note that if we don't explicitly make the metadata, it will be treated as an
 #	intermediate file and deleted after making index.html.
-#	Also note that the ruby version of mustache requires ruby 2.0 or better, so it's
-#	not available on my web host.  The best solution for the moment seems to be to
-#	keep the resulting index.html files in git, and to make sure that we don't try to
-#	remake them if mustache isn't around.
+#
+#	On the other hand, we _do_ want to delete the symlink to the template.
+#	It's there because paths to partials are resolved relative to the template.
+#
+#	At some point we might want to try mo: Mustache templates in pure bash
+#       https://github.com/tests-always-included/mo
+#
+#	Note that we are no longer using server-side includes here.  Currently
+#	they _are_ used elsewhere in the site, mainly for footers.  Also note
+#	that in order for this to work, footers etc. have to be in /site, which
+#	must be a sibling of /Songs.
 #
 ifneq ($(MUSTACHE),)
 %/index.html: %/metadata.yml 1subdir-index.mustache
-	cd `dirname $@`;  $(MUSTACHE) metadata.yml ../1subdir-index.mustache > index.html
-	chmod +x $@
+	cd `dirname $@`;  ln -sf ../1subdir-index.mustache; 			\
+	    $(MUSTACHE) metadata.yml 1subdir-index.mustache > index.html; 	\
+	    rm ./1subdir-index.mustache
 else
+%/index.html:
 	touch $@
 endif
 
