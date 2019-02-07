@@ -147,7 +147,7 @@ reportVars += LPATH ASONGS ALLSONGS DIRNAMES WEB_OK_TAGS MUSTACHE
 #
 ifneq ($(MUSTACHE),)
 %/index.html: %/metadata.yml 1subdir-index.mustache
-	cd `dirname $@`;  ln -sf ../1subdir-index.mustache; 			\
+	cd $(dir $@);  ln -sf ../1subdir-index.mustache; 			\
 	    $(MUSTACHE) metadata.yml 1subdir-index.mustache > index.html; 	\
 	    rm ./1subdir-index.mustache
 else
@@ -165,6 +165,31 @@ endif
 	sox $(shell $(TRACKINFO) format=files $*) -w -t wav - | \
 	  lame -b 64 -S $(shell $(TRACKINFO) $(SONGLIST_FLAGS)  \
 	   --mp3 $*) $@
+
+AUDIO_LINKS = $(shell for f in */*.ogg; do \
+		echo `dirname $$f`/audio-links.html; done | uniq)
+all::	$(AUDIO_LINKS)
+
+## If a subdirectory contains audio files, it needs an audio-links.html file
+#	If there are only ogg and mp3 files with names that match the directory,
+#	things are simple.  Otherwise somebody is going to have to do some editing.
+#
+#	This is a single-colon rule with no dependencies, so it will only be built
+#	if it does not already exist.  Once it's there you can edit it to add
+#	additional links or text.
+#
+%/audio-links.html:
+	d=$(subst /,,$(dir $@)); \
+	  echo "<h3 id='Recordings'>Recordings:</h3>" 				 > $@; \
+	  echo "<p class='recording'>"						>> $@; \
+	  echo "    <a href='$$d.ogg'>[ogg]</a> <a href='$$d.mp3'>[mp3]</a>"	>> $@; \
+	  echo "    <audio controls>" 						>> $@; \
+	  echo "         <source src='$$d.ogg' type='audio/ogg'>"		>> $@; \
+	  echo "         <source src='$$d.mp3' type='audio/mp3'>"		>> $@; \
+	  echo "    </audio>"	 						>> $@; \
+	  echo "</p>"	 							>> $@; \
+	  echo "<hr />"								>> $@
+
 
 ########################################################################
 ###
