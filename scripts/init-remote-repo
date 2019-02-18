@@ -19,4 +19,4 @@ echo $url
 ssh -x $site "mkdir -p $path && cd $path && git init --bare"
 git remote add origin -m master $url
 git push -f origin master
-git branch --set-upstream-to=master origin
+git branch --set-upstream-to=origin master
