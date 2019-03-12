@@ -1,0 +1,8 @@
+#!/bin/bash
+
+(echo '<!DOCTYPE html><head><title/></head><body>'
+ cat $1
+ echo '</body>'
+)   | sed -E 's|(</?)cut|$1 cut|g' \
+    | tidy 2>&1 >/dev/null \
+    | sed  -e '/^$/q' 
