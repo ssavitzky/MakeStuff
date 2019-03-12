@@ -166,8 +166,8 @@ endif
 	  lame -b 64 -S $(shell $(TRACKINFO) $(SONGLIST_FLAGS)  \
 	   --mp3 $*) $@
 
-AUDIO_LINKS = $(shell for f in */*.ogg; do \
-		echo `dirname $$f`/audio-links.html; done | uniq)
+AUDIO_LINKS = $(shell for f in *; do \
+		[ -e $$f/$$f.ogg ] && echo $$f/audio-links.html; done | uniq)
 all::	$(AUDIO_LINKS)
 
 ## If a subdirectory contains audio files, it needs an audio-links.html file
