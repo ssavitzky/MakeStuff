@@ -66,6 +66,9 @@ ALLTEXT  = $(patsubst %,%/lyrics.txt,$(DIRNAMES)) \
 WEBINDICES = 0Index.html 0IndexTable.html 0IndexShort.html
 SUBDIR_INDICES =  $(patsubst %,%/index.html, $(DIRNAMES))
 
+# these are the optional include files that %/index.html depends on
+SUBDIR_INCLUDES = body-text.html audio-links.html
+
 # At some point we can add 1Index*, after we add subdir indices that can handle
 # directories without visible lyrics.
 
@@ -115,20 +118,33 @@ reportVars += LPATH ASONGS ALLSONGS DIRNAMES WEB_OK_TAGS MUSTACHE
 	WEBSITE=$(WEBSITE) WEBDIR=$(MYNAME) $(FLKTRAN) -c $< $@
 
 
-# We can generate several types of metadata.
+## Here we generate several types of metadata.
+
 #	metadata.yml is an input to the mustache template engine
-# 	metadata.sh and metadata.make can be included in shell scripts and makefiles;
-#	that may not be necessary at this point, but they can be used as alternative
-#	templating engines in a pinch.
-
-%/metadata.sh: %.flk $(SONGINFO) | %
-	$(SONGINFO) --format=shell --ok='$(WEB_OK_TAGS)' $< > $@
-
 %/metadata.yml: %.flk $(SONGINFO) | %
 	$(SONGINFO) --format=yaml --ok='$(WEB_OK_TAGS)' $< > $@
 
+#	metadata.sh can be sourced into a shell script; it can be used if
+#	  we don't have the mustache templating engine.
+%/metadata.sh: %.flk $(SONGINFO) | %
+	$(SONGINFO) --format=shell --ok='$(WEB_OK_TAGS)' $< > $@
+
+#	metadata.make can be included in a makefile; it's not used at the moment.
 %/metadata.make: %.flk $(SONGINFO) | %
 	$(SONGINFO) --format=make --ok='$(WEB_OK_TAGS)' $< > $@
+
+#	metadata.timestamp is touched if index.html is out of date
+%/metadata.timestamp: FORCE
+	@if [ ! -f $@ ]; then 				\
+	   touch $@; echo touch $@;			\
+	else 						\
+	   export d=`dirname $@`; for f in $(SUBDIR_INCLUDES); do	\
+		if [ -e $$d/$$f ] && [ $$d/$$f -nt $@ ]; then		\
+		   touch $@; echo touch $@; break;			\
+		fi							\
+	   done								\
+	fi
+.PHONY: FORCE
 
 # The index.html files depend on the corresponding metadata.
 #	Note that if we don't explicitly make the metadata, it will be treated as an
@@ -145,16 +161,21 @@ reportVars += LPATH ASONGS ALLSONGS DIRNAMES WEB_OK_TAGS MUSTACHE
 #	that in order for this to work, footers etc. have to be in /site, which
 #	must be a sibling of /Songs.
 #
+#	Note that there appears to be no direct way to make %/index.html depend on
+#	optional include files like %/body-text.html and %/audio-links.html, so we
+#	use a timestamp file instead and touch it if index.html is out of date.
+#
 ifneq ($(MUSTACHE),)
-%/index.html: %/metadata.yml 1subdir-index.mustache
+%/index.html: %/metadata.yml %/metadata.timestamp 1subdir-index.mustache
 	cd $(dir $@);  ln -sf ../1subdir-index.mustache; 			\
 	    $(MUSTACHE) metadata.yml 1subdir-index.mustache > index.html; 	\
 	    rm ./1subdir-index.mustache
 else
-%/index.html:
+# What we really ought to do is fall back on server-side includes and a shell template
+%/index.html: %/metadata.yml %/metadata.timestamp 
 	touch $@
+	@echo NO TEMPLATING ENGINE DEFINED
 endif
-
 
 # Ogg and mp3 files.  
 #	They have no dependencies to prevent their being constantly rebuilt.
@@ -201,6 +222,7 @@ all::	$(DIRNAMES) $(ALLPDF) metadata $(ALLHTML) $(ALLTEXT)
 .PHONY: metadata
 metadata::	$(patsubst %,%/metadata.yml, $(DIRNAMES))
 metadata::	$(patsubst %,%/metadata.sh, $(DIRNAMES))
+metadata::	$(patsubst %,%/metadata.timestamp, $(DIRNAMES))
 
 
 ### Showing and hiding lyrics:
