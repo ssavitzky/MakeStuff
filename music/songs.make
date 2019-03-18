@@ -201,15 +201,15 @@ all::	$(AUDIO_LINKS)
 #
 %/audio-links.html:
 	d=$(subst /,,$(dir $@)); \
-	  echo "<h3 id='Recordings'>Recordings:</h3>" 				 > $@; \
+	  echo "<hr />" 				 			 > $@; \
+	  echo "<h3 id='Recordings'>Recordings:</h3>" 				>> $@; \
 	  echo "<p class='recording'>"						>> $@; \
 	  echo "    <a href='$$d.ogg'>[ogg]</a> <a href='$$d.mp3'>[mp3]</a>"	>> $@; \
 	  echo "    <audio controls>" 						>> $@; \
 	  echo "         <source src='$$d.ogg' type='audio/ogg'>"		>> $@; \
 	  echo "         <source src='$$d.mp3' type='audio/mp3'>"		>> $@; \
 	  echo "    </audio>"	 						>> $@; \
-	  echo "</p>"	 							>> $@; \
-	  echo "<hr />"								>> $@
+	  echo "</p>"	 							>> $@;
 
 
 ########################################################################
