@@ -13,8 +13,8 @@ PUBDIR = /usr/local/starport/Web/Public/Steve_Savitzky/TeX
 
 # Wildcard expansion requires GNU make.
 
-#SONGS = $(wildcard [a-z]*.flk)
-SONGS = alphabet.flk world.flk
+SONGS = $(wildcard [a-z]*.flk)
+# SONGS = alphabet.flk world.flk
 PRINT = $(subst .flk,$(PR),$(SONGS))
 PS    = $(subst .flk,.ps,$(SONGS))
 HTML  = $(subst .flk,.html,$(SONGS))
