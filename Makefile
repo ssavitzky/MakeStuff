@@ -8,18 +8,17 @@
 
 ### MakeStuff:  Figure out where we are and where the MakeStuff is: 
 #   BASEDIR is the directory that contains it, possibly as a symlink.
-#   Note that the former name of MakeStuff was Tools, and most of the
-#   tree still refers to it that way.
+#   Note that the former name of MakeStuff was Tools, but now that all active instances
+#        have been fixed it's safe not to look for it.
 #
 MYPATH := $(shell pwd -P)
 MYNAME := $(notdir $(MYPATH))
 MYDIR  := $(dir $(MYPATH))
-BASEDIR:= $(shell d=$(MYPATH); 						\
-		  while [ ! -d $$d/MakeStuff/make ] && [ ! -d $$d/Tools/make ] && \
-			[ ! $$d = / ]; do				\
-			d=`dirname $$d`;				\
+BASEDIR:= $(shell d=$(MYPATH); 						 \
+		  while [ ! -d $$d/MakeStuff/make ] && [ ! $$d = / ]; do \
+			d=`dirname $$d`;				 \
 		  done; echo $$d)
-# Make sure we actually found Tools, because we can't proceed without it.
+# Make sure we actually found MakeStuff, because we can't proceed without it.
 ifeq ($(BASEDIR),/)
      $(error Cannot find MakeStuff directory.  You need a symlink to it.)
 endif
@@ -77,5 +76,18 @@ deploy: all pre-deploy deploy-this
 #
 include $(MFDIR)/targets.make
 -include .depends.make depends.make
+
+### report-vars - list important make variables
+#   Down at the end in case any of the lists needs to get appended to.
+
+.PHONY: report-vars
+filteredVars = $(foreach v, $(reportVars), $(if $($(v)), $(v)))
+filteredStrs = $(foreach v, $(reportStrs), $(if $($(v)), $(v)))
+
+report-vars::
+	@echo "" $(foreach v,$(varsLine1), $(v)=$($(v)) )
+	@echo "" $(foreach v,$(varsLine2), $(v)=$($(v)) )
+	@echo -ne "" $(foreach v,$(filteredVars),$(v)=$($(v)) "\n")
+	@echo "" $(foreach v,$(filteredStrs),$(v)=\"$($(v))\" "\n")
 #
 ###### End of Tools/Makefile.  Thanks for playing. ######

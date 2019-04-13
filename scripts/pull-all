@@ -1,30 +1,85 @@
 #!/bin/bash
 #  Recursively find all directories with git repos, and try to pull them.
 
+GIT_HOST=savitzky.net
+NO_OP=false
+TIME=0
+VERBOSE=false
+default_s='default '
+default_t='default '
 
-if [ "-h" = "$1" -o "--help" = "$1" ]; then
+usage () {
     cat <<EOF
 $0 [options]
-   Recursively find all directories with git repos, and try to pull them.
-   All flags except -h and --help are passed to git pull.
-   If anything fails, a reasonable next step would be pull --rebase.
+   Recursively find all git repos; try to pull if origin matches ${GIT_HOST}
    options:
-      -h or --help - print this message and exit
-      -t time      - wait time seconds between pulls (default 4)
+      -h or --help	   - print this message and exit
+      -n or --no-op  	   - print directories without pulling
+      -s or --site SITE    - site to pull from (${default_s}${GIT_HOST}; can be a basic regex)
+      -t or --time TIME    - wait time seconds between pulls (${default_t}$TIME)
+      -v or --verbose	   - print more information 
 EOF
-    exit
-elif [ "-t" = "$1" ]; then
-    shift
-    time=$1
-    shift
-else
-    time=0
-fi
+}
+
+while [[ ! -z "$1" ]]; do
+    case $1 in
+	(-h | --help)
+	    usage; exit
+	    ;;
+	(-n | --no-op)
+	    NO_OP=true
+	    shift
+	    ;;
+	(-s | --site)
+	    shift
+	    GIT_HOST="$1"
+	    default_s=
+	    shift
+	    ;;
+	(-t | --time)
+	    shift
+	    TIME=$1
+	    default_t=
+	    shift
+	    ;;
+	(-v | --verbose)
+	    VERBOSE=true
+	    shift
+	    ;;
+	(*)
+	    usage
+	    exit
+	    ;;
+    esac
+done
+
+has_origin () {
+    [[ -d $1 ]] && (git -C $1 remote | grep -q origin)
+}
+
+get_origin () {
+    git -C $1 remote get-url origin
+}
 
 flags="${*:---ff-only}"
 repos=`find . -name .git -print | sort`
-for f in $repos; do 
-    (cd `dirname $f`; echo -n `pwd` " "; git pull $flags)
-    sleep $time # for some reason dreamhost gets bent out of shape if you make
-                # more than 11 ssh connections in a row, so throttle back.
+pfx='   '
+
+for f in $repos; do
+    if has_origin $f; then
+	if get_origin $f | grep -q "$GIT_HOST"; then
+	    echo -ne "$pfx" $(dirname $f)"\t"
+	    # note: pull has to be done from a working tree, not a repo.
+	    $NO_OP || git -C $(dirname $f) pull $flags
+	    $NO_OP && echo
+	    sleep $TIME # some sites restrict you to some small number of ssh connections
+    	    # in a row, so throttle back.  Better to use controlmaster if you can
+	else
+	    $VERBOSE && echo -e "$pfx" $(dirname $f)"\t ***" origin not $GIT_HOST
+	fi
+    elif [[ -d $f ]]; then
+	$VERBOSE && echo -e "$pfx" $(dirname $f)"\t ***" no origin
+    else
+	$VERBOSE && echo -e "$pfx" $(dirname $f)"\t ***" .git not a directory
+    fi
 done

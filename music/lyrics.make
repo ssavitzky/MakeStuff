@@ -12,8 +12,10 @@ SIZE = fontsize=12pt,
 ### Utility programs:
 TEXDIR	  = $(TOOLDIR)/TeX
 LATEX	  = latex -file-line-error
+FLKTRAN   = $(TEXDIR)/flktran.pl
 PDFLATEX  = pdflatex -file-line-error
 SORT_BY_TITLE = $(TEXDIR)/sort-by-title
+PRINT_DUPLEX = lp -o sides=two-sided-long-edge
 
 ### Song lists:
 #
@@ -27,20 +29,17 @@ SORT_BY_TITLE = $(TEXDIR)/sort-by-title
 # === need to drop the .flk and, ideally, generate the lists from metadata
 # === need to drop zongbook.tex and generate that from metadata, too.
 
-# ugly shell pipeline to sort a list of file names.  Not used
-SORT_BY_FILENAME =  sed 's/ /\n/g' | sed 's/\// /g' | sort | sed 's/ /\//g'
-
 # ASONGS is just the song files, alphabetical by filename.
 #   This works in lgf and tg because we're not using Steve's
 #   cryptic shortnames.
 #   Note that template files start with a digit, so the wildcard skips them
-ASONGS := $(shell $(SORT_BY_TITLE) $(wildcard [a-z]*.flk))
+ASONGS := $(shell $(SORT_BY_TITLE) $(wildcard [a-z]*.flk) $(wildcard [1-9][0-9]*.flk))
 
-# WIP = work in progress
+# REJECT = work in progress and other songs we don't want in the songbook
 #	Note that we have to guard against the possibility that there are no
 #	.flk files in the directory; that would make grep read from STDIN
 #	if we let things get that far.
-WIP := $(shell [ -z "$(ASONGS)" ] || grep -ile '^\\tags.*\Wwip\W' $(ASONGS))
+REJECT := $(shell [ -z "$(ASONGS)" ] || grep -ilEe '^\\tags.*\W(wip|rej)\W' $(ASONGS))
 
 # TRANSPOSED
 #	We use "--X" to indicate songs that have been transposed into the key
@@ -71,7 +70,7 @@ PD := $(shell [ -z "$(ALLSONGS)" ] || grep -ile '^\\tags.*\Wpd\W' $(ALLSONGS))
 
 
 # ALLSONGS is the songs minus work in progress, which is usually what we want.
-ALLSONGS := $(filter-out $(WIP), $(ASONGS))
+ALLSONGS := $(filter-out $(REJECT), $(ASONGS))
 
 SONGBOOK := $(filter-out $(TRANSPOSED), $(ALLSONGS))
 
@@ -109,8 +108,8 @@ HAVE_ZONGBOOK := $(wildcard zongbook.tex)
 # This really ought to go into a file.
 
 ZONGS := $(shell [ -e zongbook.tex ] && 	\
-		 perl -n -e '/file\{(.+\.flk)/ && print "$$1\n"' zongbook.tex)
-ZONGBOOK := $(filter-out $(WIP), $(ZONGS))
+		 perl -n -e '/^\\file\{(.+\.flk)/ && print "$$1\n"' zongbook.tex)
+ZONGBOOK := $(filter-out $(REJECT), $(ZONGS))
 
 # Compute the song lists by filtering ZSONGS
 #   SONGS    -- stuff that's OK to put in a songbook
@@ -159,6 +158,15 @@ SONG_LOOSELEAF= '\documentclass[$(SIZE)a4paper,enabledeprecatedfontcommands]{scr
 		$(SONG_PREAMBLE) '\begin{document}\input{$<}\end{document}'
 	rm -f $*.log $*.aux
 
+%.txt:	%.flk
+	$(FLKTRAN) $< $@
+
+%.chords.txt: %.flk | %
+	WEBSITE=$(WEBSITE) WEBDIR=$(MYNAME) $(FLKTRAN) -c $< $@
+
+%.html: %.flk | %
+	WEBSITE=$(WEBSITE) WEBDIR=$(MYNAME) $(FLKTRAN) -t -b $< $@
+
 # Build into another directory, for constructing websites and songbooks.
 #	Note that the target directory has to be specified directly as well as
 #	in the target filenames, e.g.:  make DESTDIR=foo foo/bar.dvi
@@ -167,7 +175,7 @@ $(DESTDIR)/%.dvi:	%.flk
 		$(SONG_PREAMBLE) '\begin{document}\input{$<}\end{document}'
 	cd $(DESTDIR); rm -f $*.log $*.aux
 
-reportVars += TRANSPOSED NAMES ALLNAMES ZNAMES WIP
+reportVars += TEXDIR ASONGS TRANSPOSED NAMES ALLNAMES ZNAMES REJECT ALLPDF
 
 ########################################################################
 ###
@@ -178,16 +186,49 @@ reportVars += TRANSPOSED NAMES ALLNAMES ZNAMES WIP
 # the website at this point.  HTML and PDF songbooks _will_ be built here
 # eventually.
 
-all::
+all::	$(ALLPDF)
 	@echo building PDF files
 all::	$(PRINT)
 
+# zongbook.pdf depends on all the files it references 
+zongbook.pdf: zongbook.tex $(ZONGS) $(TEXDIR)/song.sty
+
+###
 ### Lists:
+###
+.PHONY: list-names list-songs list-missing list-long list-short
 
 list-names:
 	@echo $(NAMES)
 list-songs: 
 	@echo $(SONGBOOK)
+
+# List the songs that are missing from zongbook.tex
+#
+list-missing:
+	for f in *.flk; do \
+		grep -q $$f zongbook.tex || echo $$f missing from zongbook.tex ;\
+	done
+
+# List long songs, i.e. songs that will require two facing pages when printed
+#
+list-long:
+	@for f in *.pdf; do g=$$(basename $$f .pdf); \
+		echo $$g.flk $$(pdfinfo $$f | grep Pages) \
+		     $$(if head -1 $$g.flk|grep -q '\[L'; \
+			then :; else echo unmarked; fi);\
+	done | egrep '[3-6]'
+
+# List short songs, for which lyrics fit on one page
+#	We test for 2 pages because the stand-along PDFs always have a title page.
+#	Only bother with songs that will actually be printed.
+#
+list-short:
+	@for f in $(ZPDF); do g=$$(basename $$f .pdf); \
+		echo $$g.flk $$(pdfinfo $$f|grep Pages) \
+		     $$(if head -1 $$g.flk | grep -q '\[S'; \
+			then :; else echo unmarked; fi);\
+	done | grep 2
 
 ### Printing.
 #	The following recipes print the individual PDF files that make
@@ -223,27 +264,31 @@ list-songs:
 #   Note that in some cases the following might work better:
 #	@for f in $(PS) ; do lpr $$f ; done 
 
-# Songbook: print SONGS as individual files
-songbook: $(PDF) 
-	lp $(PDF)
+# print-songbook: print SONGS as individual files
+print-songbook: $(PDF) 
+	$(PRINT_DUPLEX) $(PDF)
 
-# Longbook: print ALLSONGS as individual files
-longbook: $(ALLPDF) 
-	lp $(ALLPDF)
+# print-longbook: print ALLSONGS as individual files
+print-longbook: $(ALLPDF) 
+	$(PRINT_DUPLEX) $(ALLPDF)
 
-# Zongbook: print ZSONGS as individual files
-zongbook: $(ZPDF) 
-	lp $(ZPDF)
+# Zongbook: print zongbook.pdf, which is a properly-formatted book.
+#
+#	zongbook.tex should have a \file tag for every song you want
+#	to print.  The easy way to make it is to add every song and
+#	comment out the ones you don't want; that makes it easy to
+#	verify that you haven't left anything out.  Use list-missing.
+#
+print-zongbook: zongbook.pdf
+	$(PRINT_DUPLEX) $<
 
-# songlists:
-
-songlist.txt:$(ALLSONGS) Makefile
-	@echo building $@ from ALLSONGS
-	@$(TOOLDIR)/Setlist.cgi $(ALLSONGS) > $@
-
-### filkbook: make a printed songbook with everything in it.
-filkbook: $(ALLPS)
-	lp $(ALLPS)
+# print-zongs -- all the songs in zongbook printed separately
+#
+#	zongbook is supposed to contain \file entries for all the songs
+#	that we actually want
+#
+print-zongs: $(ZONGS)
+	$(PRINT_DUPLEX) $(ZONGS)
 
 ### Cleanup:
 

@@ -22,6 +22,7 @@
 %%%	  \lyrics{lyricist}			% specifies theLyricist
 %%%	  \music{composer}			% specifies theComposer
 %%%	  \arranger{arranger}			% specifies theArranger
+%%%	  \performer{performer}			% specifies thePerformer
 %%%	  \credits{credits}			% specifies theCredits
 %%%       \performance{performance notes}       % specifies perf. notes
 %%%
@@ -35,9 +36,11 @@
 %%%	  \verse or \\
 %%%	  between verses
 %%%	  \spoken{spoken parts in slanted type}
-%%%	  \begin{refrain}
-%%%	    indented refrain with verse spacing
-%%%	  \end{refrain}
+%%%	  \begin{chorus}
+%%%	    indented chorus with verse spacing
+%%%	  \end{chorus}
+%%%       NOTE:  you can use ``refrain'' instead of chorus; it's technically
+%%%              incorrect, but I've been using it.
 %%%	  \begin{bridge}
 %%%	      indented (2em) bridge with verse spacing
 %%%	  \end{bridge}
@@ -121,6 +124,7 @@ Attribution-Noncommercial-Share Alike 4.0 License.}
 \def\lyrics#1{\global\def\theLyricist{#1}}\def\theLyricist{}
 \def\music#1{\global\def\theComposer{#1}}\def\theComposer{}
 \def\arranger#1{\global\def\theArranger{#1}}\def\theArranger{}
+\def\performer#1{\global\def\thePerformer{#1}}\def\thePerformer{}
 \def\credits#1{\global\def\theCredits{#1}}\def\theCredits{}
 \def\performance#1{\global\def\thePerformance{#1}}\def\thePerformance{}
 
@@ -162,10 +166,18 @@ Attribution-Noncommercial-Share Alike 4.0 License.}
   % with a default that can be set in the songbook.  The idea is that a short
   % song only occupies a single page, so if we're in compact mode we don't
   % care whether it's on an odd or even page.
-  \def\song@length{#1\song@default@length} % \if only sees first character.
+  \def\@empty{}
+  \def\song@length{#1}
+  \ifx\song@length\empty
+    \if\song@default@length\short@length
+       \def\song@length{S}
+    \else
+       \def\song@length{L}
+    \fi
+  \fi
   \if@twoside
     \ifcompact                  % compact formats
-      \if\short@length\song@length
+      \ifx\short@length\song@length
          \clearpage             % compact: short songs can start anywhere
       \else
          \cleardoublepageleft   % compact: longer songs start on even (left) page
@@ -199,11 +211,18 @@ Attribution-Noncommercial-Share Alike 4.0 License.}
 %%% Parts of songs
 %%%
 %%%    refrain (indent 1em)
+%%%    chorus  (indent 1em)
 %%%    bridge  (indent 2em)
 %%%    indent  (indent 6em)
 %%%    Indent  (indent 8em)
 %%%
 \newenvironment{refrain}{\list{}{\listparindent 1em
+ \itemindent\listparindent
+ \labelwidth 0pt
+ \rightmargin 0pt
+ \parsep 0pt plus 1pt}\item[]}{\endlist}
+
+\newenvironment{chorus}{\list{}{\listparindent 1em
  \itemindent\listparindent
  \labelwidth 0pt
  \rightmargin 0pt
@@ -343,9 +362,11 @@ Attribution-Noncommercial-Share Alike 4.0 License.}
 %%%	turn off \documentstyle and \begin{document}...\end{document}.
 %%%
 \def\file#1{\newpage\begingroup
-\def\theFile{#1}
+  \def\theFile{#1}
+  \def\thisPage{\thepage}
 \input{#1}
-\addcontentsline{toc}{Song}{\hbox{{\tt \hbox to 7em{\theFile\hss}}\hbox to 2em{\hss\theTiming}\;\hbox{\theSong\hss}}}
+\addcontentsline{toc}{Song}{\hbox{\hbox to 2em{\hss\thisPage}%
+    \hbox to 3em{\hss\theTiming}\;\hbox{\theSong\hss}}}
 \endgroup}
 %
 % \theFile defaults to \jobname, so that it doesn't have to be provided in
@@ -354,12 +375,12 @@ Attribution-Noncommercial-Share Alike 4.0 License.}
 \def\theFile{\jobname}
 
 %%%
-%%% \ignore{stuff}	Ignore some stuff.
+%%% \comment{stuff}	Ignore some stuff.
 %%%	A crude form of extended, nestable comment
 %%%	frequently useful for cancelling out lists of songs.
 %%%
 
-\long\def\ignore#1{}
+\long\def\comment#1{}
 
 %%%
 %%% Chords.

@@ -1,0 +1,13 @@
+#!/bin/bash
+
+slug () {
+     echo "$1" | sed -e 's/title: *//' -e 's/"//g' -e 's/\[.*\]//' \
+     	  -e 's/[ ]\+/-/g' -e 's/^-*//'  -e s/-*$// \
+	  -e 's/[^-a-zA-Z0-9]//g' | tr '[A-Z]' '[a-z]'
+}
+
+for f in $*; do 
+    g="`sed -n -e '/title:/p' -e '/title:/q' $f`"
+    h=`echo $f | sed -e 's/_[0-9]*$//'`
+    mv $f $h-`slug "$g"`.html
+done

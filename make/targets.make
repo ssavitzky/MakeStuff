@@ -87,6 +87,17 @@ push-r::
 		 echo pushing in $$d;					\
 		 if grep -qs deploy: Makefile;				\
 		    then make push-this push-r;				\
+		 fi)							\
+	    fi; 							\
+	done
+
+# push-R recursively pushes every git repo it can find.
+push-R::
+	@for d in $(GITDIRS); do 					\
+	    if [ -d $$d/.git/refs/remotes/origin ]; then (cd $$d;	\
+		 echo pushing in $$d;					\
+		 if grep -qs deploy: Makefile;				\
+		    then make push-this push-r;				\
 		    else git push|tee /dev/null; fi)			\
 	    fi; 							\
 	done
@@ -193,31 +204,13 @@ makeable:
 	   echo linking to $(TOOLREL)/Makefile			\
 	   ln -s $(TOOLREL)/Makefile .; 			\
 	   git add Makefile; 					\
-	   git commit -m "Makefile linked from Tools"; 		\
+	   git commit -m "Makefile linked from MakeStuff";	\
 	fi
 
 ### site-wide targets and depends:
 
 ifdef SITEDIR
-  ifneq ($(wildcard $(SITEDIR)/targets.make),)
-    include $(SITEDIR)/targets.make
-  endif
-  ifneq ($(wildcard $(SITEDIR)/depends.make),)
-    include $(SITEDIR)/depends.make
-  endif
+  -include $(SITEDIR)/targets.make $(SITEDIR)/depends.make
 endif
-
-### report-vars - list important make variables
-#   Down at the end in case any of the lists needs to get appended to.
-
-.PHONY: report-vars
-filteredVars := $(foreach v, $(reportVars), $(if $($(v)), $(v)))
-filteredStrs := $(foreach v, $(reportStrs), $(if $($(v)), $(v)))
-
-report-vars::
-	@echo "" $(foreach v,$(varsLine1), $(v)=$($(v)) )
-	@echo "" $(foreach v,$(varsLine2), $(v)=$($(v)) )
-	@echo -n "" $(foreach v,$(filteredVars),$(v)=$($(v)) "\n")
-	@echo "" $(foreach v,$(filteredStrs),$(v)=\"$($(v))\" "\n")
 
 ###### end of targets.make ######

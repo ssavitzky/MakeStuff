@@ -33,6 +33,8 @@
 
 ifeq ($(wildcard Lyrics), Lyrics)
   LYRICDIR := ./Lyrics
+else ifneq ($(wildcard *.flk),,)
+  LYRICDIR := .
 else
   LYRICDIR := $(shell d=$(MYDIR); 					\
 		  while [ ! -d $$d/Lyrics ] && [ ! $$d = / ]; do	\
@@ -180,16 +182,17 @@ MP3S = $(addsuffix .mp3, $(SONGS))
 
 LOCAL_METADATA = $(wildcard *.flk)
 
-# TRACK_SOURCES -- the original .wav files for the tracks
-#	They are first copied into Premaster/WAV, normalized, then
-#	converted to 16-bit .wav files in Master.
+#FIXME? TRACK_* may not be necessary
 
-TRACK_SOURCES = $(shell $(TRACKINFO) format=files $(TRACKS))
+# TRACK_SOURCES -- the original .wav (or other) files for the tracks
+#	These are in Premaster, and are converted to 16-bit .wav files in Master.
+
+TRACK_SOURCES = $(addprefix Premaster/, $(SONGS))
 
 # TRACK_DATA -- the data files in Master, in the correct order for burning
 #
 
-TRACK_DATA = $(shell $(TRACKINFO) format=cd-files $(TRACKS))
+TRACK_DATA = $(addsuffix .wav, $(addprefix Master/, $(SONGS)))
 
 ## Compute targets
 
@@ -212,7 +215,6 @@ ifneq ($(SONGFILES),)
 	$(subst .songs,.long.html, $(SONGFILES)) \
 	$(subst .songs,.extras.html, $(SONGFILES)) 
 
-  SUBMAKES += $(subst .songs,.make, $(SONGFILES))
   RIPDIRS += $(subst .songs,.rips, $(SONGFILES)) 
 else
   # no songfiles -- set the default so setup: can make it later.
@@ -259,16 +261,14 @@ endif
 %.mp3s: %.names
 	(for f in `cat $<`; do echo $$f.mp3; done) > $@
 
-%.rips: %.names %.make %.oggs %.mp3s
+%.rips: %.names %.oggs %.mp3s
 	[ -d $@ ] || mkdir $@
 	rm -f $@/[0-9][0-9]-*
-	make -f $*.make
 	$(TRACKINFO) format=symlinks dir=$@ @$*.names
 
-%.re-rip: %.names %.make %.oggs %.mp3s
+%.re-rip: %.names %.oggs %.mp3s
 	[ -d $*.rips ] || mkdir $*.rips
 	rm -f $*.rips/[0-9][0-9]-*
-	make -f $*.make
 	$(TRACKINFO) format=symlinks dir=$*.rips @$*.names
 
 ## rules to make ogg and mp3 files
@@ -347,8 +347,8 @@ re-list:
 .PHONY:	toc-file
 toc-file: $(BASEPFX)toc
 
-# Note that the toc-file does NOT depend on $(TRACK_DATA).
-$(BASEPFX)toc: $(TRACKFILE) $(TRACK_SOURCES)
+# FIXME: some track lengths are bad.
+$(BASEPFX)toc: $(TRACKFILE) $(TRACK_DATA)
 	$(TRACKINFO) -cd $(TOC_FLAGS) title="$(TITLE)" $(SONGS) > $@
 	$(CDRDAO) show-toc $(BASEPFX)toc | tail -1
 
@@ -476,71 +476,29 @@ print-songbook: $(PRINT_FILES)
 	@for f in $(PRINT_FILES); do echo $$f; lp $$f; done
 
 
-### Update Premaster/WAV by importing track data
+### Premaster
 #
-# === probably not necessary now that we export directly into Premaster
+#	When we export a track, we normally put it in Premaster.  This
+#	is particularly easy when we can do export-multiple in
+#	Audacity, but it works for individual tracks, too.  This
+#	replaces the old, and mostly broken, logic we had for finding
+#	the most recent take in a track directory.  If, instead, the
+#	track files are in this directory, we can indicate that by
+#	setting the makefile variable NO_PREMASTER
 #
-#	This is not done by default because normalization and other 
-#	premastering is done there; as a side-effect we get an archive
-#	of exactly what track data is on the disk.
-
-#	This has to be done using an auxiliary Makefile, mytracks.make,
-#	because the track data files keep changing their names as we
-#	work on them.  The only exception is, e.g., concerts, where the 
-#	original wav files are local to this directory.  This is indicated
-#	by setting the makefile variable NO_PREMASTER
-
-# === work needed
-
-.PHONY: update-tracks update-master 
-update-tracks: Premaster mytracks.make
-	$(MAKE) -f mytracks.make update-tracks
-	touch Premaster
-
-update-master: Premaster Master
-	$(MAKE) -f mytracks.make update-master
-
-### Make ogg and mp3 files and other things that depend on tracks.
+# 	Files in Premaster can be in any format as long as sox can
+#	read them and convert them to 16-bit CD audio tracks.  It is
+#	convenient to do premastering steps like normalization on .wav
+#	files, because normalize-audio can't handle .flac.  by setting
+#	the makefile variable NO_PREMASTER
 #
-#	Rules like %.ogg $(shell $(TRACKINFO) format=files %) 
-#	apparently don't allow make to detect the dependency.  Grump.
-#
-#	So instead, we gather them all up into mytracks.make and
-#	run make -f mytracks.make
-#
-#	Also note that we use "-w -t .wav" to force sox to make 16-bit
-#	.wav files; the -t is there because otherwise sox gets confused
-#	by filenames that have dots in them, like foo.bar.wav.  -w is
-#	no longer supported as of lenny/karmic
-#
+#	It is no longer necessary to kludge up a "mytracks.make" file.
 
-%.make: %.songs 
-	echo '# $@' $(shell date)		 	> $@
-	@echo 'TRACKINFO = $(TRACKINFO)'			>> $@
-	@echo 'TITLE	 = '"$(TITLE)"				>> $@
-	@echo 'TOOLDIR	 = $(TOOLDIR)'				>> $@
-	@echo 'SONGS	 = '`cat $*.names`			>> $@
-	@echo 'include $$(TOOLDIR)/music/track-depends.make'	>> $@
-	@echo 'all:: oggs mp3s'					>> $@
-	@echo 'oggs: '`cat $*.oggs`				>> $@
-	@echo 'mp3s: '`cat $*.mp3s`				>> $@
-	@for f in `cat $*.names`; do	\
-		tf=`$(TRACKINFO) format=files $$f`;			\
-		pf=Premaster/WAV/$$f.wav;				\
-		echo Premaster/WAV/$$f.wav: $$tf	 	>> $@;	\
-		echo "	"rsync  --copy-links -v -p '$$< $$@'	>> $@;	\
-		echo update-tracks:: Premaster/WAV/$$f.wav	>> $@;	\
-		echo Master/$$f.wav: Premaster/WAV/$$f.wav 	>> $@;	\
-		echo "	"sox '$$< -b 16 -t cdr - |'			\
-			 sox '-t cdr - -t .wav $$@'		>> $@;	\
-		echo update-master:: Master/$$f.wav	 	>> $@;	\
-	done
+Master/%.wav:  Premaster/%.wav | Master
+	sox $? -b 16 $@
 
-
-# this doesn't work because it creates output files with funny names
-# 		echo "	"shntool pad $$@			>> $@;	\
-
-
+Master/%.wav:  Premaster/%.flac | Master
+	sox $? -b 16 $@
 
 .PHONY: oggs mp3s
 oggs:  $(OGGS)
@@ -573,8 +531,8 @@ Premaster:
 
 ### Normalization:
 # 	Probably don't want the --mix flag on normalize.
-#	That would make bring everything to the same average level,
-#	rather than maximizing each track separately.  
+#	That would bring everything to the same average level,	rather than
+#	maximizing each track separately.  
 #	Probably don't want -q, either -- it's a long time to go without
 #	output, and we'll almost always be doing it from the command line.
 
@@ -622,33 +580,35 @@ $(SHORTNAME).$(yyyymmdd).tracks: $(SHORTNAME).tracks
 #	you don't get the advantage of realtime scheduling if you're not.
 #	Speed is parametrized, default 8:  you can get away with just about 
 #	anything for data, but audio is more picky.  I've never had any
-#	problems with 8, and _have_ had problems with 24.
+#	problems with 8, and _have_ had problems with 24.  8 seems to be
+#	cdrdao's minimum these days.
 #
-#	Make masters at 4 or lower.  verify with qpxtool (plextor drives) or
-#	readom -c2scan dev=ATA:1,1,0
-#
-# 	Note that it is no longer necessary to specify a device
+# 	Note that it is no longer necessary to specify a device for wodim
 #	Note that if you want to burn a mixed disk, you MUST eject and reload
 #	the disk before reading the msinfo.
 #
 
-#SPEED=--speed 8
+SPEED=--speed 8
 .PHONY: cdr
 cdr: $(BASEPFX)toc
 	@[ `whoami` = "root" ] || (echo "cdrdao should be run by root")
-	/usr/bin/time $(CDRDAO) write --driver generic-mmc-raw --eject \
-	  $(SPEED) $(BASEPFX)toc
+	/usr/bin/time $(CDRDAO) write --driver generic-mmc --buffers 128 --eject \
+	  --device /dev/sr0 $(SPEED) $(BASEPFX)toc
 
 .PHONY: try-cdr
 try-cdr: $(BASEPFX)toc
 	@[ `whoami` = "root" ] || (echo "cdrdao should be run by root")
-	/usr/bin/time $(CDRDAO) write --driver generic-mmc-raw --simulate \
-	  $(BASEPFX)toc
+	/usr/bin/time $(CDRDAO) write --driver generic-mmc --buffers 128 --simulate \
+	  --device /dev/sr0 $(SPEED) $(BASEPFX)toc
 
 .PHONY: tao
 tao: 	
 	@[ `whoami` = "root" ] || (echo "wodim should be run by root")
 	$(WODIM) -pad -tao -audio $(TRACK_DATA)
+
+try-tao: 	
+	@[ `whoami` = "root" ] || (echo "wodim should be run by root")
+	$(WODIM) -pad -tao -audio --dummy $(TRACK_DATA)
 
 ### Setup
 
@@ -668,5 +628,6 @@ endif
 ### Test - list important variables
 
 reportVars += LONGNAME TITLE TYPE DATE SONGS SONGFILES PRINT_FILES DEFAULT_SONGFILE
+reportVars += TRACKS TRACK_SOURCES TRACK_DATA
 reportStrs += TITLE EVNAME
 

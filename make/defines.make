@@ -23,10 +23,9 @@ endif
 ### Rsync upload: DOTDOT is the path to this directory on $(HOST).
 #	Either can -- and should -- be overridden in the local config.make
 
-#	This hack works because /vv is the parent of our whole deployment tree,
-#	and ~/vv exists on the web host.  This is not really a good assumption,
-#	and fails miserably when deploying with rsync from, e.g., a laptop.
-DOTDOT  := .$(MYDIR)
+#	This hack works because the parent of our whole deployment tree is
+#	either /vv or ~/vv here, and ~/vv on the host.
+DOTDOT  := $(shell echo $(MYDIR) | sed s/^.*vv/vv/)
 
 #	HOST is computed on the assumption that we're deploying to the same host
 #	that we're getting Tools from, which, as they say, works on my machine
@@ -136,9 +135,9 @@ endif
 #	to be revised.  For the moment, look for Tracks or one or the other of
 #	*.songs or *.tracks (the latter indicating an album's recording directory)
 #
-hasLyrics = $(if $(wildcard *.flk),lyrics.make)
 hasSongs  = $(if $(findstring /Songs,$(MYPATH))$(wildcard *.songs),songs.make)
 hasTracks = $(if $(wildcard *songs *.tracks Tracks),tracks.make)
+hasLyrics = $(if $(hasTracks),,$(if $(wildcard *.flk),lyrics.make))
 # Note that MUSIC_D may need to be changed later.
 MUSIC_D := $(if $(hasSongs)$(hasLyrics)$(hasTracks),$(TOOLDIR)/music)
 MUSIC_D_INCLUDES := $(hasLyrics) $(hasSongs) $(hasTracks)
@@ -148,11 +147,11 @@ MUSIC_D_INCLUDES := $(hasLyrics) $(hasSongs) $(hasTracks)
 #	The lists are defined here so that they can be appended to 
 varsLine1  := SHELL MYNAME HOST
 varsLine2  := BASEREL TOOLREL
-reportVars := BASEDIR TOOLDIR DOTDOT SITEDIR ALLDIRS SUBDIRS \
+reportVars := $(reportVars) BASEDIR TOOLDIR DOTDOT SITEDIR ALLDIRS SUBDIRS \
 			COLLDIRS DATEDIRS ITEMDIRS \
 	   		GITDIRS GIT_REPO hasLyrics hasSongs hasTracks  MUSIC_D \
 			MUSIC_D_INCLUDES
-reportStrs := COMMIT_MSG
+reportStrs := $(reportStrs) COMMIT_MSG
 
 
 ### Templates

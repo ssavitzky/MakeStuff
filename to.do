@@ -5,11 +5,28 @@ cleanup.  More ended up in wibnif.do, and should probably be consolidated here.
 
 =========================================================================
 
-Blogging:
-  o grab posting stuff from Private/Journals/River
-  o use charm to post - make foo.post
-  o probably useful to have a .do -> .html formatter, too.
+BUGS:
+  o [scripts/import-blog-entries] need to slugify tags, too.  Keep ", "
+  o [scripts/import-blog-entries] should replace cut and user tags.
+  o [scripts/init-deployment] make deployable doesn't work.
+  o [make/songs.make] indices should indicate which songs have notes, audio, or postable
+    lyrics.  That will require actually looking at the metadata.
+  o [deployment] post-update hooks are out of date; there should be a way to update them.
+  o [flktran] need to handle \singer; math $$ in some macros;
+  o [flktran] need to be able to specify CC license subtype; in particular my songs need
+    to be CC-BY-SA-NC for monetization.
+  o [make/songs.make] body text in other formats, e.g. markdown
+    
+General:
+  o in shared projects (e.g. github) make push should always happen on a feature branch,
+    and can use -f.  That would make it possible to filter out commits that are only used
+    for syncing between workstations.  Use "git merge --squash"
+  o <a href="https://github.com/rylnd/shpec" >rylnd/shpec: Test your shell scripts!</a>
 
+Blogging:
+  o probably useful to have a .do -> .html formatter, too.
+  o Note: wget can get credentials from .netrc
+  o DW field size limits:  custom mood: 38, Music: 80, Location 80
 
 WAV->FLAC
   o Move to a workflow that uses flac instead of wav.  Audacity can export it,
@@ -22,24 +39,14 @@ WAV->FLAC
   o upgrade makefiles in older record directories.
 
 songs.make, Songs/ improvements:
+  o (0315) note that some, perhaps all, includes can be done in mustache at
+    template-expansion time.
+  o BUG: etoolbox.sty not found on Dreamhost.
   ? lyrics--*.pdf probably not worth the trouble in most cases.
-  o make */Songs from */Lyrics* -- use tags or subdirs to identify which ones get visible
-    lyrics.  Pages want to be there even if the lyrics are hidden, because the
-    performances, notes, etc. are still needed.
   o eventually, make lyrics visible for logged-in band members; maybe fans.
   o web links for lyrics we don't own; on the songwriter's official site if possible. 
-  o options for lyrics:
-    - build %/lyrics.pdf, which is what we do currently
-    - symlink %.flk into Songs/%, and do the build directly.
-  o %/index.html should #include lyrics.html, and only if we have rights.
-    generate, which lets it include directly-linked audio files.  Put body text in an
-    editable include file which is generated only if missing (e.g. text.html)
   o header should be #included and auto-generated; that's the way to do title and
     navbar correctly - Songs/name currently aren't links.
-  @ <a href="http://httpd.apache.org/docs/current/expr.html"
-    >Expressions in Apache HTTP Server - Apache HTTP Server Version 2.4</a>
-    SSI can, for example, test variables set in  .htaccess.
-    Or, we can just have two different index file templates that we link to.
   o be nice to have a song index on the left; maybe hideable.
   o header/footer boilerplate should come from a template file
   o use songlist files instead of passing list on the command line ?
@@ -73,11 +80,8 @@ TeX improvements
     o Uppercase style names to distinguish;
     * Separate packages for context-specific (i.e. scripting) macros. -> zingers
   o LaTeX2e
-    * documentclass.  May want broadside and songbook classes.
-    * 0619 multicol for columns.  Redefine the twocolumns environment, for minimum upset.
-    * 0619 fancyhdr for headers.
     . clean up obsolete constructs
-    o \comment instead of \ignore
+    * 0527 \comment instead of \ignore
     o parametrize page size and layout, e.g. for tablets.  See
       <a href="https://en.wikibooks.org/wiki/LaTeX/Page_Layout#Page_size_for_tablets"
       >LaTeX/Page Layout # Page size for tablets</a> 
@@ -117,11 +121,6 @@ songbook.make (proposed) - make plugin for Songbook directories
     compact should of course be filenames.
 
 index.pl, flktran.pl; Songs/Makefile
-  x move index.pl and flktran.pl into Tools from TeX; adjust paths.
-    -> no, they belong with the rest of the scripts that operate on .flk files
-  : index.pl is incredibly badly written (parses a file into global variables instead of a
-    hash!) and seems to have a preliminary version of the flktran chord parser as well!
-    And why am I not using it to sort song files by title?
   o flktex.pm song parser module would help a lot. 
   o (?)use TrackInfo instead of index.pl -- it's more recent.
   o add license and URL info to ogg, html, pdf files
@@ -159,10 +158,6 @@ Consider rewriting TrackInfo etc in Python or Haskell, possibly as a Pandoc plug
 
 Tracklist.cgi: like Setlist.cgi but builds album tracklists 
   o could probably merge both into TrackInfo using a format and template.
-
-o Need a program to replace an HTML element with a given id (mainly for
-  tracklists)  The present template hack has problems with multiple end
-  lines. 
 
 Should have a track.make template for [album]/Tracks/* directories
   o use Makefile in Tracks to cons up the Makefile, HEADER.html, notes, etc.
@@ -350,6 +345,11 @@ burning:  -> notes copied to tracks.make
     but can use .inf files with -useinfo.  see icedax(0)
   = it is necessary to eject and reload the disk before reading the msinfo
 
+  * LaTeX2e
+    * documentclass.  May want broadside and songbook classes.
+    * 0619 multicol for columns.  Redefine the twocolumns environment, for minimum upset.
+    * 0619 fancyhdr for headers.
+    
 0624Sa
   * cleanup.  remove TeX/1song.tex, which is obsolete.
     remove obsolete \Centered and \Indented macros.
@@ -381,8 +381,100 @@ burning:  -> notes copied to tracks.make
     page (and title page if present)
   x marginpar for singer annotations?  -> no; interacts wrong with columns
 
+1211
+  * grab posting stuff from Private/Journals/River
+  * use charm to post - make foo.post
+  : note that the ljpost wrapper for charm is in Honu/bin
+  
+2018
+====
+
+0121
+  * BUG: make zongbook prints in looseleaf format; one would expect it to make and
+    print zongbook.pdf.
+  ~ might be a good idea to ask for confirmation before printing a songbook
+    -> change targets to print-songbook etc.
+  * BUG: zongbook.pdf should depend on all .flk files
+  * BUG: printing doesn't force two-sided.
+
+0122
+  * BUG [S] puts a spurious L on the (unnecessary) first page of short songs.
+    -> was using \if to compare expansions; should have used \ifx
+
+0309Fr
+  * generate Songs/*/lyrics.html without headers.
+
+0312Mo
+  * extracting song info for template expansion:
+    eval $(LYRICDIR=../Lyrics-Other $(TOOLDIR)/music/TrackInfo.pl --shell $shortname)
+    loads the shell's environment with the track info.
+    TrackInfo does too much; need a module that parses song files correctly.
+    -> 0312 songinfo.
+    -> Needs YAML and make options as well as shell.
+    
+0313Tu
+  * options for lyrics:
+    -> build %/lyrics.pdf, which is what we do currently
+    - symlink %.flk into Songs/%, and do the build directly.  (loses information about
+      which directory it came from, so not a good idea.)
+  * %/index.html should #include lyrics.html, and only if we have rights.
+    in steve/Songs we can do this by lyrics directory, i.e. Lyrics and Lyrics-PD.
+    In lgf, use tags.
+  * generate Songs/*/index.html from templates
+  @ <a href="http://httpd.apache.org/docs/current/expr.html"
+    >Expressions in Apache HTTP Server - Apache HTTP Server Version 2.4</a>
+    SSI can, for example, test variables set in  .htaccess.
+    Or, we can just have two different index file templates that we link to.
+  * make */Songs from */Lyrics* -- use tags or subdirs to identify which ones get visible
+    lyrics.  Pages want to be there even if the lyrics are hidden, because the
+    performances, notes, etc. are still needed.
+  * Put body text in an editable include file which is generated only if missing
+    (e.g. text.html) -> body-text.html
+
+0314Th
+  x move index.pl and flktran.pl into Tools from TeX; adjust paths.
+    -> no, they belong with the rest of the scripts that operate on .flk files
+  : index.pl is incredibly badly written (parses a file into global variables instead of a
+    hash!) and seems to have a preliminary version of the flktran chord parser as well!
+    And why am I not using it to sort song files by title
+  x Need a program to replace an HTML element with a given id (mainly for
+    tracklists)  The present template hack has problems with multiple end
+    lines.  -> use mustache templates or something bash or make based
+
+0316Fr
+  * take Songs/*/index.html out of git now that they can be made on the server.
+
+0317Sa
+  * [TeX/songinfo] metadata files need descriptions.
+  * [make/songs.make] indices are badly-formatted, don't need filenames anymore
+
+0510
+  * 0510 [lgf, steve] need to build Songs after push.
+
+0825Sa
+  * It would be useful for make entry to have targets for both html and markdown, or else
+    a command-line variable maybe ff for file format.  ff=html (default), ff=md, etc.  ff
+    is more versatile, but targets like make draft.md may be feasible.
+    -> EXT; can be defined in .config.make or, e.g., jekyll.make
+
+1027Sa
+  * it should be easy to crosspost. => going to mark this done:
+  * import-blog-entries working modulo spaces and punctuation in tags.
+
+1231Mo
+  * should include the post's URL in the Posted: header, if the program returns it.
+    -> the way DW archive pages are named, /yyyy/mm/dd/, can be used to get the URL of the
+       most recent one.  (as long as it's public)  Ought to parametrize with how archived
+       posts are listed -- mine is most recent last; some people use blog order.
+  * Each entry starts with [h3 class="entry-title"][a title="..." href="POSTED_URL"
+    That's all you need to find the permalink URL of the entry.  Use the following:
+    wget -q -O - https://mdlbear.dreamwidth.org/$(date +%Y/%m/%d/) \
+       | grep 'class="entry-title"' | tail -1                      \
+       | sed -E 's/^<[^>]*><[^>]*href="([^"]*)".*$/\1/'
+       
 =now====Tools/to.do=====================================================================>|
 
 Local Variables:
     fill-column:90
 End:
+?

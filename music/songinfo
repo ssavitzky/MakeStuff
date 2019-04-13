@@ -1,0 +1,425 @@
+#!/usr/bin/perl
+# $Id: TrackInfo.pl,v 1.10 2010-06-13 18:09:48 steve Exp $
+# TrackInfo [options] infile... 
+#	<title>extract track info</title>
+
+### Extracts information about a song from its .flk) file
+#	The default is to produce a simple property list of name=value assignments.
+#       It is also able to substitute these into a template.
+
+$usage="$0 [options] $filename
+options:
+  --format=[yaml|shell|make]
+";
+
+### Option variables and their defaults:
+
+$debug = 0;					# debug
+$html  = 0;					# convert TeX constructs to HTML
+$verbose = 0;					# be verbose
+$ok_tags = "web-ok cc pd";			# tags that indicate lyrics are ok to publish
+$bad_tags = "not-ok rej wip";			# tags that keep us from publishing lyrics.
+$format = "shell";
+
+$message = "";					# error message
+$status = 0;					# result status code
+
+### Variables set from song macros:
+
+$title = "";
+$subtitle = "";
+$notice = "";
+$license = "";
+$dedication = "";
+$description = "";
+$tags = "";
+$key = "";
+$timing = "";
+$created = "";
+$cvsid = "";
+$credits = "";
+$performer = "";		# performer
+$lyrics = "";			# lyricist
+$music = "";			# composer
+$arranger = "";			# arranger
+$performer = "";		# performer
+
+			      ## derived:
+$index_title = "";		# title without leading A/The
+$filename  = "";		# filename.flk
+$shortname = "";		# filename without .flk
+$longname = '';			# title as a filename
+
+$web_ok = '';			# is it ok to show lyrics on the web?
+
+
+
+##########################################################################
+### Main Program:
+##########################################################################
+
+$morefiles = "";
+
+foreach $f (@ARGV) {
+    if ($f =~ /^-/) {
+	if ($f =~ /-v/)           { ++$verbose; }
+     	elsif ($f =~ /--verbose/) { ++$verbose; }
+	elsif ($f =~ /--?debug/)  { ++$debug; }
+	elsif ($f =~ /-d/)  	  { ++$debug; }
+	elsif ($f =~ /-h/)  	  { ++$html; }
+	elsif ($f =~ /--template=(.+)/) { $template = $1; }
+	elsif ($f =~ /--ok=(.+)/) {$ok_tags = $1;}
+	elsif ($f =~ /--format=(.+)/) { $format = $1; }
+        else {
+	    print $usage;
+	    exit 1;
+	}
+    } elsif ($f =~ /\.flk/) {
+	$filename = $f;
+    }
+}
+if ($html || $format eq "yaml") {
+    $html = 1;
+}
+setupFormattingConstants();
+
+getSongFileInfo($filename);
+
+if ($template) {
+    expandTemplate();		# in order to do template expansion, we really want a hash.
+} else {
+    printMetadata();
+}
+exit($status);
+
+
+##########################################################################
+
+
+# entity encode (protect) a string
+sub entityEncode {
+    my ($s) = @_;
+    $s =~ s/\&/&amp;/gs;
+    $s =~ s/\>/&gt;/gs;
+    $s =~ s/\</&lt;/gs;
+    return $s;
+}
+
+sub trim {
+    my ($s) = @_;
+    $s =~ s/^[ \t\n]*//gs;
+    $s =~ s/[ \t\n]*$//gs;
+    return $s;
+}
+
+sub basename {
+    my ($fn) = @_;
+    $fn =~ m@([^/]*)$@;
+    $fn = $1;
+    $fn =~ /^(.+)\.[^.]*$/;
+    return $1;
+}
+
+### getSongFileInfo($filename, $directory)
+#	Get information from a song (.flk) file
+#	The results are returned in global variables, which are assumed to
+#	have been initialized already.  $directory defaults to $lyricDir
+#
+sub getSongFileInfo {
+    my ($filename) = @_;
+
+    # Extract the shortname from the filename:
+    #   a leading numeric prefix separated by hyphens is ignored.
+    #   everything after "." is ignored.  This allows track numbers
+    #   and qualifiers (foo.a, etc.)
+    $shortname = basename($filename);
+    if ($shortname =~ /^(.+)\-\-/) {
+	$shortname = $1;
+    } elsif ($shortname =~ /^.+\.([^.]+)(\.|\-\-)?/) { 
+	$shortname = $1;
+    } elsif ($shortname =~ /^([a-z]*[0-9]+\-+)?([^.]+)\.?/) { 
+	$shortname = $2;
+    } 
+
+    open(IN, $filename) || return 0;
+    
+    while (<IN>) {			
+	if (/^[ \t]*$/) { }		# blank line
+	elsif (/^[ \t]*\%.*$/) { }	# comment: ignore
+
+    # Variable-setting macros:
+
+	elsif (/\\begin.*\{song/)	{ begSong($_); }  # \begin{song}{title}
+	elsif (/\\title/)  	{ $title	= getContent($_); }
+	elsif (/\\subtitle/)  	{ $subtitle	= getContent($_); }
+	elsif (/\\key/)  	{ $key		= getContent($_); }
+	elsif (/\\tags/)	{ $tags		= getContent($_); }
+	elsif (/\\category/)	{ $tags		= getContent($_); }
+	elsif (/\\dedication/)	{ $dedication	= getContent($_); }
+	elsif (/\\description/)	{ $description	= getContent($_); }
+	elsif (/\\license/) 	{ $license	= getContent($_); }
+	elsif (/\\timing/)  	{ $timing    = getContent($_); }
+	elsif (/\\created/)  	{ $created   = getContent($_); }
+	elsif (/\\notice/)  	{ $notice    = getContent($_); }
+	elsif (/\\cvsid/)	{ $cvsid     = getContent($_); }
+	elsif (/\\music/)	{ $music     = getContent($_); }
+	elsif (/\\lyrics/)	{ $lyrics    = getContent($_); }
+	elsif (/\\arranger/)	{ $arranger  = getContent($_); }
+	elsif (/\\performer/)	{ $performer = getContent($_); }
+	elsif (/\\credits/)	{ $credits   = getContent($_); }
+	elsif ($title) { 
+	    # everything's at the top, so we have it all now.
+	    last;
+	}
+    }
+    close(IN);
+
+    ## handle defaults and create derived information:
+    
+    $title = $shortname unless $title;
+
+    $longname = $title;
+    $longname =~ s/ /_/g;
+    $longname =~ s/[^0-9a-zA-Z_]/-/g;
+
+    # Set index_title (for sorting) from title
+    $index_title = "" . $title;
+    $index_title =~ s/^(An? |The )//;
+
+    # If lyricist specified but composer isn't, assume they're the same
+    $music  = $lyrics if ! $music && $lyrics;
+
+    # If $credits isn't specified, construct it from $music and $lyrics
+    if (! $credits) {
+	$credits = last_name($lyrics);
+	$credits .= "/" . last_name($music) if $music && ($music ne $lyrics);
+    }
+
+    $notice =~ s/\n/ /g;
+    # FIXME: The expansion of SomeRightsReserved should be parametrized
+    $notice =~ s/\\SomeRightsReserved/CC-by-nc-sa/; # alternatively, deTeX makes it a link
+    $notice =~ s/\\copyright/\&copy;/g;
+
+    # Figure out the license.
+    if (! $license && ($notice =~ /(CC[-_A-Z]+)/g)) {
+	$license = $1;
+    }
+    
+    # Figure out whether it's ok to put these lyrics on our website
+    for $t (split(' ', $ok_tags)) {
+	if ($tags =~ /$t/i) {
+	    $web_ok = "true";
+	    last;
+	}
+    }
+    for $t (split(' ', $bad_tags)) {
+	if ($tags =~ /$t/i) {
+	    $web_ok = "";	# using empty for false means that we can grep for the field
+	                        # and use the exit code to tell whether it's there.
+	    last;
+	}
+    }
+
+    return 1;
+}
+
+### last_name($credits)
+#	used in short-form credits.
+#	special hacks to abbreviate "Trad." and 
+#	eliminate a parenthesized phrase like (PD).
+#
+sub last_name {
+    my ($name) = @_;
+    if ($name =~ /[Tt]rad/) { $name = "Trad."; }
+    #if ($name =~ /[^ ]+ (*)$/) { $name = $1; }
+    if ($name =~ /([^ ]+)( +\([^\(]*\))?$/) { $name = $1; }
+    return $name;
+}
+
+sub printMetadata {
+    if ($format eq "yaml") {
+	print "---\n";
+    } elsif ($format eq "shell") {
+    } elsif ($format eq "make") {
+    } else {
+	die "unknown format";
+    }
+	
+    # TODO:  have different print routines for long values and lists.
+    printItem("shortname", $shortname);
+    printItem("longname", $longname);
+    printItem("filename", $filename);
+    printItem("title", $title);
+    printItem("index_title", $index_title);
+    printItem("subtitle", $subtitle) if $subtitle;
+    printItem("dedication", $dedication) if $dedication;
+    printItem("description", $description) if $description;
+    printItem("notice", $notice) if $notice;
+    printItem("license", $license) if $license;
+    printItem("lyrics", $lyrics);
+    printItem("music", $music) if $music;
+    printItem("arranger", $arranger) if $arranger;
+    printItem("performer", $performer) if $performer;
+    printItem("timing", $timing) if $timing;
+    printItem("tags", $tags) if $tags;
+    printItem("key", $key) if $key;
+    printItem("credits", $credits) if $credits;
+    printItem("created", $created) if $created;
+    printItem("webok", $web_ok) if $web_ok;
+
+    if ($format eq "yaml") {
+	print "---\n";
+    } elsif ($format eq "shell") {
+    } elsif ($format eq "make") {
+    } else {
+	die "unknown format";
+    }
+}
+
+sub printItem {
+    my ($key, $value) = @_;
+    if ($format eq "yaml") {
+	$value =~ s/\\/\\\\/g;
+	$value =~ s/"/\\"/g;
+	print "$key: \"$value\"\n";
+    } elsif ($format eq "shell") {
+	print "$key=\"$value\"\n";
+    } elsif ($format eq "make") {
+	print "$key = $value\n";
+    }
+
+}
+########################################################################
+###
+### Macro handlers:
+###
+###	Each of the following routines handles a LaTeX macro.
+###
+
+### Begin a song:
+###	Stash the title.
+sub begSong {
+    my ($line) = @_;		# input line
+    $line =~ s/^.*song\}//;
+    $title = getContent($line);	
+}
+
+### Formatting constants:
+sub setupFormattingConstants {
+    if ($html) {
+	$EM  = "<em>";
+	$_EM = "</em>";
+	$BF  = "<b>";
+	$_BF = "</b>";
+	$TT  = "<tt>";
+	$_TT = "</tt>";
+	$UL  = "<u>";
+	$_UL = "</u>";
+	$SMALL = "<small>";
+	$_SMALL = "</small>";
+	$SPOKEN  = "(spoken)";
+	$_SPOKEN = "";
+	$NL  = "<br />\n";
+	$NP  = "<hr />\n";
+	$SP  = "&nbsp;";
+	$AMP = "&amp;";
+	$FLKTRAN = "<a href='../Tools/TeX/flktran.html'><code>flktran</code></a>";
+	# Creative Commons copyright notice
+	$CCnotice = "<a href=\"http://creativecommons.org/licenses/by-nc-sa/2.0/\"
+><img  alt=\"Creative Commons License\" border=\"0\" 
+       src=\"http://creativecommons.org/images/public/somerights.gif\" 
+     /><small>Some rights reserved.</small></a>";
+    } else {
+	$EM  = "_";
+	$_EM = "_";
+	$BF  = "*";
+	$_BF = "*";
+	$TT  = "";
+	$_TT = "";
+	$UL  = "";
+	$_UL = "";
+	$SMALL = "";
+	$_SMALL = "";
+	$SPOKEN  = "(spoken)";
+	$_SPOKEN = "";
+	$NL  = "\n";
+	$NP  = "\f";
+	$SP  = " ";
+	$AMP = "&";
+	$FLKTRAN = "flktran";
+	$CCnotice = "Some Rights Reserved:  CC by-nc-sa/2.0/";
+    }
+}
+
+### Remove LaTeX constructs or replace them with equivalent html
+sub deTeX {
+    my ($txt) = @_;		# input line
+    while ($txt =~ /\%/) {	# TeX comments eat the line break, too.
+	$txt =~ s/\%.*$//;
+	$txt .= <IN>;
+
+    }
+    while ($txt =~ /\{\\em[ \t\n]/
+	   || $txt =~ /\{\\tt[ \t\n]/
+	   || $txt =~ /\{\\bf[ \t\n]/
+	   || !($txt =~ /\}/s)) {
+	# This will fail if there's a \bf and \em in one line in that order
+	if ($txt =~ /\{\\em[ \t\n]/s) {
+	    $txt =~ s/\{\\em[ \t\n]/$EM/s; 
+	    while (! $txt =~ /\}/s) {$txt =~ s/[\n\r]*/ /g; $txt .= <IN>; }
+	    $txt =~ s/\}/$_EM/s;
+	}
+	if ($txt =~ /\{\\tt[ \t\n]/) {
+	    $txt =~ s/\{\\tt[ \t\n]/$TT/; 
+	    while (! $txt =~ /\}/) {$txt =~ s/[\n\r]*/ /g; $txt .= <IN>; }
+	    $txt =~ s/\}/$_TT/;
+	}
+	if ($txt =~ /\{\\bf[ \t\n]/) { 
+	    $txt =~ s/\{\\bf[ \t\n]/$BF/; 
+	    while (! $txt =~ /\}/) {$txt =~ s/[\n\r]*/ /g; $txt .= <IN>; }
+	    $txt =~ s/\}/$_BF/;
+	}
+	if ($txt =~ /\{\\small[ \t\n]/) { 
+	    $txt =~ s/\{\\small[ \t\n]/$SMALL/; 
+	    while (! $txt =~ /\}/) {$txt =~ s/[\n\r]*$/ /g; $txt .= <IN>; }
+	    $txt =~ s/\}/$_SMALL/s;
+	}
+	if (!($txt =~ /\}/)) {$txt =~ s/[\n\r]/ /g; $txt .= <IN>;}
+    }
+    $txt =~ s/\~/&nbsp;/g; 
+    $txt =~ s/---/--/g;			# no &emdash;?
+    while ($txt =~ /\\link\{[^}]+\}\{[^}]+\}/s) {
+	if ($html) {
+	    $txt =~ s/\\link\{([^}]+)\}\{([^}]+)\}/<a href="$1">$2<\/a>/s;
+	} else {
+	    $txt =~ s/\\link\{([^}]+)\}\{([^}]+)\}/$2/s;
+	}
+    }   
+    $txt =~ s/\\&/$AMP/g;
+    $txt =~ s/\\;/$SP/g;
+    $txt =~ s/\\ /$SP/g;
+    $txt =~ s/\\ldots/.../g;
+    $txt =~ s/\\\\/$NL/g;
+
+    $txt =~ s/\\m/m/g;
+    $txt =~ s/\\sus/sus/g;
+    $txt =~ s/\\capo/ capo/g;
+    $txt =~ s/\\sharp/#/g;
+    $txt =~ s/\\flat/b/g;
+
+    $txt =~ s/\n$//;
+    $txt =~ s/[{}]//g;
+    return $txt
+}
+
+### getContent(line): get what's between macro braces.
+#
+sub getContent {
+    my ($line) = @_;		# input line
+    # Throw away everything up to the "{"
+    $line =~ s/^[^{]*\{/\{/;
+    # Suck in more lines if we haven't seen the closing brace
+    # NOTE that we have to use the same file handle as getSongInfo!!
+    return deTeX($line);
+}
+

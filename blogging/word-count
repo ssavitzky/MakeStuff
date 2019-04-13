@@ -1,0 +1,185 @@
+#!/bin/bash
+#    Get a reasonably accurate word count for posts in the current month
+
+usage="$0 [options] [month] print word counts for posts in a given month
+  Options:
+	-d | -C  -- change directory
+	-h   	 -- help
+	-j   	 -- use Jekyll-style dates (yyyy-mm-dd)
+	-m month -- set month
+	-n 	 -- just listed files, no monthly stats
+	-y year	 -- set year
+	-Y 	 -- count words in the entire year
+	-r 	 -- remove (don't count) postng statistics
+	-v	 -- verbose: print word count for each post
+"
+
+### Default values
+
+m=$(date "+%m"); this_month=$m
+y=$(date "+%Y"); this_year=$y
+allYear=false
+
+### get options
+
+while :; do
+    case $1 in
+	-d | -C) # set directory
+	    shift; POST_ARCHIVE=$1
+	    shift
+	    ;;
+	-h) # help
+	    echo "$usage"
+	    exit
+	    ;;
+	-v) # -v lists all files with their word counts
+	    verbose=-------
+	    shift
+	    ;;
+	-r) # remove stats
+	    remove_stats=1
+	    shift
+	    ;;
+	-m) # set month
+	    shift; m=$1
+	    shift
+	    ;;
+	-n) # -n -- don't count words in the month
+	    m=
+	    shift
+	    ;;
+	-y) # set year
+	    shift; y=$1
+	    shift
+	    ;;
+	-Y) # count words in year to date
+	    shift; allYear=true
+	    ;;
+	-j) # -j uses Jekyll-format filenames:  yyyy-mm-dd-SLuG <<TODO
+	    sep="-"
+	    shift
+	    ;;
+	*) break
+	   ;;
+    esac
+done
+
+sep=${sep:-/}
+
+if [[ ! -z ${POST_ARCHIVE} ]]; then
+    cd ${POST_ARCHIVE}; 
+elif [[ ! -d $y ]]; then
+   cd ~/vv/users/$USER/Private/Journals
+fi
+   
+### Stats header:  special label for NaBloPoMo (November)
+
+stats=Posting
+if [[ -z $m ]]; then
+    stats=Draft
+elif (( $m == 11 )); then
+    stats=NaBloPoMo
+else
+    stats=Posting
+fi
+
+echo "<pre>$stats stats:"
+
+expand () {
+    ls ${1}* 2>/dev/null
+}
+
+### count-words GLOB [sep]
+count-words () {
+    files="$@"
+
+    total=0
+    count=0
+    missed=0
+    last=0
+    for f in $files ; do
+	# pandoc uses dashes as list bullets, so we have to take them out so they
+	# don't get counted.
+	if [[ ! -z $remove_stats ]] && [[ "$f" != "${f%.html}" ]]; then
+	    # optionally remove stats ("<pre>....stats:" - "</pre>") from html files
+	    wc=$(sed -e '/^<pre>[a-zA-Z]* stats\:$/,/^<\/pre>/d' $f | 
+		 pandoc -f html -t plain | tr -- " -" "  " | wc -w  )
+	else
+	    wc=$(pandoc -i $f -t plain | tr -- " -" "  " | wc -w)
+	fi
+	total=$(( $total + $wc))
+	count=$(( $count + 1))
+	if [[ $f = [0-9][0-9][0-9][0-9]/[0-9][0-9]/[0-9][0-9]--* ]]; then
+	    day=`echo $f | head -c10 | tail -c2 | sed s/^0//`
+	    if (( $day > $last + 1 )); then
+		missed=$(( $missed + 1 ))
+	    fi
+	    last=$day
+	fi
+	if [[ ! -z $verbose ]]; then
+	    echo -e "`printf %7d $wc`"  $f
+	fi
+    done
+    if (($count == 0)); then
+	avg=0
+    else
+	avg=$(($total / $count))
+    fi
+    [[ -z $verbose ]] || echo $verbose
+}
+
+if $allYear; then
+    echo all of $y by month:
+    yearWords=0
+    yearCount=0
+    for month in `seq 1 12`; do
+	mm=$(printf "%02d" $month)
+	count-words $(expand $y$sep$mm$sep)
+	yearWords=$(( $yearWords + $total ))
+	yearCount=$(( $yearCount + $count ))
+	echo -e  "`printf %7d $total`" words in "`printf %2d $count`" posts"\t"  \
+	     in $y/$mm "(average $avg/post)"
+    done
+    avg=$(($yearWords / $yearCount))
+    echo '----------------------------------'
+    echo -e  "`printf %7d $yearWords`" words in $yearCount posts total \
+	 in $y "(average $avg/post)"
+    echo '</pre>'
+    exit
+fi
+
+if [[ -z $m ]]; then		# no month stats
+    count-words $*
+    echo -e  "`printf %7d $total`" words total "(average $avg/file)"
+    echo '</pre>'
+    exit
+fi
+
+# Count words and posts so far this month
+
+mm=$(printf "%02d" $m)
+count-words $(expand $y$sep$mm$sep) $*
+
+# Add missing days after the last date seen.
+if (( $this_month == $m && $this_year == $y)); then    # We're doing this month
+    end=$(date +%d)
+    in="this month"
+else
+    end=$(date -d "$y/$m/1 +1month -1day" +%d)
+    in=$(date -d "$y/$m/1" +"in %B")
+    if (( $this_year != $y )); then in="$in of $y"; fi
+fi
+missed_days=$(( $missed + $end - $last ))
+
+echo -e  "`printf %7d $total`" words in $count posts $in "(average $avg/post)"
+
+if (( $m == $this_month && $y == $this_year)); then
+    count-words $(expand `date "+$y$sep$m$sep%d"`)
+    if [ $count == 1 ]; then s=" "; else s=s; fi
+    echo -e  "`printf %7d $total`" words in $count post$s today
+fi
+if (( $missed_days != 0 )); then
+    if [ $missed_days == 1 ]; then s=" "; else s=s; fi
+    echo -e "`printf %7d $missed_days`" day$s with no posts
+fi
+echo '</pre>'

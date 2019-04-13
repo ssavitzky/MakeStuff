@@ -2,15 +2,26 @@
 #
 
 # Songs is the web directory; each song is in an individual subdirectory
-#   At the moment, [song]/lyrics.{html,pdf,txt} are built from ../Lyrics;
+#   [song]/lyrics.{html,pdf,txt} are built from ../Lyrics*/[song].flk
 #   this needs to be fixed eventually.
 
-### Song lists:  (All made via (cd ../Lyrics; make list-*)
-#
-#   SONGS    -- stuff that's OK to put in a songbook: mine/ours and PD
-#   WEBSONGS -- Adds $(OK) to get stuff that's OK to put on the web
-#   ALLSONGS -- everything but in-progress songs
-#
+# Utility programs:
+TEXDIR	  = $(TOOLDIR)/TeX
+FLKTRAN   = $(TEXDIR)/flktran.pl
+INDEX     = $(TEXDIR)/index.pl
+TRACKINFO = $(TOOLDIR)/music/TrackInfo.pl
+SONGINFO  = $(TOOLDIR)/music/songinfo
+SORT_BY_TITLE = $(TEXDIR)/sort-by-title
+MUSTACHE  = $(shell which mustache)
+
+# These are the tags for which we can put lyrics on the web.  This can be overridden
+# in the local .config.make, e.g. to add specific songwriter tags.
+WEB_OK_TAGS = web-ok mine ours pd cc
+
+# These are the tags that indicate that it's not ok to put up lyrics, even if they have
+# one of the tags in WEB_OK_TAGS.  The rej and wip tags are included for completeness;
+# songs that have them don't normally have directories made for them.
+NOT_OK_TAGS = not-ok rej wip
 
 # Directories containing lyrics (virtual path for dependencies):
 LPATH := $(filter-out %WIP, $(wildcard $(BASEREL)Lyrics*))
@@ -21,83 +32,47 @@ VPATH = $(LPATH)
 # "--" are versions in different keys, and are meant to be printed individually when
 # someone is performing with an instrument that can't be capoed.
 #
-ASONGS := $(shell for d in $(LPATH); do ls $$d/[a-z]*.flk | grep -ve '--' ; done)
+# ASONGS is just the song files sorted by pathname
+#   It's almost impossible to write a glob that rejects template files at this point,
+#   but they get filtered out in ALLSONGS because they have an empty song title.
+ASONGS := $(shell for d in $(LPATH); do ls $$d/*.flk; done)
 
-# WIP = work in progress
-WIP := $(shell [ -z "$(ASONGS)" ] || grep -ile '^\\tags.*\Wwip\W' $(ASONGS))
-
-ALLSONGS := $(filter-out $(WIP), $(ASONGS))
-
-# PD = public domain
-PD := $(shell [ -z "$(ALLSONGS)" ] || grep -ile '^\\tags.*\Wpd\W' $(ALLSONGS))
-
-# OURS =  a band member has sufficient rights to allow us to publish the lyrics
-OURS := $(shell [ -z "$(ALLSONGS)" ] || grep -le '^\\tags.*\Wours\W' $(ALLSONGS))
-
-# MINE contains songs ganked from one bandmember or another
-MINE := $(shell [ -z "$(ALLSONGS)" ] || grep -le '^\\tags.*\Wmine\W' $(ALLSONGS))
-
-# WEB_OK = not ours but we have permission to publish on the web
-WEB_OK :=$(shell [ -z "$(ALLSONGS)" ] || grep -le '^\\tags.*\Wweb-ok\W' $(ALLSONGS))
-
-# ugly shell pipeline to sort a list of song references.
-SORT_SONGS =  sed 's/ /\n/g' | sed 's/\// /g' | sort -k3 | sed 's/ /\//g'
-
-# Songlists:
-#   SONGBOOK -- stuff that's OK to put in a songbook
-#   OURSONGS -- just ours, not PD or ok-to-publish
-#   WEBSONGS -- Adds $(WEB_OK) to get stuff that's OK to put on the web
-#   ALLSONGS -- everything but work in progress
-SONGBOOK = $(shell echo $(OURS) $(MINE) $(PD) | $(SORT_SONGS))
-OURSONGS = $(shell echo $(OURS) $(MINE) | $(SORT_SONGS))
-WEBSONGS = $(shell echo $(OURS) $(MINE) $(WEB_OK) $(PD) | $(SORT_SONGS))
-
-# Directory name lists:
-# 	Because we're building a web directory here, we're mostly interested in
-#	ALLNAMES and WEBNAMES.  We will build subdirectories for ALLNAMES, because
-#	those are the songs in our repertoire.  We will make lyrics visible only
-#	in WEBNAMES.
+# REJECT = work in progress and other songs we don't want on the web at all.
 #
-SBNAMES  = $(sort $(filter-out %--% %.orig.%, $(subst .flk,,$(notdir $(SONGBOOK)))))
-ALLNAMES = $(sort $(filter-out %--% %.orig.%, $(subst .flk,,$(notdir $(ALLSONGS)))))
-WEBNAMES = $(sort $(filter-out %--% %.orig.%, $(subst .flk,,$(notdir $(WEBSONGS)))))
-NOTWEB   = $(filter-out $(WEBNAMES), $(ALLNAMES))
+REJECT := $(shell [ -z "$(ASONGS)" ] || grep -ilEe '^\\tags.*\W(wip|rej)\W' $(ASONGS))
 
+# ALLSONGS is the list of files sorted by title, which is more useful
+ALLSONGS := $(shell $(SORT_BY_TITLE)  $(filter-out $(REJECT),$(ASONGS)))
 
-# Indices: all
-# 	1Index.html is the index web page, 1IndexTable.html is just the
-#	 <table> element, for use in template replacement.
-#	1IndexShort.html is the raw list of names linked to subdirs
-#	1IndexLong.html is the long table with descriptions
-#
-INDICES= 1Index.html 1IndexTable.html 1IndexShort.html   # 1IndexLong.html
+# Directory names:
+#	DIRNAMES is the list of all song directories, sorted by title.  (We sort
+#	by title because eventually we'll want to build indices and such.)
+#	It would be better if we could use filter-out, but it doesn't handle regexps
+#	Similarly, we need the loop because grep needs each name on a separate line.
+DIRNAMES := $(shell for f in $(subst .flk,,$(notdir $(ALLSONGS))); do echo $$f; done \
+		    | grep -v -e .orig -e --)
 
 # Lists.  Just the ones we actually need
-ALLDIRS  = $(ALLNAMES)
-ALLPDF   = $(patsubst %,%/lyrics.pdf,$(ALLNAMES))
-ALLHTML  = $(patsubst %,%/lyrics.html,$(ALLNAMES))
-ALLTEXT  = $(patsubst %,%/lyrics.txt,$(ALLNAMES))
+ALLPDF   = $(patsubst %,%/lyrics.pdf,$(DIRNAMES))
+ALLHTML  = $(patsubst %,%/lyrics.html,$(DIRNAMES))
+ALLTEXT  = $(patsubst %,%/lyrics.txt,$(DIRNAMES)) \
+	   $(patsubst %,%/lyrics.chords.txt,$(DIRNAMES))
 
-WEBDIRS  = $(WEBNAMES)
-WEBPDF   = $(patsubst %,%/lyrics.pdf,$(WEBNAMES))
-WEBHTML  = $(patsubst %,%/lyrics.html,$(WEBNAMES))
-WEBTEXT  = $(patsubst %,%/lyrics.txt,$(WEBNAMES))
+# Indices: 
+# 	0Index.html is the index web page, 0IndexTable.html is just the
+#	 <table> element, for use in template replacement.
+#	0IndexShort.html is the raw list of names linked to subdirs
+#	0IndexLong.html is the long table with descriptions
+WEBINDICES = 0Index.html 0IndexTable.html 0IndexShort.html
+SUBDIR_INDICES =  $(patsubst %,%/index.html, $(DIRNAMES))
 
-# Indices: web
-#	0Index* are the web-safe versions of the index files
-WEBINDICES = 0Index.html 0IndexTable.html 0IndexShort.html  # 0IndexLong.html
+# these are the optional include files that %/index.html depends on
+SUBDIR_INCLUDES = body-text.html audio-links.html
 
 # At some point we can add 1Index*, after we add subdir indices that can handle
 # directories without visible lyrics.
 
-
-# Utility programs:
-TEXDIR	  = $(TOOLDIR)/TeX
-FLKTRAN   = $(TEXDIR)/flktran.pl
-INDEX     = $(TEXDIR)/index.pl
-TRACKINFO = $(TOOLDIR)/music/TrackInfo.pl
-
-reportVars += LPATH WEBNAMES NOTWEB
+reportVars += LPATH ASONGS ALLSONGS DIRNAMES WEB_OK_TAGS MUSTACHE
 
 ########################################################################
 ###
@@ -106,7 +81,7 @@ reportVars += LPATH WEBNAMES NOTWEB
 
 # Rules to make song subdirectories and their contents
 
-%: %.flk
+%: | %.flk
 	mkdir -p $@
 
 # lyrics.pdf
@@ -117,7 +92,7 @@ reportVars += LPATH WEBNAMES NOTWEB
 #	We also can't make %/%.pdf, because make can't handle rules with
 #	multiple wildcards on the left.
 #	
-%/lyrics.pdf: %.dvi
+%/lyrics.pdf: %.dvi | %
 	dvipdf $< $@
 
 # %.dvi:  Intermediate stage in making %/lyrics.pdf
@@ -133,20 +108,74 @@ reportVars += LPATH WEBNAMES NOTWEB
 %.dvi:	%.flk
 	d=`pwd`; cd `dirname $<`; $(MAKE) $$d/$*.dvi DESTDIR=$$d
 
-%/lyrics.html: %.flk
-	WEBSITE=$(WEBSITE) WEBDIR=$(MYNAME) $(FLKTRAN) -t $< $@
+%/lyrics.html: %.flk | %
+	WEBSITE=$(WEBSITE) WEBDIR=$(MYNAME) $(FLKTRAN) -t -b $< $@
 
-%/lyrics.txt: %.flk
+%/lyrics.txt: %.flk | %
 	WEBSITE=$(WEBSITE) WEBDIR=$(MYNAME) $(FLKTRAN) $< $@
 
-# === Eventually we want to be able to make the index.html file.
-#	This is currently a symlink to lyrics.html, but if we don't
-#	have the necessary rights it needs to be a link to dummy.html
-#	instead.  We also need to be able to make dummy.html, but 
-#	that's another matter.
+%/lyrics.chords.txt: %.flk | %
+	WEBSITE=$(WEBSITE) WEBDIR=$(MYNAME) $(FLKTRAN) -c $< $@
 
-%/index.html:
-	cd `dirname $@`; ln -s lyrics.html index.html
+
+## Here we generate several types of metadata.
+
+#	metadata.yml is an input to the mustache template engine
+%/metadata.yml: %.flk $(SONGINFO) | %
+	$(SONGINFO) --format=yaml --ok='$(WEB_OK_TAGS)' $< > $@
+
+#	metadata.sh can be sourced into a shell script; it can be used if
+#	  we don't have the mustache templating engine.
+%/metadata.sh: %.flk $(SONGINFO) | %
+	$(SONGINFO) --format=shell --ok='$(WEB_OK_TAGS)' $< > $@
+
+#	metadata.make can be included in a makefile; it's not used at the moment.
+%/metadata.make: %.flk $(SONGINFO) | %
+	$(SONGINFO) --format=make --ok='$(WEB_OK_TAGS)' $< > $@
+
+#	metadata.timestamp is touched if index.html is out of date
+%/metadata.timestamp: FORCE
+	@if [ ! -f $@ ]; then 				\
+	   touch $@; echo touch $@;			\
+	else 						\
+	   export d=`dirname $@`; for f in $(SUBDIR_INCLUDES); do	\
+		if [ -e $$d/$$f ] && [ $$d/$$f -nt $@ ]; then		\
+		   touch $@; echo touch $@; break;			\
+		fi							\
+	   done								\
+	fi
+.PHONY: FORCE
+
+# The index.html files depend on the corresponding metadata.
+#	Note that if we don't explicitly make the metadata, it will be treated as an
+#	intermediate file and deleted after making index.html.
+#
+#	On the other hand, we _do_ want to delete the symlink to the template.
+#	It's there because paths to partials are resolved relative to the template.
+#
+#	At some point we might want to try mo: Mustache templates in pure bash
+#       https://github.com/tests-always-included/mo
+#
+#	Note that we are no longer using server-side includes here.  Currently
+#	they _are_ used elsewhere in the site, mainly for footers.  Also note
+#	that in order for this to work, footers etc. have to be in /site, which
+#	must be a sibling of /Songs.
+#
+#	Note that there appears to be no direct way to make %/index.html depend on
+#	optional include files like %/body-text.html and %/audio-links.html, so we
+#	use a timestamp file instead and touch it if index.html is out of date.
+#
+ifneq ($(MUSTACHE),)
+%/index.html: %/metadata.yml %/metadata.timestamp 1subdir-index.mustache
+	cd $(dir $@);  ln -sf ../1subdir-index.mustache; 			\
+	    $(MUSTACHE) metadata.yml 1subdir-index.mustache > index.html; 	\
+	    rm ./1subdir-index.mustache
+else
+# What we really ought to do is fall back on server-side includes and a shell template
+%/index.html: %/metadata.yml %/metadata.timestamp 
+	touch $@
+	@echo NO TEMPLATING ENGINE DEFINED
+endif
 
 # Ogg and mp3 files.  
 #	They have no dependencies to prevent their being constantly rebuilt.
@@ -158,15 +187,43 @@ reportVars += LPATH WEBNAMES NOTWEB
 	  lame -b 64 -S $(shell $(TRACKINFO) $(SONGLIST_FLAGS)  \
 	   --mp3 $*) $@
 
+AUDIO_LINKS = $(shell for f in *; do \
+		[ -e $$f/$$f.ogg ] && echo $$f/audio-links.html; done | uniq)
+all::	$(AUDIO_LINKS)
+
+## If a subdirectory contains audio files, it needs an audio-links.html file
+#	If there are only ogg and mp3 files with names that match the directory,
+#	things are simple.  Otherwise somebody is going to have to do some editing.
+#
+#	This is a single-colon rule with no dependencies, so it will only be built
+#	if it does not already exist.  Once it's there you can edit it to add
+#	additional links or text.
+#
+%/audio-links.html:
+	d=$(subst /,,$(dir $@)); \
+	  echo "<h3 id='Recordings'>Recordings:</h3>" 				 > $@; \
+	  echo "<p class='recording'>"						>> $@; \
+	  echo "    <a href='$$d.ogg'>[ogg]</a> <a href='$$d.mp3'>[mp3]</a>"	>> $@; \
+	  echo "    <audio controls>" 						>> $@; \
+	  echo "         <source src='$$d.ogg' type='audio/ogg'>"		>> $@; \
+	  echo "         <source src='$$d.mp3' type='audio/mp3'>"		>> $@; \
+	  echo "    </audio>"	 						>> $@; \
+	  echo "</p>"	 							>> $@; \
+	  echo "<hr />"								>> $@
+
+
 ########################################################################
 ###
 ### Targets
 ###
 
-all::	$(ALLDIRS) $(WEBHTML) $(ALLPDF) subdir-indices webindices
+all::	$(DIRNAMES) $(ALLPDF) metadata $(ALLHTML) $(ALLTEXT)
 
-.PHONY: webindices
-webindices: $(WEBINDICES)
+.PHONY: metadata
+metadata::	$(patsubst %,%/metadata.yml, $(DIRNAMES))
+metadata::	$(patsubst %,%/metadata.sh, $(DIRNAMES))
+metadata::	$(patsubst %,%/metadata.timestamp, $(DIRNAMES))
+
 
 ### Showing and hiding lyrics:
 #
@@ -182,26 +239,26 @@ webindices: $(WEBINDICES)
 #	In either case, we do this in a loop, so that if the status of
 #	a song changes we do the right thing.
 
-.PHONY: show-lyrics hide-lyrics subdir-indices
+.PHONY: subdir-indices
 
-subdir-indices:: show-lyrics hide-lyrics
+subdir-indices: $(SUBDIR_INDICES)
 
-show-lyrics: $(WEBNAMES)
-	for d in $(WEBNAMES); do (cd $$d; ln -sf lyrics.html index.html) done
-
-hide-lyrics: $(NOTWEB)
-	for d in $(NOTWEB); do (cd $$d; rm -f index.html) done
+ifneq ($(MUSTACHE),)
+## If we have the templating engine it's safe to rebuild */index.html
+all:: subdir-indices
+endif
 
 ### Lists:
 
 list-names:
-	@echo $(ALLNAMES)
-list-songbook: 
-	@echo $(SONGBOOK)
+	@echo $(DIRNAMES)
+list-dirs: 
+	@echo $(DIRNAMES)
 list-allsongs: 
 	@echo $(ALLSONGS)
 list-websongs: 
 	@echo $(WEBSONGS)
+
 
 ### Songbook:  Just my stuff and public domain.  
 #	Note that the Songbook doesn't have a proper index -- use the 
@@ -249,8 +306,7 @@ htmlclean::
 ### Website indices:
 
 # FIXME: At the moment neither $(INDEX) and $(TRACKINFO) is able to handle
-# multiple lyrics directories.  trackinfo can probably be fixed by giving
-# it 
+# multiple lyrics directories. 
 
 # We used to generate complete HTML files, but that's not nearly versatile
 # enough.  What we do now is generate HTML fragments that get included in
@@ -260,78 +316,46 @@ htmlclean::
 # trying to generate lists in the lyrics directory.  That gives us better
 # control over what's included.
 
-0List.html: $(WEBSONGS) $(WEBDIRS) | $(INDEX)
-	@echo building $@ from WEBLYRICS
-	@echo '<html>' 					>  $@
-	@echo '<head>'					>> $@
-	@echo '<title>Song List</title>'		>> $@
-	@echo '</head><body>'				>> $@
-	@echo '<h2><a href="/">steve.savitzky.net</a> '	>> $@
-	@echo '  / <a href="./">Songs</a>'		>> $@
-	@echo '  / Song List</h1>'			>> $@
-	@$(INDEX) -h  $(WEBSONGS)			>> $@
-	@echo '<h5>Last update: ' `date` '</h5>'	>> $@
-	@echo '</body>'					>> $@
-	@echo '</html>' 				>> $@
+WEBINDICES = 0Index.html 0IndexShort.html 0IndexTable.html 0IndexLong.html
 
-0Index.html: $(WEBSONGS) $(WEBDIRS) | $(INDEX)
+.PHONY: webindices 
+webindices: $(WEBINDICES)
+
+# indices currently broken
+all:: webindices
+
+# 0Index.html is a kludge -- don't link to it!
+#	The right thing to do is make a page called, e.g., SongIndex.html that #includes
+#	either 0IndexTable or 0IndexLong
+0Index.html: $(ALLSONGS) $(DIRNAMES) $(INDEX) $(TOOLDIR)/music/songs.make
 	@echo building $@ from WEBLYRICS
 	@echo '<html>' 					>  $@
 	@echo '<head>'					>> $@
 	@echo '<title>Song Index</title>'		>> $@
+	@echo '<link href="../site/style.css" rel="stylesheet" type="text/css">' >> $@
 	@echo '</head><body>'				>> $@
-	@echo '<h2><a href="/">steve.savitzky.net</a> '	>> $@
-	@echo '  / <a href="./">Songs</a>'		>> $@
-	@echo '  / Song Index</h2>'			>> $@
-	@$(INDEX) -t -h $(WEBSONGS)			>> $@
+	@echo '<nav><a href="/">[home]</a>'		>> $@
+	@echo '  / <a href="../Songs">Songs</a>'	>> $@
+	@echo '  / <a href="./">Song Index</a></nav>'	>> $@
+	@$(INDEX) -t -h $(ALLSONGS)			>> $@
 	@echo '<h5>Last update: ' `date` '</h5>'	>> $@
 	@echo '</body>'					>> $@
 	@echo '</html>' 				>> $@
 
-0IndexTable.html: | $(INDEX)
+0IndexTable.html: $(INDEX)
 	@echo building $@ from WEBLYRICS
 	@echo '<!-- begin $@ -->'			>  $@
-	@$(INDEX) -t -h $(WEBSONGS)			>> $@
+	@$(INDEX) -t -h $(ALLSONGS)			>> $@
 	@echo '<!-- end $@ -->'				>> $@
 
 0IndexShort.html: 
-	@echo building $@ from WEBNAMES
+	@echo building $@ from directory listing:
 	@echo '<!-- begin $@ -->'			>  $@
-	@for f in `echo $(WEBNAMES) | tr ' ' "\n" | sort | uniq`; do \
+	@for f in `echo $(DIRNAMES) | tr ' ' "\n" | sort | uniq`; do \
 		echo '<a href="'$$f/'">'$$f'</a>' >> $@; \
 	done
 	@echo '<!-- end $@ -->'				>> $@
 
+# Note that TrackInfo might not look at metadata to check whether it should include lyrics
 0IndexLong.html: 
-	$(TRACKINFO) --long --credits --sound -t format=list.html $(WEBNAMES) > $@
-
-1Index.html:
-	@echo building $@ from ALLLYRICS
-	@echo '<html>' 					>  $@
-	@echo '<head>'					>> $@
-	@echo '<title>Song Index</title>'		>> $@
-	@echo '</head><body>'				>> $@
-	@echo '<h2><a href="/">steve.savitzky.net</a> '	>> $@
-	@echo '  / <a href="./">Songs</a>'		>> $@
-	@echo '  / Complete Index</h2>'			>> $@
-	@$(INDEX) -t -h $(ALLSONGS)			>> $@
-	@echo '<h5>Last update: ' `date` '</h5>'	>> $@
-	@echo '</body>'					>> $@
-	@echo '</html>' 				>> $@
-
-1IndexTable.html: | $(INDEX)
-	@echo building $@ from ALLLYRICS
-	@echo '<!-- begin $@ -->'			>  $@
-	@$(INDEX) -t -h $(ALLSONGS)			>> $@
-	@echo '<!-- end $@ -->'				>> $@
-
-1IndexShort.html:
-	@echo building $@ 
-	@echo '<!-- begin $@ -->'			>  $@
-	@for f in `echo $(ALLSONGS) | tr ' ' "\n" | sort | uniq`; do \
-		echo '<a href="'$$f/'">'$$f'</a>' 	>> $@; \
-	done
-	@echo '<!-- end $@ -->'				>> $@
-
-1IndexLong.html:  | $(TRACKINFO)
-	$(TRACKINFO) --long --sound --credits -t format=list.html $(ALLNAMES) > $@
+	$(TRACKINFO) --long --credits --sound -t format=list.html $(DIRNAMES) > $@

@@ -367,6 +367,7 @@ sub getSongFileInfo {
 	elsif (/\\music/)	{ $music     = getContent($_); }
 	elsif (/\\lyrics/)	{ $lyrics    = getContent($_); }
 	elsif (/\\arranger/)	{ $arranger  = getContent($_); }
+	elsif (/\\performer/)	{ $performer = getContent($_); }
 	elsif (/\\credits/)	{ $credits   = getContent($_); }
 	elsif ($title) { 
 	    # everything's at the top, so we have it all now.
@@ -684,14 +685,15 @@ sub printInfo {
 	print "shortname='$shortname'\n";
 	print "longname='$longname'\n";
 	print "filename='$filename'\n";
-	print "title='$title'\n";
-	print "index_title='$index_title'\n";
+	print "title=\"$title\"\n";
+	print "index_title=\"$index_title\"\n";
 	print "track_number='$track_number'\n";
 	print "subtitle='$subtitle'\n" if $subtitle;
 	# can't (easily) have multiline items in shell format
 	#print "dedication='$dedication'\n" if $dedication;
 	#print "description='$description'\n" if $description;
 	# === needs license and url
+	$music = $lyrics unless $music;
 	print "lyrics='$lyrics'\n";
 	print "music='$music'\n" if $music;
 	print "arranger='$arranger'\n" if $arranger;
@@ -993,6 +995,8 @@ sub setupFormattingConstants {
 	$_TT = "</tt>";
 	$UL  = "<u>";
 	$_UL = "</u>";
+	$SMALL = "<small>";
+	$_SMALL = "</small>";
 	$SPOKEN  = "(spoken)";
 	$_SPOKEN = "";
 	$NL  = "<br />\n";
@@ -1014,6 +1018,8 @@ sub setupFormattingConstants {
 	$_TT = "";
 	$UL  = "";
 	$_UL = "";
+	$SMALL = "";
+	$_SMALL = "";
 	$SPOKEN  = "(spoken)";
 	$_SPOKEN = "";
 	$NL  = "\n";
@@ -1052,6 +1058,11 @@ sub deTeX {
 	    $txt =~ s/\{\\bf[ \t\n]/$BF/; 
 	    while (! $txt =~ /\}/) { $txt .= <STDIN>; }
 	    $txt =~ s/\}/$_BF/;
+	}
+	if ($txt =~ /\{\\small[ \t\n]/) { 
+	    $txt =~ s/\{\\small[ \t\n]/$SMALL/; 
+	    while (! $txt =~ /\}/) { $txt .= <STDIN>; }
+	    $txt =~ s/\}/$_SMALL/;
 	}
     }
     if ($html) { 

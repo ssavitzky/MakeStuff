@@ -1,0 +1,227 @@
+#!/usr/bin/python3
+# 
+import os
+import sys
+import re
+import argparse
+import string
+
+### page-to-template-data:
+#
+#   This program converts a web page or blog post to a file consisting
+#   of an YAML header followed by the contents of the body tag.
+#   Server-side includes are removed.
+#
+#   The contents of the title tag are put in the title: header, and each
+#   <meta name="x" contents="y"> becomes x: y
+#
+#   The headers can be output to a separate file.
+#
+
+long_description = '''Convert web page or blog post to html fragment with metadata.
+
+This is a rather hacky python program that converts a web page
+(typically index.html) or an HTML fragment with an RF822 (email)
+header into a body-contents fragment with a YAML header.  The main use
+is converting web pages and blog posts to something that can be the
+input to a templating engine (e.g. mustache) or site generator
+(e.g. Jekyll).
+
+RFC822-style headers are currently used in blog posts.  The --metafile
+option lets you direct the metadata to a different file.
+
+The --jekyll option produces Jekyll frontmatter, preceeded and
+followed by ---.  If the input is a blog post with an RFC822 header, a
+jekyll header is the default.  This program cannot convert a YAML
+header to RFC822.
+ '''
+
+# Note that we make no attempt to actually parse the HTML
+
+argparser = argparse.ArgumentParser(description=long_description)
+argparser.add_argument('-j', '--jekyll', action='store_true', help='generate Jekyll metadata')
+argparser.add_argument('-o', '--outfile', help='output file name - default stdout')
+argparser.add_argument('-m', '--metafile', help='metadata file name - default outfile')
+argparser.add_argument('infile', help='input file')
+
+args = argparser.parse_args()
+
+input_file_name = args.infile
+output_file_name = args.outfile
+meta_file_name = args.metafile
+jekyll = args.jekyll
+
+##########################################################################
+# Functions:
+
+# Extend line with additional lines from file until regex.search succeeds.
+#   This is used to get a complete tag or element assuming that the start
+#   tag is contained in the line.
+#   Return (line, match) where line is whatever remains after the match.
+def get_complete_tag(regex, line, file):
+    while True:
+        match = regex.search(line)
+        if match:
+            return (line[match.end():], match)
+        re.sub(r'\n', ' ', line)
+        line = line + file.readline()
+
+# remove backslashes from a string.
+#   We need this because our mail-like headers get quoted in shell scripts,
+#   and contain backslash-escaped single quotes.
+def unescape_string(s):
+    if not s:
+        return ""
+    else:
+        return s.replace('\\', '')
+
+# Extract metadata from the <head> element of the file.
+#   The metadata is returned as a dict.
+#   If the file starts out looking like a mail header, use extract_mail_metadata
+def extract_metadata(vfile):
+    metadata = {}
+    end_head = re.compile('</head>')
+    title = re.compile('<title>')
+    get_title = re.compile('<title>(.*)</title>')
+    meta = re.compile(r'<meta\s+name')
+    get_meta = re.compile(r'<meta\s+name="([^"]*)"\s+content="([^"]*)"\s*>')
+    
+    line = file.readline()
+    if re.search(r'^(\w)+:', line):
+        # If it looks like we have a header, use extract_mail_metadata
+        return extract_mail_metadata(line, file)
+    
+    while not end_head.search(line):
+        if title.search(line):
+            (line, match) = get_complete_tag(get_title, line, file)
+            metadata['title'] = match.group(1)
+            continue
+        if meta.search(line):
+            (line, match) = get_complete_tag(get_meta, line, file)
+            metadata[match.group(1).lower()] = match.group(2)
+            continue
+        try:                    # readline just returns an empty string at EOF.
+            line = next(file)   # so we use the file as an iterator
+        except StopIteration:   # and handle the exception we get when it's done
+            print("No </head> tag found", file=sys.stderr)
+            exit(1)             # otherwise we would hang if there's no </head>
+        
+    # If the <body> tag starts on the same line as </head>, remove it.
+    # (note that it might continue for several lines)
+    if re.search(r'<body', line):
+        (line, match) = get_complete_tag(re.compile(r'<body[^>]*>'), line, file)
+    return metadata
+
+# Extract metadata from an email (rfc822) header
+#   This gets called in case the file looks like a DW post
+#   In that case, we also want to set jekyll to true.
+def extract_mail_metadata(line, file):
+    global jekyll
+    jekyll = True;
+    metadata = {}
+    get_header = re.compile(r'^(\w+):\s*([^\s].*)?$')
+    while not re.search(r'^\s*$', line):
+        match = get_header.search(line)
+        if not match: break;
+        # Subject -> title.  All keys to lowercase.
+        if 'Subject' == match.group(1):
+            metadata['title'] = match.group(2)
+        else:
+            metadata[match.group(1).lower()] = unescape_string(match.group(2))
+        try:                    # readline just returns an empty string at EOF.
+            line = next(file)   # so we use the file as an iterator
+        except StopIteration:   # and handle the exception we get when it's done
+            print("No body found", file=sys.stderr)
+            exit(1)             # otherwise we would hang if there's no </head>
+    return metadata
+
+# Extract the contents of the <body> element, and return it as a list of lines.
+#   The <body>, </body>, and </html> tags and server-side includes are skipped.
+#   We assume that the end tags and SSI comments are not continued onto other lines.
+#   The <body> tag is skipped in extract_metadata if it's on the same line as </head>.
+#
+#   TODO:  This should be rewritten using a real parser, e.g. <a
+#   href="https://www.crummy.com/software/BeautifulSoup/" >Beautiful Soup.</a>
+#
+def extract_body_contents(file):
+    body_text = []
+    start_cut = re.compile(r'<cut\s')
+    get_cut = re.compile(r'^(.*)<cut\s+text="([^"]*)"[^>]*>')
+    end_cut = re.compile(r'^(.*)</cut\s*>')
+    line = file.readline()
+    while True:
+        if re.search(r'<body', line):
+            (line, match) = get_complete_tag(re.compile(r'<body[^>]*>'), line, file)
+            continue
+        if re.search(r'<!--#|</body|</html', line):
+            line=''
+            continue
+        if start_cut.search(line):
+            (line, match) = get_complete_tag(get_cut, line, file)
+            body_text.append(match.group(1))
+            continue
+        if end_cut.search(line):
+            (line, match) = get_complete_tag(end_cut, line, file)
+            body_text.append(match.group(1))
+            continue;
+        # we also ought to replace <user name=NAME> and <lj user=NAME>
+        # doing that right would require a more sophisticated parser.
+        body_text.append(line)        
+        try:                    # readline just returns an empty string at EOF.
+            line = next(file)   # so we use the file as an iterator
+        except StopIteration:   # and handle the exception we get when it's done
+            break
+    return body_text
+
+# Output the metadata, in either Jekyll or DW format.
+def put_metadata(metadata, file):
+    if jekyll:
+        print('---', file=file)
+        for key in sorted(metadata.keys()):
+            # quote all the tags -- some may look numbers rather than strings
+            if key == 'tags':
+                print('tags: [ "' + metadata[key] + '" ]', file=file)
+                continue
+            # quote the value, which might contain colons or single quotes.
+            # FIXME:  check value for double quotes and escape them.
+            print (key +  ': "' + metadata[key] + '"', file=file)
+        print('---', file=file)
+    else:
+        # TODO: Really, we ought to convert Jekyll metadata to DW here
+        for key in sorted(metadata.keys()):
+            print(key.capitalize() + ": ", metadata[key], file=file)
+
+def put_body_contents(lines, file):
+    for line in lines:
+        print(line, end='', file=file)
+        
+############################################################################
+# main
+
+# I would normally like to define the functions _after_ the main program that
+# calls them, but it appears that Python doesn't like that.
+
+with open(input_file_name, 'r') as file:
+    metadata = extract_metadata(file)
+    body_text = extract_body_contents(file)
+
+if meta_file_name:
+    with open(meta_file_name, 'w') as meta_file:
+        put_metadata(metadata, meta_file)
+
+if output_file_name:
+    with open(output_file_name, 'w') as out_file:
+        if not meta_file_name:
+            put_metadata(metadata, out_file)
+            print("", file=out_file)
+        put_body_contents(body_text, out_file)
+else:
+    if not meta_file_name:
+        put_metadata(metadata, sys.stdout)
+        print("", file=sys.stdout)
+    put_body_contents(body_text, sys.stdout)
+
+
+    
+    
+

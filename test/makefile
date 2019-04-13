@@ -6,12 +6,15 @@
 # 	Pre-initialization:  this directory contains symlinks to both Makefile
 #	and MakeStuff.  It should be recognized as BASEDIR in all subdirectories.
 
-SUITES = $(wildcard *.tests)
-.PHONY:  $(SUITES) # $(subst .tests,.run, $(SUITES))
+SUITES = $(subst .tests,, $(shell ls *.tests))
+.PHONY:  all run
 
 all::
-	@echo suites available: $(SUITES)
-	@echo run with "make NAME.run"
+	@echo test suites available: $(SUITES)
+	@echo run one suite with "make NAME.run"
+	@echo run all suites with "make run"
+
+run: $(addsuffix .run, $(SUITES))
 
 %.run:  %.tests
 	$(MAKE) -f $< teardown 2>&1 | tee `basename $< tests`.log

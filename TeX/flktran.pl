@@ -149,7 +149,7 @@ if ($html) {
     $SP  = "&nbsp;";
     $AMP = "&amp;";
     # it might be more sensible to use the cellpadding to space the verses.
-    $BVERSE = ($tables)? "<table cellpadding=0 cellspacing=0>\n<tr>" : "<pre>\n";
+    $BVERSE = ($tables)? "<table cellpadding=0 cellspacing=0 class='verse'>\n<tr>" : "<pre class='verse'>\n";
     $EVERSE = ($tables)? "</tr></table>\n" : "</pre>\n";
     $FLKTRAN = "<a href='/Tools/TeX/flktran.html'><code>flktran</code></a>";
     # Creative Commons copyright notice
@@ -191,7 +191,7 @@ Attribution-Noncommercial-Share Alike 4.0 International License</a>. ';
 
 ### Process input in FlkTeX:
 
-while (<STDIN>) {			
+while (<STDIN>) {
     if (/^\\\\/) { sepVerse(); } 		# verse separator
     elsif (/^[ \t]*$/) { blankLine(); }		# blank line
     elsif (/^[ \t]*\%.*$/) { }			# comment: ignore
@@ -213,11 +213,14 @@ while (<STDIN>) {
     elsif (/\\arranger/)	{ $arranger = getContent($_); }
     elsif (/\\description/)	{ $description = getContent($_); }
     elsif (/\\ttto/)            { $ttto = getContent($_); }
+    elsif (/\\def/)             {  } # ignore macro definitions
 
     # Environments: 
 
-    elsif (/\\begin\{refrain/)	{ begRefrain(); } # Refrain
+    elsif (/\\begin\{refrain/)	{ begRefrain(); } # Refrain (deprecated)
     elsif (/\\end\{refrain/)	{ endRefrain(); }
+    elsif (/\\begin\{chorus/)	{ begRefrain(); } # chorus (same as refrain for now)
+    elsif (/\\end\{chorus/)	{ endRefrain(); }
     elsif (/\\begin\{bridge/)	{ begBridge(); }  # Bridge
     elsif (/\\end\{bridge/)	{ endBridge(); }
     elsif (/\\begin\{note/)	{ begNote(); } 	  # Note
@@ -231,7 +234,8 @@ while (<STDIN>) {
     elsif (/\\tailnote/)	{ doTailnote(); }
 
     # Ignorable TeX macros:
-    elsif (/\\(small|footnotesize|advance|vfill|vfiller|vbox)/) {}
+    elsif (/\\(small|footnotesize|advance|vfill|vfiller|vbox|makesongtitle)/) {}
+    elsif (/\\(oddsidemargin|evensidemargin|textwidth)/) {}
     elsif (/\\(begin|end)\{/)	{} # other environments get ignored
     elsif (/\\ignore/)		{ getContent($_); }
 
@@ -339,8 +343,10 @@ sub doTailnote {
 
 ### Begin a refrain:
 sub begRefrain {
+    my ($isBridge) = @_;
+    my $cssClass = $isBridge? "bridge" : "chorus";
     if ($vlines) { endVerse(); }
-    if ($html) { print "<blockquote>\n" if ($tables); }
+    if ($html) { print "<blockquote class='$cssClass'>\n" if ($tables); }
     $indent += $TABSTOP;
     # Note that begVerse will get called when the first line appears,
     # so we don't have to deal with verse count, line count, or <pre>.
@@ -359,7 +365,7 @@ sub endRefrain {
 
 ### Begin a bridge:
 sub begBridge {
-    begRefrain();
+    begRefrain(1);
     if ($html) { print "<blockquote>\n" if ($tables); }
     $indent += $TABSTOP;
     # Note that begVerse will get called when the first line appears,
@@ -573,8 +579,8 @@ sub tableLine {
     $line =~ s/\\min/m/g;
     $line =~ s/[\n\r]//g;
 
-    $cline .= "  <tr><td>";
-    $dline .= "  <tr><td>";
+    $cline .= "  <tr class=chords><td>";
+    $dline .= "  <tr class=lyrics><td>";
 
     for ($p = 0; $p < length($line); $p++) {
 	$c = substr($line, $p, 1); 
@@ -612,7 +618,11 @@ sub tableLine {
 }
 
 ### Remove LaTeX constructs.
-###	This would be easier with a table.
+###    NOTE:  This code does not handle {...} blocks that are nested or split across lines.
+###    It's really crude; it would be better to parse the input into tokens and keep a stack
+###    that says what to do when we reach a chord or a closing brace.  Later.  Also, see
+###    songinfo for what to do about getting the content for things like \notice, which can
+###    be split across several lines.
 sub deTeX {
     my ($txt) = @_;		# input line
 
@@ -620,35 +630,38 @@ sub deTeX {
 	$txt =~ s/\%.*$//;
 	$txt .= <STDIN>;
      }
-    # here's where we need to handle superscripts.
-    while ($txt =~ /\{\\em[ \t\n]/
-	   || $txt =~ /\{\\tt[ \t\n]/
-	   || $txt =~ /\{\\bf[ \t\n]/
-	   || $txt =~ /\\underline/
-	   || $txt =~ /\\link/
-	   || $txt =~ /\\sub(sub)?section/
-	   ) {
-	if ($txt =~ /\{\\em[ \t\n]/) {
+    # The tricky part is making sure that the block doesn't include a chord, because
+    # the parts before and after the chord end up in different <td> cells.
+    while ($txt =~ /\{\\(em|tt|bf|)[ \t\n]/
+	   || $txt =~ /\\(ul|underline|link|subsection|subsubsection)\{/
+	   || $txt =~ /\\(subsection|subsubsection)\*[^\{]*\{/) {
+	my $tag = $1;
+	if ($tables && ($tag =~ /(em|bf|tt)/) && $txt =~ /\{\\$tag[^\[]*\[/) {
+	    # we have a chord before the end of the block.  Split.
+	    # em, bf, and tt all split the same way
+	    $txt =~ s/(\{\\$tag[^\[]*)(\[[^\]]*\])/$1\}$2\{\\$tag/;
+	}
+	if ($tag eq "em") {
 	    $txt =~ s/\{\\em[ \t\n]/$EM/; 
-	    while ($txt !~ /\}/) { $txt .= <STDIN>; }
 	    $txt =~ s/\}/$_EM/;
 	}
-	if ($txt =~ /\{\\tt[ \t\n]/) {
+	if ($tag eq "tt") {
 	    $txt =~ s/\{\\tt[ \t\n]/$TT/; 
-	    while ($txt !~ /\}/) { $txt .= <STDIN>; }
 	    $txt =~ s/\}/$_TT/;
 	}
-	if ($txt =~ /\{\\bf[ \t\n]/) { 
+	if ($tag eq "bf") {
 	    $txt =~ s/\{\\bf[ \t\n]/$BF/; 
-	    while ($txt !~ /\}/) { $txt .= <STDIN>; }
 	    $txt =~ s/\}/$_BF/;
 	}
-	if ($txt =~ /\\underline\{/) { 
-	    $txt =~ s/\\underline\{/$UL/; 
-	    while ($txt !~ /\}/) { $txt .= <STDIN>; }
+	if ($tag eq "ul" || $tag eq "underline") { 
+	    if ($tables && ($txt =~ /\\$tag\{[^\}\[]*\[/)) {
+		# we have a chord before the end of the block.  Split.
+		$txt =~ s/(\\$tag\{[^\}\[]*)(\[[^\]]*\])/$1\}$2\\$tag\{/;
+	    }	    
+	    $txt =~ s/\\$tag\{/$UL/; # ul and underline have the same replacement text
 	    $txt =~ s/\}/$_UL/;
 	}
-	if ($txt =~ /\\link/) {
+	if ($tag eq "link") {
 	    while ($txt !~ /\\link\{[^\}]*\}\{[^\}]*\}/) { $txt .= <STDIN>; }
 	    if ($html) {
 		$txt =~ s/\\link\{([^\}]*)\}\{([^\}]*)\}/<a href="$1">$2<\/a>/;
@@ -657,18 +670,15 @@ sub deTeX {
 		$txt =~ s/\\link\{([^\}]*)\}\{([^\}]*)\}/$2/;
 	    }
 	}
-	if ($txt =~ /\\subsection\*?\{/) {
+	if ($tag eq "subsection") {
 	    $txt =~ s/\\subsection\*?\{/$SUBSEC/;
-	    while ($txt !~ /\}/) { $txt .= <STDIN>; }
 	    $txt =~ s/\}/$_SUBSEC/;
 	}
-	if ($txt =~ /\\subsubsection\*?\{/) {
+	if ($tag eq "subsubsection") {
 	    $txt =~ s/\\subsubsection\*?\{/$SUBSUB/;
-	    while ($txt !~ /\}/) { $txt .= <STDIN>; }
 	    $txt =~ s/\}/$_SUBSUB/;
 	}
     }
-    $txt =~ s/\\clearpage//g;
     $txt =~ s/\\hfill//g;
     $txt =~ s/---/--/g;
     $txt =~ s/\\&/$AMP/g;
@@ -678,11 +688,12 @@ sub deTeX {
     $txt =~ s/\\\_/\_/g;
     $txt =~ s/\\\$/\$/g;
     $txt =~ s/\\\\/$NL/g;
+    $txt =~ s/\\clearpage/$NP/g;
     $txt =~ s/\\newpage/$NP/g;
+    $ext =~ s/\\columnbreak/$NP/g;
 
     return $txt
 }
-
 
 ### getContent(line): get what's between macro braces.
 sub getContent {
