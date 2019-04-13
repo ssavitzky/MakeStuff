@@ -141,11 +141,11 @@ export TEXINPUTS
 SONG_PREAMBLE = '\documentclass[$(SIZE)a4paper,enabledeprecatedfontcommands]{scrartcl}'			\
 		'\usepackage[utf8]{inputenc}'                                   \
 		'\usepackage[protrusion=true,expansion=true,tracking=true,stretch=10,shrink=250]{microtype}'                                   \
-		'\usepackage{song,zingers,zongbook}'
+		'\usepackage{song,zingers,zongbook,uniinput}'
 SONG_LOOSELEAF= '\documentclass[$(SIZE)a4paper,enabledeprecatedfontcommands]{scrartcl}'		\
 		'\usepackage[utf8]{inputenc}'                                   \
 		'\usepackage[protrusion=true,expansion=true,tracking=true,stretch=10,shrink=250]{microtype}'                                   \
-		'\usepackage{song,zingers,zongbook}'
+		'\usepackage{song,zingers,zongbook,uniinput}'
 
 .SUFFIX: flk
 
