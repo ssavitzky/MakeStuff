@@ -261,11 +261,11 @@ list-short:
 
 # print-songbook: print SONGS as individual files
 print-songbook: $(PDF) 
-	$(PRINT_DUPLEX) $(PDF)
+	for f in $(ALLPDF); do $(PRINT_DUPLEX) $$f; done
 
 # print-longbook: print ALLSONGS as individual files
 print-longbook: $(ALLPDF) 
-	$(PRINT_DUPLEX) $(ALLPDF)
+	for f in $(ALLPDF); do $(PRINT_DUPLEX) $$f; done
 
 # Zongbook: print zongbook.pdf, which is a properly-formatted book.
 #
@@ -282,8 +282,8 @@ print-zongbook: zongbook.pdf
 #	zongbook is supposed to contain \file entries for all the songs
 #	that we actually want
 #
-print-zongs: $(ZONGS)
-	$(PRINT_DUPLEX) $(ZONGS)
+print-zongs: $(ZPDF)
+	for f in $(ZPDF); do $(PRINT_DUPLEX) $$f; done
 
 ### Cleanup:
 
