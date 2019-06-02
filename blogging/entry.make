@@ -99,13 +99,13 @@ $(ENTRY):
 	mkdir -p $(POST_ARCHIVE)$(MONTHPATH)
 	@echo "$$$(PFX)TEMPLATE" > $@
 	git add $@
-	git commit -m "$(MYNAME): started entry $(ENTRY)" $@
+	git commit -m "$(MYNAME): start $(ENTRY)" $@
 
 $(DRAFT):
 	@echo "$$$(PFX)TEMPLATE" > $@
 	git add $@
 	[ ! -z $(DONT_COMMIT_DRAFT) ] || 			\
-	   git commit -m "$(MYNAME): started entry $(ENTRY)" $@
+	   git commit -m "$(MYNAME): start $(ENTRY)" $@
 
 ## Validation dependencies for posting:
 #
