@@ -66,6 +66,9 @@ INDEX = index.pl
 #	The style stuff should be in a header file.
 .flk.tex:	
 	echo '\documentstyle[fontsize=12pt,a4paper,enabledeprecatedfontcommands,song,twocolumns,zongbook]{scrartcl}' > $@
+	echo '\usepackage[utf8]{inputenc}' >> $@
+	echo '\usepackage[protrusion=true,expansion=true,tracking=true,stretch=10,shrink=250]{microtype}' >> $@
+	echo '\usepackage{song,zingers,zongbook,uniinput}' >> $@
 	echo '\begin{document}'		>> $@
 	echo '\file{'$*.flk'}'		>> $@
 	echo '\end{document}'		>> $@
