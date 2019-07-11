@@ -78,6 +78,7 @@
 
 \usepackage{etoolbox}           % additional programming constructs.
 \usepackage{tipa} % phonetic symbols
+\providecommand\phantomsection{}% avoids the need to usepackage{hyperref} here, which could be too early.
 \DeclareUnicodeCharacter{1D106}{\textdoublepipe:}
 \DeclareUnicodeCharacter{1D107}{:\textdoublepipe}
 
@@ -190,6 +191,7 @@ Attribution-Share Alike 4.0 License.}
   \else
     \clearpage                  % onesided (compact)
   \fi
+  \phantomsection{}% the link will point here
   % tags, creation date, file, etc. want to be put out at the beginning of the lyrics.
   \global\def\theTags{}\global\def\theTiming{}
   \global\def\theCrDate{}\global\def\theKey{}
