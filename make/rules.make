@@ -25,7 +25,6 @@ endif
 
 %.pdf:	%.tex
 	echo q | pdflatex $*
-	makeindex $* || true
 	if [ -f $*.aux ] && [ `wc -l $*.aux | cut -d " " -f 1` -gt 0 ];\
 		then echo q|pdflatex $*; fi
 	-rm -f $*.aux $*.log
