@@ -78,7 +78,7 @@
 
 \usepackage{etoolbox}           % additional programming constructs.
 \usepackage{tipa} % phonetic symbols
-\providecommand\phantomsection{}% avoids the need to usepackage{hyperref} here, which could be too early.
+\providecommand\phantomsection{}% avoids the need to usepackage{hyperref} here, which could be too early (loading it before imakeindex breaks links in the index)
 \DeclareUnicodeCharacter{1D106}{\textdoublepipe:}
 \DeclareUnicodeCharacter{1D107}{:\textdoublepipe}
 
