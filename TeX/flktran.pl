@@ -138,8 +138,8 @@ if ($html) {
     $_TT = "</tt>";
     $UL  = "<u>";
     $_UL = "</u>";
-    $SPOKEN  = "(spoken)";
-    $_SPOKEN = "";
+    $SPOKEN  = $EM . "(spoken) ";
+    $_SPOKEN = $_EM;
     $SUBSEC  = "<h3>";
     $_SUBSEC  = "</h3>";
     $SUBSUB  = "<h4>";
@@ -168,7 +168,7 @@ if ($html) {
     $_TT = "";
     $UL  = "";
     $_UL = "";
-    $SPOKEN  = "(spoken)";
+    $SPOKEN  = "(spoken) ";
     $_SPOKEN = "";
     $SUBSEC  = "";
     $_SUBSEC  = "";
@@ -634,7 +634,9 @@ sub deTeX {
     # the parts before and after the chord end up in different <td> cells.
     while ($txt =~ /\{\\(em|tt|bf|)[ \t\n]/
 	   || $txt =~ /\\(ul|underline|link|subsection|subsubsection)\{/
-	   || $txt =~ /\\(subsection|subsubsection)\*[^\{]*\{/) {
+	   || $txt =~ /\\(emph|spoken)\{/
+	   || $txt =~ /\\(subsection|subsubsection)\*[^\{]*\{/
+      ) {
 	my $tag = $1;
 	if ($tables && ($tag =~ /(em|bf|tt)/) && $txt =~ /\{\\$tag[^\[]*\[/) {
 	    # we have a chord before the end of the block.  Split.
@@ -643,6 +645,14 @@ sub deTeX {
 	}
 	if ($tag eq "em") {
 	    $txt =~ s/\{\\em[ \t\n]/$EM/; 
+	    $txt =~ s/\}/$_EM/;
+	}
+	if ($tag eq "emph") { # italicize, but has the form \tag{...}
+	    $txt =~ s/\\emph\{/$EM/;
+	    $txt =~ s/\}/$_EM/;
+	}
+	if ($tag eq "spoken") { # italicize, but has the form \tag{...}
+	    $txt =~ s/\\spoken\{/$SPOKEN/;
 	    $txt =~ s/\}/$_EM/;
 	}
 	if ($tag eq "tt") {
