@@ -1,10 +1,11 @@
 \begin{song}{The Programmer's Alphabet}
 \cvsid{$Id: alphabet.flk,v 1.4 2010-10-14 06:48:15 steve Exp $}
-\notice{    Lyrics \copyright 1981, 1984 Stephen Savitzky.  All rights reserved.
+\notice{    Lyrics \copyright 1981, 1984 Stephen Savitzky.  \SomeRightsReserved
             To the tune of ``Sweet Betsy from Pike''}
 \tags{computer, mine}
 \key{C}
 \timing{4:20}
+\makesongtitle
 
 \small
         [C]A is for ASCII, our [G7]Alphabet's [C]name
@@ -14,14 +15,22 @@
 \begin{refrain}
             [C]Programming, programming, [G7]all through the [C]night,
             [C]We're stuck here until our new [G7]program works right.
-            [C]Programming, programming, [F]isn't it [C]fun?
+            [C]Programming, programming, [F]aren't {\em italics [C]fun?}
             [C]The maintainance starts when deb[G7]ugging is [C]done!
 \end{refrain}
-        E is the Elegant problems we're set
+        E is the Elegant problems we're set \spoken{e.g. TeX comments, % like this one
+	which eat the linefeed}
         F is old Fortran we try to Forget.
         G is the GOTO we're trying to kill, and
         H is the Hacker who uses it still.
-\\
+
+\begin{chorus} % a chorus is just like a refrain.  The line break is eaten too.
+
+            [C]Programming, programming, [G7]all through the [C]night,
+            [C]We're stuck here until our new [G7]program works right.
+            [C]Programming, programming, [F]isn't it [C]fun?
+            [C]The maintainance starts when deb[G7]ugging is [C]done!
+\end{chorus}
         I is the Input we handle with care
         J is the Jump to nobody knows where
         K is the Kludge with which we got by, and
@@ -34,7 +43,8 @@
 \begin{bridge}
 If this was a real song
 This would be a bridge
-But this is a test.
+But \spoken{this is a test % and this is a comment
+ with a line break commented out}
 \end{bridge}
         Q is for QWERTY, of typewriter lore,
         R is the RAM that we used to call core.
@@ -55,6 +65,8 @@ But this is a test.
 \begin{note}
 This is actually derived from
 \link{../songs/alphabet.html}{../songs/alphabet}.
+{\bf we want to test bf 
+as well as line breaks in blocks}
 \end{note}
 \tailnote{Loosely inspired by various sailors' alphabet songs.}
 \end{song}

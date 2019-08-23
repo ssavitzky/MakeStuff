@@ -6,10 +6,10 @@
 ### Print usage info:
 sub usage {
     print "$0 [options] infile[.flk] [outfile].ext\n";
-    print "	-b	bare lyrics -- no headings\n";
-    print "	-c	output chords\n";
-    print "	-h	output html\n";
-    print "	-t	use tables (implies -h -c)\n";
+    print "	-b --bare	bare lyrics -- no headings\n";
+    print "	-c --chords	output chords\n";
+    print "	-h --html	output html\n";
+    print "	-t --tables	use tables (implies -h -c)\n";
     print "	-v	verbose\n";
     print " Formats (extensions): \n";
     print "	flk	FlkTeX	(input; default)\n";
@@ -72,10 +72,13 @@ $arranger = "";
 
 ### Handle options:
 
+if (@ARGV == 0) {
+    usage;
+    exit
+}
 
 while ($ARGV[0] =~ /^\-/) {
-    if ($ARGV[0] eq "-opt") { shift; $opt = shift; }
-    elsif ($ARGV[0] eq "-b" || $ARGV[0] eq "-bare") { shift; $bare = 1; }
+    if ($ARGV[0] eq "-b" || $ARGV[0] eq "-bare") { shift; $bare = 1; }
     elsif ($ARGV[0] eq "-c"|| $ARGV[0] eq "-chords") { shift; $chords = 1; }
     elsif ($ARGV[0] eq "-h" || $ARGV[0] eq "-html") { shift; $html = 1; }
     elsif ($ARGV[0] eq "-t"|| $ARGV[0] eq "-tables") { 
@@ -115,7 +118,7 @@ if ($outfile =~ m|^(.*/)?([^/]+)\.[^./]+$|) {
 } 
 
 if ($WEBSITE) {
-    $WEBSITE =~ m|http://([^/]+)|;
+    $WEBSITE =~ m|https?://([^/]+)|;
     $sitename = $1;
 } else {
     $sitename = '';
@@ -562,7 +565,7 @@ sub chordLine {
 }
 
 ### Convert a line to a table
-###   When using tables, each line becomes a separate table.
+###   When using tables, each line becomes a separate table containing chords and text.
 ###   This, in turn, becomes a row in a table containing the verse.
 sub tableLine {
     my ($line) = @_;		# input line
@@ -618,7 +621,7 @@ sub tableLine {
 }
 
 ### Remove LaTeX constructs.
-###    NOTE:  This code does not handle {...} blocks that are nested or split across lines.
+###    NOTE:  This code does not handle nested {...} blocks or comments that contain braces.
 ###    It's really crude; it would be better to parse the input into tokens and keep a stack
 ###    that says what to do when we reach a chord or a closing brace.  Later.  Also, see
 ###    songinfo for what to do about getting the content for things like \notice, which can
@@ -626,10 +629,13 @@ sub tableLine {
 sub deTeX {
     my ($txt) = @_;		# input line
 
-    while ($txt =~ /\%/) {	# TeX comments eat the line break, too.
-	$txt =~ s/\%.*$//;
+    # Remove TeX comments (which eat the line break as well)
+    # and extend the line until it contains no unmatched left braces
+    while ($txt =~ /\%/ || $txt =~ /\{[^\}]*$/) {
+	$txt =~ s/\%.*\n$//;	# TeX comments eat the line break, too.
 	$txt .= <STDIN>;
-     }
+    }
+    
     # The tricky part is making sure that the block doesn't include a chord, because
     # the parts before and after the chord end up in different <td> cells.
     while ($txt =~ /\{\\(em|tt|bf|)[ \t\n]/
@@ -638,20 +644,23 @@ sub deTeX {
 	   || $txt =~ /\\(subsection|subsubsection)\*[^\{]*\{/
       ) {
 	my $tag = $1;
-	if ($tables && ($tag =~ /(em|bf|tt)/) && $txt =~ /\{\\$tag[^\[]*\[/) {
+	if ($tables && ($tag =~ /(em|bf|tt)/) && $txt =~ /\{\\$tag[^\}\[]*\[/) {
 	    # we have a chord before the end of the block.  Split.
 	    # em, bf, and tt all split the same way
-	    $txt =~ s/(\{\\$tag[^\[]*)(\[[^\]]*\])/$1\}$2\{\\$tag/;
+	    $txt =~ s/(\{\\$tag[^\[]*)(\[[^\]]*\])/$1\}$2\{\\$tag /;
+	    # If there's a space in front of the chord, keep it there, because
+	    # tableLine turns a space before a chord into &nbsp;
+	    $txt =~ s/([ \t])\}/}$1/;
 	}
 	if ($tag eq "em") {
 	    $txt =~ s/\{\\em[ \t\n]/$EM/; 
 	    $txt =~ s/\}/$_EM/;
 	}
-	if ($tag eq "emph") { # italicize, but has the form \tag{...}
+	if ($tag eq "emph") { # italicize, but has the form \tag{...}  Does't handle chords
 	    $txt =~ s/\\emph\{/$EM/;
 	    $txt =~ s/\}/$_EM/;
 	}
-	if ($tag eq "spoken") { # italicize, but has the form \tag{...}
+	if ($tag eq "spoken") { # italicize, but has the form \tag{...}  Does't handle chords
 	    $txt =~ s/\\spoken\{/$SPOKEN/;
 	    $txt =~ s/\}/$_EM/;
 	}
@@ -663,10 +672,11 @@ sub deTeX {
 	    $txt =~ s/\{\\bf[ \t\n]/$BF/; 
 	    $txt =~ s/\}/$_BF/;
 	}
-	if ($tag eq "ul" || $tag eq "underline") { 
+	if ($tag eq "ul" || $tag eq "underline") {
+	    # want to be able to handle underline{}
 	    if ($tables && ($txt =~ /\\$tag\{[^\}\[]*\[/)) {
 		# we have a chord before the end of the block.  Split.
-		$txt =~ s/(\\$tag\{[^\}\[]*)(\[[^\]]*\])/$1\}$2\\$tag\{/;
+		$txt =~ s/(\\$tag\{[^\}\[]*)(\[[^\]]*\])/$1\} $2\\$tag\{/;
 	    }	    
 	    $txt =~ s/\\$tag\{/$UL/; # ul and underline have the same replacement text
 	    $txt =~ s/\}/$_UL/;
