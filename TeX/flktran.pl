@@ -6,10 +6,10 @@
 ### Print usage info:
 sub usage {
     print "$0 [options] infile[.flk] [outfile].ext\n";
-    print "	-b --bare	bare lyrics -- no headings\n";
-    print "	-c --chords	output chords\n";
-    print "	-h --html	output html\n";
-    print "	-t --tables	use tables (implies -h -c)\n";
+    print "	-b -bare	bare lyrics -- no headings\n";
+    print "	-c -chords	output chords\n";
+    print "	-h -html	output html\n";
+    print "	-t -tables	use tables (implies -h -c)\n";
     print "	-v	verbose\n";
     print " Formats (extensions): \n";
     print "	flk	FlkTeX	(input; default)\n";
@@ -111,7 +111,7 @@ if ($outfile =~ m|^(.*/)?([^/]+)\.[^./]+$|) {
     $htmlfile = "$filebase.html";
 } elsif ($outfile =~ m|^(.*/)?([^/]+)/$|) {
     $filebase = "$2";
-    $filedir  = "$1$2";
+    $filedir  = "$1/$2";
     $shortname= $2;
     $htmlfile = "$filebase/";
     $outfile  = "$filedir/lyrics.html";
@@ -274,8 +274,6 @@ sub begSong {
 	print "<h3>"
 	    . ($sitename? "<a href='$WEBSITE'>$sitename</a>" : "")
 	    . expandPath("$WEBDIR/$htmlfile") . $alinks . "</h3>\n";
-    } else {
-	print "Online: $WEBSITE$WEBDIR/$htmlfile\n\n";
     }
 }
 
@@ -285,7 +283,7 @@ sub endSong {
     if ($bare) { return; }
     if ($html) {
 	print "<hr>";
-	print "<p><small><code><a href='./'>$WEBSITE$WEBDIR/</a>$htmlfile";
+	print "<p><small><code><a href='./'>$WEBSITE/$WEBDIR/</a>$htmlfile";
 	print "</code><br>\n";
 	print "   <i>Automatically generated with $FLKTRAN";
 	print " from <code>$infile</code>.<i><br>\n";
@@ -293,8 +291,10 @@ sub endSong {
 	print "</small></p>\n";
 	print "</body></html>\n" ;
     } else {
-	print "\n\nOnline:\n";
-	print "    $WEBSITE$WEBDIR/$htmlfile\n\n";
+	if ($WEBSITE) {
+	    print "\n\nOnline:\n";
+	    print "    $WEBSITE/$WEBDIR/$filedir\n\n";
+	}
 	print "Automatically generated with $FLKTRAN from $infile.\n";
     }
 }
