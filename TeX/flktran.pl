@@ -104,15 +104,17 @@ if ($outfile && $outfile !~ /\./ && $outfile !~ /\/$/ && $outfmt) {
 $html = $outfmt eq "html";
 $outfile =~ s|/lyrics.html$|/|;
 
-if ($outfile =~ m|^(.*/)?([^/]+)\.[^./]+$|) {
+if ($outfile =~ m|^(.*/)?([^/]+)(\.[^./]+)$|) {
     $filebase = "$2";
     $filedir  = ($1 eq "")? "." : $1;
     $shortname= $2;
+    $filename = "$2$3";
     $htmlfile = "$filebase.html";
 } elsif ($outfile =~ m|^(.*/)?([^/]+)/$|) {
     $filebase = "$2";
     $filedir  = "$1/$2";
     $shortname= $2;
+    $filename = "lyrics.html";
     $htmlfile = "$filebase/";
     $outfile  = "$filedir/lyrics.html";
 } 
@@ -293,7 +295,7 @@ sub endSong {
     } else {
 	if ($WEBSITE) {
 	    print "\n\nOnline:\n";
-	    print "    $WEBSITE/$WEBDIR/$filedir\n\n";
+	    print "    $WEBSITE/$WEBDIR/$filedir$filename\n\n";
 	}
 	print "Automatically generated with $FLKTRAN from $infile.\n";
     }

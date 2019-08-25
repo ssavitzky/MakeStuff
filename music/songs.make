@@ -91,32 +91,42 @@ reportVars += LPATH ASONGS ALLSONGS DIRNAMES WEB_OK_TAGS MUSTACHE
 #
 #	We also can't make %/%.pdf, because make can't handle rules with
 #	multiple wildcards on the left.
-#	
-%/lyrics.pdf: %.dvi | %
-	dvipdf $< $@
-
-# %.dvi:  Intermediate stage in making %/lyrics.pdf
-#	We want to do the build in the Lyrics directory rather than here
-#	because there may be multiple lyrics directories in the search path,
-#	and we want to use whatever local styles they have, including
-#	singer annotations (zinger.sty).
 #
-#	An alternative would be to put the lyrics directory in the
-#	search path, which would allow us to override the songbook
-#	style here if we wanted to.  See lyrics.make for the rule.
+#	What we do instead is make %.pdf here, and move it to the
+#	destination directory.
+#
+%/lyrics.pdf: %.pdf
+	mv $< $@
+
+%.pdf:	%.flk
+	d=`pwd`; cd `dirname $<`; $(MAKE) $$d/$*.pdf DESTDIR=$$d
+
+# We used to use %.dvi as an intermediate and run dvipdf to move it;
+#	That _sort of_ works, but to make a dvi file we have to use
+#	latex instead of pdftex, and the two have differences.
+#
+#%/lyrics.pdf: %.dvi | %
+#	dvipdf $< $@
+# it's safe to leave the %.dvi rule here, and someone might prefer it.
 #
 %.dvi:	%.flk
 	d=`pwd`; cd `dirname $<`; $(MAKE) $$d/$*.dvi DESTDIR=$$d
 
 %/lyrics.html: %.flk | %
-	WEBSITE=$(WEBSITE) WEBDIR=$(MYNAME) $(FLKTRAN) -t -b $< $@
+	$(FLKTRAN) -t -b $< $@
 
+#	The text files might get passed around loose, so we'd like them to
+#	point back to the web.  That's rather ugly, and it's done in flktran
 %/lyrics.txt: %.flk | %
 	WEBSITE=$(WEBSITE) WEBDIR=$(MYNAME) $(FLKTRAN) $< $@
 
 %/lyrics.chords.txt: %.flk | %
 	WEBSITE=$(WEBSITE) WEBDIR=$(MYNAME) $(FLKTRAN) -c $< $@
 
+#	This one makes a symlink to the appropriate lyric (.flk) file
+#	Best not to do it by default, because it may not be appropriate in some contexts
+%/lyrics.flk: | %.flk %
+	ln -rs %.flk $@
 
 ## Here we generate several types of metadata.
 
