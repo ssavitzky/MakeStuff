@@ -1,5 +1,10 @@
 #!/usr/bin/make  ### make/defines.make -- standard definitions for makefiles
 
+# Utilities
+
+MARKDOWN=kramdown
+MARKDOWN_FLAGS= -i GFM --no-hard-wrap -o html
+
 # MFDIR is where the make include files live
 MFDIR	= $(TOOLDIR)/make
 

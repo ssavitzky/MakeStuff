@@ -52,4 +52,9 @@ endif
 %.pdf: %.eps
 	 ps2pdf $<
 
+# Markdown to html
+
+%.html: %.md
+	$(MARKDOWN) $(MARKDOWN_FLAGS) $< > $@
+
 ###### end of rules.make ######
