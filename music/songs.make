@@ -113,7 +113,7 @@ reportVars += LPATH ASONGS ALLSONGS DIRNAMES WEB_OK_TAGS MUSTACHE
 	d=`pwd`; cd `dirname $<`; $(MAKE) $$d/$*.dvi DESTDIR=$$d
 
 %/lyrics.html: %.flk | %
-	$(FLKTRAN) -t -b $< $@
+	$(FLKTRAN) -t -b $< > $@
 
 #	The text files might get passed around loose, so we'd like them to
 #	point back to the web.  That's rather ugly, and it's done in flktran
