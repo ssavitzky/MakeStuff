@@ -90,10 +90,13 @@ all::
 #
 entry:  $(ENTRY) .draft
 
-## draft:  make a draft in the top level.  No link is needed.
+## draft:  make a draft in the top level.
+#	the .draft link isn't necessary, but we make one if it doesn't already exist
+#	(which would indicate that there's some other draft in progress)
 #	post with "make post name=<filename>"; name is required in this case
 #
 draft:	name-required $(DRAFT)
+	[ -e .draft ] || ln -s $(DRAFT) .draft
 
 $(ENTRY):
 	mkdir -p $(POST_ARCHIVE)$(MONTHPATH)
