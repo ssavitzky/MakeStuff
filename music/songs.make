@@ -59,11 +59,13 @@ ALLTEXT  = $(patsubst %,%/lyrics.txt,$(DIRNAMES)) \
 	   $(patsubst %,%/lyrics.chords.txt,$(DIRNAMES))
 
 # Indices: 
-# 	0Index.html is the index web page, 0IndexTable.html is just the
-#	 <table> element, for use in template replacement.
+# 	0IndexTable.html is the song list in a <table> element
 #	0IndexShort.html is the raw list of names linked to subdirs
-#	0IndexLong.html is the long table with descriptions
-WEBINDICES = 0Index.html 0IndexTable.html 0IndexShort.html
+#
+#  there are additional optional index targets:
+#	0Index is a full HTML page rather than a fragment
+#	0IndexLong.html is a long table with descriptions
+WEBINDICES = 0IndexTable.html 0IndexShort.html
 SUBDIR_INDICES =  $(patsubst %,%/index.html, $(DIRNAMES))
 
 # these are the optional include files that %/index.html depends on
@@ -326,7 +328,7 @@ htmlclean::
 # trying to generate lists in the lyrics directory.  That gives us better
 # control over what's included.
 
-WEBINDICES = 0Index.html 0IndexShort.html 0IndexTable.html 0IndexLong.html
+WEBINDICES = 0IndexShort.html 0IndexTable.html 0IndexLong.html
 
 .PHONY: webindices 
 webindices: $(WEBINDICES)
@@ -334,34 +336,16 @@ webindices: $(WEBINDICES)
 # indices currently broken
 all:: webindices
 
-# 0Index.html is a kludge -- don't link to it!
-#	The right thing to do is make a page called, e.g., SongIndex.html that #includes
-#	either 0IndexTable or 0IndexLong
-0Index.html: $(ALLSONGS) $(DIRNAMES) $(INDEX) $(TOOLDIR)/music/songs.make
-	@echo building $@ from WEBLYRICS
-	@echo '<html>' 					>  $@
-	@echo '<head>'					>> $@
-	@echo '<title>Song Index</title>'		>> $@
-	@echo '<link href="../site/style.css" rel="stylesheet" type="text/css">' >> $@
-	@echo '</head><body>'				>> $@
-	@echo '<nav><a href="/">[home]</a>'		>> $@
-	@echo '  / <a href="../Songs">Songs</a>'	>> $@
-	@echo '  / <a href="./">Song Index</a></nav>'	>> $@
-	@$(INDEX) -t -h $(ALLSONGS)			>> $@
-	@echo '<h5>Last update: ' `date` '</h5>'	>> $@
-	@echo '</body>'					>> $@
-	@echo '</html>' 				>> $@
-
 0IndexTable.html: $(INDEX)
 	@echo building $@ from WEBLYRICS
 	@echo '<!-- begin $@ -->'			>  $@
-	@$(INDEX) -t -h $(ALLSONGS)			>> $@
+	@$(INDEX) -t -h -l $(ALLSONGS)			>> $@
 	@echo '<!-- end $@ -->'				>> $@
 
 0IndexShort.html: 
 	@echo building $@ from directory listing:
 	@echo '<!-- begin $@ -->'			>  $@
-	@for f in `echo $(DIRNAMES) | tr ' ' "\n" | sort | uniq`; do \
+	@for f in `echo $(DIRNAMES) | tr ' ' "\n" | grep -v ".orig" | sort | uniq`; do \
 		echo '<a href="'$$f/'">'$$f'</a>' >> $@; \
 	done
 	@echo '<!-- end $@ -->'				>> $@
