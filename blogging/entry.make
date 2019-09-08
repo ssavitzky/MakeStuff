@@ -188,7 +188,7 @@ posted:
 
 ### reporting
 
-.PHONY: report-template wc wc-month wc-prev
+.PHONY: report-template wc wc-month wc-prev check
 wc:
 	$(TOOLDIR)/blogging/word-count
 
@@ -197,6 +197,11 @@ wc-v:
 
 wc-last:
 	$(TOOLDIR)/blogging/word-count -v `date -d "today - 1month" +%m`
+
+check:
+	@[ -L .draft ] || (echo .draft does not exist && false)
+	$(TOOLDIR)/blogging/check-html .draft
+
 
 reportVars := $(reportVars) name title ENTRY DRAFT
 report-template:
