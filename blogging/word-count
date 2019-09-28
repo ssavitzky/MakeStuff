@@ -16,7 +16,7 @@ usage="$0 [options] [month] print word counts for posts in a given month
 
 ### Default values
 
-m=$(date "+%m"); this_month=$m
+m=$(date "+%_m"); this_month=$m	# has to be space-padded to keep it from looking like octal
 y=$(date "+%Y"); this_year=$y
 allYear=false
 
@@ -177,7 +177,7 @@ if (( $m == $this_month && $y == $this_year)); then
     # we've already seen all the posts; clear $verbose so we don't see
     # today's listed a second time.
     verbose=
-    count-words $(expand `date "+$y$sep$m$sep%d"`)
+    count-words $(expand `date "+$y$sep$mm$sep%d"`)
     if [ $count == 1 ]; then s=" "; else s=s; fi
     echo -e  "`printf %7d $total`" words in $count post$s today
 fi
