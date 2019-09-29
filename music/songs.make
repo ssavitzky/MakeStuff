@@ -92,23 +92,38 @@ reportVars += LPATH ASONGS ALLSONGS DIRNAMES WEB_OK_TAGS MUSTACHE
 #	to specify the output file, just the output directory.
 #
 #	We also can't make %/%.pdf, because make can't handle rules with
-#	multiple wildcards on the left.
-#
-#	What we do instead is make %.pdf here, and move it to the
-#	destination directory.
+#	multiple wildcards on the left.  But the lyrics directories are
+#	in VPATH, so if the pdf already exists there, make will find it
+#	and copy it to %/.  We use cp so that the PDF in Lyrics doesn't
+#	get treated as an intermediate file and deleted.
 #
 %/lyrics.pdf: %.pdf
-	mv $< $@
+	cp $< $@
 
+#	... If Lyrics/%.pdf doesn't exist, we first make it there, then
+#	copy it here (i.e. to Songs), where the previous rule will find it
+#	because at that point % and %.pdf are in the same directory.  It
+#	gets copied, then make deletes it because it's an intermediate file.
+#
 %.pdf:	%.flk
-	d=`pwd`; cd `dirname $<`; $(MAKE) $$d/$*.pdf DESTDIR=$$d
+	d=`pwd`; cd `dirname $<`; $(MAKE) $*.pdf; cp $*.pdf $$d
 
-# We used to use %.dvi as an intermediate and run dvipdf to move it;
+# NOTE:	There are two potential problems:
+#    1. If we don't want to leave PDFs in the Lyrics directory, we would
+#	have to change "cp" to "mv" in the above rules.  That could be
+#	done with a conditional and a configuration variable.
+#    2. If we want to use different options for foo.pdf and foo/lyrics.pdf
+#	(e.g. compact vs. looseleaf) things would get more complicated.
+# 	Probably the best thing would be to make %/lyrics.flk and build
+#	the PDF in place.  That would require putting the PDF rules in a
+#	separate file, which arguably is where they belong.
+#    2a	Alternatively, we could use %.dvi as an intermediate and run dvipdf
+#	to move it (which we used to do), which means we can use lyrics.make.
 #	That _sort of_ works, but to make a dvi file we have to use
 #	latex instead of pdftex, and the two have differences.
 #
 #%/lyrics.pdf: %.dvi | %
-#	dvipdf $< $@
+	dvipdf $< $@
 # it's safe to leave the %.dvi rule here, and someone might prefer it.
 #
 %.dvi:	%.flk
