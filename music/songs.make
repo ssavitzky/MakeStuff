@@ -53,6 +53,7 @@ DIRNAMES := $(shell for f in $(subst .flk,,$(notdir $(ALLSONGS))); do echo $$f; 
 		    | grep -v -e .orig -e --)
 
 # Lists.  Just the ones we actually need
+ALLFLK   = $(patsubst %,%/lyrics.flk,$(DIRNAMES))
 ALLPDF   = $(patsubst %,%/lyrics.pdf,$(DIRNAMES))
 ALLHTML  = $(patsubst %,%/lyrics.html,$(DIRNAMES))
 ALLTEXT  = $(patsubst %,%/lyrics.txt,$(DIRNAMES)) \
@@ -89,16 +90,21 @@ reportVars += LPATH ASONGS ALLSONGS DIRNAMES WEB_OK_TAGS MUSTACHE
 # lyrics.pdf
 #	It would be better if we could make foo/lyrics.pdf directly, but
 #	there's no good way to do that because latex doesn't have a way
-#	to specify the output file, just the output directory.
+#	to specify the output file, just the output directory.  Even if
+#	we did, the default in ../Lyrics is to generate looseleaf (double
+#	sided) format.  What most people expect, and what we've been doing
+#	so far, is "compact" format, without a title page.
 #
-#	We also can't make %/%.pdf, because make can't handle rules with
-#	multiple wildcards on the left.  But the lyrics directories are
-#	in VPATH, so if the pdf already exists there, make will find it
-#	and copy it to %/.  We use cp so that the PDF in Lyrics doesn't
-#	get treated as an intermediate file and deleted.
+#	So to make looseleaf format PDFs, set LOOSELEAF to anything non-
+#	blank.   The lyrics directories are in VPATH, so if the pdf already
+#	exists there, make will find it and copy it to %/.  We use cp so
+#	that the PDF in Lyrics doesn't get treated as an intermediate file
+#	and deleted.
 #
+ifdef LOOSELEAF
 %/lyrics.pdf: %.pdf
 	cp $< $@
+endif
 
 #	... If Lyrics/%.pdf doesn't exist, we first make it there, then
 #	copy it here (i.e. to Songs), where the previous rule will find it
@@ -108,27 +114,25 @@ reportVars += LPATH ASONGS ALLSONGS DIRNAMES WEB_OK_TAGS MUSTACHE
 %.pdf:	%.flk
 	d=`pwd`; cd `dirname $<`; $(MAKE) $*.pdf; cp $*.pdf $$d
 
-# NOTE:	There are two potential problems:
-#    1. If we don't want to leave PDFs in the Lyrics directory, we would
-#	have to change "cp" to "mv" in the above rules.  That could be
-#	done with a conditional and a configuration variable.
-#    2. If we want to use different options for foo.pdf and foo/lyrics.pdf
-#	(e.g. compact vs. looseleaf) things would get more complicated.
-# 	Probably the best thing would be to make %/lyrics.flk and build
-#	the PDF in place.  That would require putting the PDF rules in a
-#	separate file, which arguably is where they belong.
-#    2a	Alternatively, we could use %.dvi as an intermediate and run dvipdf
-#	to move it (which we used to do), which means we can use lyrics.make.
+# 
+#       For compact format, we make a dvi file in Songs, which lyrics.make
+#	does using compact format, and then use dvipdf to create the PDF
+#	in the song directory.
 #	That _sort of_ works, but to make a dvi file we have to use
-#	latex instead of pdftex, and the two have differences.
+#	latex instead of pdftex, and the two have differences.  
 #
-#%/lyrics.pdf: %.dvi | %
+ifndef LOOSELEAF
+%/lyrics.pdf: %.dvi | %
 	dvipdf $< $@
-# it's safe to leave the %.dvi rule here, and someone might prefer it.
+endif
+
+#	making the dvi file here just involves setting DESTDIR.
 #
 %.dvi:	%.flk
 	d=`pwd`; cd `dirname $<`; $(MAKE) $$d/$*.dvi DESTDIR=$$d
 
+# 	The lyrics.html file is just a fragment; we use mustache to include
+#	it in the index.html file
 %/lyrics.html: %.flk | %
 	$(FLKTRAN) -t -b $< > $@
 
