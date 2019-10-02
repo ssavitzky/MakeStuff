@@ -145,9 +145,10 @@ endif
 	WEBSITE=$(WEBSITE) WEBDIR=$(MYNAME) $(FLKTRAN) -c $< $@
 
 #	This one makes a symlink to the appropriate lyric (.flk) file
-#	Best not to do it by default, because it may not be appropriate in some contexts
+#	Not done by default because doing so would require major changes to
+#	the lyrics.pdf recipe
 %/lyrics.flk: | %.flk %
-	ln -rs %.flk $@
+	ln -rsf %.flk $@
 
 ## Here we generate several types of metadata.
 
