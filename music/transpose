@@ -60,6 +60,9 @@ print STDERR "xp='$xp' use_flats='$use_flats' '$in' -> '$out'\n";
 while (<IN>) {
     my $out = "";
 
+    if (s/^(\\key\{)([^}]})//) {
+	$out .= $1 . transpose($2) . '}';
+    }
     while (s/([^\[]*)\[([^\]]+)\]//) {
 	$out .= "${1}[" . transpose($2) . "]";
     }
