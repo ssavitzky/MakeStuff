@@ -20,12 +20,14 @@
 #	DRAFTS	     	- if defined, directory where we keep drafts.  Used with Jekyll.
 #	EXT	     	- Filename extension.  Default is html; md is a popular alternative.
 #	PFX	     	- prepended to the template name.  See thanks.make for an example.
+#
+#	POSTCMD		- command to post; currently charm-wrapper, a wrapper for ljcharm
 
 ### Defaults
 
 # The default default extension is html; this lets us override the default in .config.make
 DEFAULT_EXT ?= html
-POSTCMD	?= ljpost
+POSTCMD	?= $(TOOLDIR)/blogging/charm-wrapper
 #DONT_COMMIT_DRAFT = true
 
 ## figure out what the extension for posts should be.
