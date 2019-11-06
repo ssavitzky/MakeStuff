@@ -16,6 +16,8 @@
 
 POST=charm
 MARKDOWN='kramdown -i GFM --no-hard-wrap'
+BLOGIN=mdlbear
+BLOGIN=`grep '^hlogin =' ~/.charmrc | head -1 | cut -d= -f 2 | cut -d' ' -f2`
 
 if [ "-n" == "$1" ]; then
     ACTION=no_action
@@ -90,7 +92,7 @@ read_headers () {
 } < "${1:-/dev/stdin}"
 
 if [ ! -z "$XPOST" ]; then
-    (cat $1; echo '(crossposted from mdlbear)' ) | {
+    (cat $1; echo '(crossposted from $BLOGIN)' ) | {
 	read_headers
 	JOURNAL=$XPOST
 	SUBJECT="$SUBJECT"
@@ -104,6 +106,6 @@ fi
 #  Note: this may not work if the post isn't public; it might if one puts
 #  the appropriate credentials in .netrc
 
-wget -q -O - https://mdlbear.dreamwidth.org/$(date +%Y/%m/%d/) \
+wget -q -O - https://$BLOGIN.dreamwidth.org/$(date +%Y/%m/%d/) \
    | grep 'class="entry-title"' | tail -1                      \
    | sed -E 's/^<[^>]*><[^>]*href="([^"]*)".*$/\1/'
