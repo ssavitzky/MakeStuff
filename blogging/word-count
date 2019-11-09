@@ -162,10 +162,10 @@ count-words $(expand $y$sep$mm$sep) $*
 
 # Add missing days after the last date seen.
 if (( $this_month == $m && $this_year == $y)); then    # We're doing this month
-    end=$(date +%d)
+    end=$(date +%e)
     in="this month"
 else
-    end=$(date -d "$y/$m/1 +1month -1day" +%d)
+    end=$(date -d "$y/$m/1 +1month -1day" +%e)
     in=$(date -d "$y/$m/1" +"in %B")
     if (( $this_year != $y )); then in="$in of $y"; fi
 fi
