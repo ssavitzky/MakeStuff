@@ -15,6 +15,10 @@ Picture: turkey
 Music: 
 Mood: grateful
 
-<p> 
+<p> Today I am grateful for...
+
+<ul>
+  <li>
+</ul>
 endef
 export thx_TEMPLATE
