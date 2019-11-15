@@ -82,7 +82,7 @@ export POST_ARCHIVE
 .PHONY: draft entry pre-post post
 .PHONY: from-required draft-or-entry-required name-or-entry-required name-required
 
-all:: 
+help:: 
 	@echo usage: '$(HELP)'
 
 ## entry:  make an entry for today, and link .draft
