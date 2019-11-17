@@ -142,28 +142,33 @@ from-required:
 #	The entry is not committed; that's done in post, but if it hasn't been added
 #	git mv will fail and we do a plain mv followed by git add.
 #
-#	Make a symlink from .post to the most recent entry, to make it easy to edit.
-#	Done in pre-post so that you can separate the two steps to do something like
-#	a word-count.  This works because pre-post is idempotent.
-#
-#	.draft stays around until you "make post" so that it won't require a name=
-#	if you make pre-post separately, e.g. for word count.
+#	Ensure that a .draft link to the new entry exists, e.g. if it was created
+#	with an earlier "make draft".  The .draft link stays around until you
+#	"make post", so that it won't require a name= if it's done separately,
+#	e.g. for appending an accurate word count.  It works because pre-post is
+#	idempotent.
 #
 pre-post:	name-or-entry-required draft-or-entry-required
 	if [ ! -f $(ENTRY) ]; then mkdir -p $(POST_ARCHIVE)$(MONTHPATH); 	   \
 	   git mv $(DRAFT) $(ENTRY) || ( mv  $(DRAFT) $(ENTRY); git add $(ENTRY) ) \
 	fi
-	ln -sf $(ENTRY) .post
+	ln -sf $(ENTRY) .draft
 
 # post an entry.
 #	The date is recorded in the entry, followed by the url returned by $(POSTCMD)
 #
 #	commit with -a because the draft might have been added but not committed
+#	Assuming the post succeeded, remove the .draft link and replace it with
+#	.post, which makes the most recent entry easier to find for editing.
+#
+#	Finally, grep for the Posted: line, which gets the URL printed on the
+#	terminal; most terminal emulators, e.g. gnome-terminal, let you open it.
 #
 post:	pre-post
 	url=$$($(POSTCMD) $(ENTRY)); 	\
 	   sed -i -e '1,/^$$/ s@^$$@Posted:  $(POSTED) '"$$url"'\n@' $(ENTRY)
 	rm -f .draft
+	ln -sf $(ENTRY) .post
 	git add $(ENTRY)
 	git commit -m "posted $(ENTRY)" -a
 	grep Posted: $(ENTRY) | head -1
