@@ -186,7 +186,7 @@ if ($html) {
     $BVERSE = "\n";
     $EVERSE = "\n";
     $FLKTRAN = "flktran";
-    $SomeRightsReserved = "Some Rights Reserved:  CC by-nc-sa/4.0";
+    $SomeRightsReserved = "CC by-nc-sa/4.0";
     $CCnotice = 'This work is licensed under a Creative Commons
 Attribution-Noncommercial-Share Alike 4.0 International License</a>. ';
 
