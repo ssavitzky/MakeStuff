@@ -183,7 +183,7 @@ if ($html) {
     $NP  = "\f";
     $SP  = " ";
     $AMP = "&";
-    $BVERSE = "\n";
+    $BVERSE = ""; # try this "\n";
     $EVERSE = "\n";
     $FLKTRAN = "flktran";
     $SomeRightsReserved = "CC by-nc-sa/4.0";
