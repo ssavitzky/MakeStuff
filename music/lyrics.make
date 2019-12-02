@@ -136,10 +136,10 @@ TEXINPUTS := .:$(TEXDIR):$(TEXINPUTS)
 export TEXINPUTS
 SONG_PREAMBLE = '\documentclass[$(SIZE)letterpaper]{article}'			\
 		'\usepackage[utf8]{inputenc}'                                   \
-		'\usepackage{song,zingers,zongbook}'
+		'\usepackage{song,zongbook,zingers}'
 SONG_LOOSELEAF= '\documentclass[$(SIZE)letterpaper,twoside]{article}'		\
 		'\usepackage[utf8]{inputenc}'                                   \
-		'\usepackage{song,zingers,zongbook}'
+		'\usepackage{song,zongbook,zingers}'
 
 .SUFFIX: flk
 
