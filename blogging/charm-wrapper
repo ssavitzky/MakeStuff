@@ -6,24 +6,35 @@
 #  https://stackoverflow.com/questions/6980090/how-to-read-from-a-file-or-stdin-in-bash
 #  This is a quick hack because I'm too lazy to add the functionality to charm.
 
+# The -x option crossposts to livejournal, using the alternate .charmrc-lj config file.
+# (Note that the Crosspost: header specifies a community or alternate blog on Dreamwidth.)
+
 # Note for testing.  charm won't let you post two in a row with the same subject!
 # It does not appear to be a problem for cross-posting, though.  It looks like
 # charm only archives the second (crossposted) post.
 
 # A simple test script:
 # (echo Access: private; echo Subject: test3; echo Tags: test, software; \
-#  echo "--text follows this line--" ; echo test headers) | ljpost
+#  echo "--text follows this line--" ; echo test headers) | charm-wrapper
 
 POST=charm
 MARKDOWN='kramdown -i GFM --no-hard-wrap'
 BLOGIN=mdlbear
 BLOGIN=`grep '^hlogin =' ~/.charmrc | head -1 | cut -d= -f 2 | cut -d' ' -f2`
+BHOST=dreamwidth.org
 
 if [ "-n" == "$1" ]; then
     ACTION=no_action
     shift
 else
     ACTION=""
+fi
+
+if [ "-x" == "$1" ]; then
+    RCFILE=~/.charmrc-lj
+    POST="charm -f $RCFILE"
+    BHOST=livejournal.com
+    shift
 fi
 
 case "$1" in
@@ -77,7 +88,7 @@ read_headers () {
 	esac
     done
 }
-
+q
 {
     read_headers
     # posts with local access don't get posted
@@ -91,7 +102,7 @@ read_headers () {
 
 } < "${1:-/dev/stdin}"
 
-if [ ! -z "$XPOST" ]; then
+if [ ! -z "$XPOST" ] && [ -z "$RCFILE" ]; then
     (cat $1; echo '(crossposted from $BLOGIN)' ) | {
 	read_headers
 	JOURNAL=$XPOST
@@ -104,8 +115,10 @@ fi
 
 # print out the url of the last thing we posted:
 #  Note: this may not work if the post isn't public; it might if one puts
-#  the appropriate credentials in .netrc
+#  the appropriate credentials in .netrc -> doesn't, at least not for LJ.
+#  and since my livejournal is marked adults-only, this doesn't even work for
+#  public posts on LJ.
 
-wget -q -O - https://$BLOGIN.dreamwidth.org/$(date +%Y/%m/%d/) \
+wget -q -O - https://$BLOGIN.$BHOST/$(date +%Y/%m/%d/) \
    | grep 'class="entry-title"' | tail -1                      \
    | sed -E 's/^<[^>]*><[^>]*href="([^"]*)".*$/\1/'

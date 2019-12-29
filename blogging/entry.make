@@ -173,6 +173,16 @@ post:	pre-post
 	git commit -m "posted $(ENTRY)" -a
 	grep Posted: $(ENTRY) | head -1
 
+# crosspost the latest post to LJ, for use when automatic crossposting is broken
+# this is fragile: it relies on there being two spaces after "Posted:"
+LAST_POST = $(shell if [ -e $(ENTRY) ]; then echo $(ENTRY); else readlink .post; fi)
+POSTED_URL = $(shell grep Posted: $(LAST_POST) | head -1 | cut -f5 -d' ')
+CROSSPOSTED = <p> Cross-posted from <a href=$(POSTED_URL)>$(JOURNAL)</a>
+
+xpost:
+	(sed -e 's/<cut/<lj-cut/' -e 's@</cut@</lj-cut@'$(LAST_POST); \
+		echo "$(CROSSPOSTED)") | $(POSTCMD) -x
+
 POST_URL=$(shell wget -q -O - https://$(JOURNAL)/$(DAYPATH)  	\
          | grep 'class="entry-title"' | tail -1                 \
          | sed -E 's/^<[^>]*><[^>]*href="([^"]*)".*$$/\1/')
@@ -180,6 +190,8 @@ POST_URL=$(shell wget -q -O - https://$(JOURNAL)/$(DAYPATH)  	\
 posted:
 	sed -i -e '1,/^$$/ s@^$$@Posted:  $(POSTED) $(POST_URL)\n@' $(ENTRY)
 	git commit -m "posted $(ENTRY)" $(ENTRY)
+	rm -f .draft
+	ln -sf $(ENTRY) .post
 	grep Posted: $(ENTRY) | head -1
 
 # make .draft point to today's entry
@@ -188,7 +200,7 @@ posted:
 
 ### reporting
 
-.PHONY: report-template wc wc-month wc-prev check
+.PHONY: report-template wc wc-month wc-prev xp-text check
 wc:
 	$(TOOLDIR)/blogging/word-count
 
@@ -197,6 +209,9 @@ wc-v:
 
 wc-last:
 	$(TOOLDIR)/blogging/word-count -v `date -d "today - 1month" +%m`
+
+xp-text:
+	echo "$(CROSSPOSTED)"
 
 check:
 	@[ -L .draft ] || (echo .draft does not exist && false)
