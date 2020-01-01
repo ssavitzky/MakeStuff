@@ -180,7 +180,7 @@ POSTED_URL = $(shell grep Posted: $(LAST_POST) | head -1 | cut -f5 -d' ')
 CROSSPOSTED = <p> Cross-posted from <a href=$(POSTED_URL)>$(JOURNAL)</a>
 
 xpost:
-	(sed -e 's/<cut/<lj-cut/' -e 's@</cut@</lj-cut@'$(LAST_POST); \
+	(sed -e 's/<cut/<lj-cut/' -e 's@</cut@</lj-cut@' $(LAST_POST); \
 		echo "$(CROSSPOSTED)") | $(POSTCMD) -x
 
 POST_URL=$(shell wget -q -O - https://$(JOURNAL)/$(DAYPATH)  	\
