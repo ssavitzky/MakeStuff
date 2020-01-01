@@ -1,5 +1,8 @@
 #!/bin/sh
+
+BLOG=${1:-mdlbear.dreamwidth.org}
+
 ### this prints out the URL of the last post you made today:
-    wget -q -O - https://mdlbear.dreamwidth.org/$(date +%Y/%m/%d/)  \
+    wget -q -O - https://$BLOG/$(date +%Y/%m/%d/)  \
        | grep 'class="entry-title"' | tail -1                    \
        | sed -E 's/^<[^>]*><[^>]*href="([^"]*)".*$/\1/'
