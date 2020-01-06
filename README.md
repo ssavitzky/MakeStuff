@@ -15,11 +15,14 @@ Annotated Contents
 ### Directories
 
  [blogging](blogging/) (see blogging/README.md for details.)
-:   `blogging.make` provides make targets for creating blog entries and
-    posting them to Dreamwidth (a Livejournal clone).
+:   `blogging.make` provides make targets and templates for creating blog
+	entries and posting them to Dreamwidth (a Livejournal clone) or Jekyll.
+	It also includes support for activity logs (to.do and yyyy/mm.done).
 
  [deployment](deployment/) 
-:   Git hooks and related tools for efficient website deployment.  
+:   Git hooks and related tools for efficient website deployment.
+    Mostly these are designed around a web host that can build the site
+    from the the git working tree
 
  [make](make/) 
 :   The general-purpose `*.make` files included by `Makefile`.
@@ -64,8 +67,10 @@ The `Makefile` looks for the following local include files:
     for specific targets with dependencies.
 
  `*/[.]config.make` 
-:   This contains make rules, definitions, and dependencies that apply to the
-    current directory.
+:   This contains make rules, definitions, dependencies, and `include`
+	statements that apply to the current directory.  A local `.config.make` is
+	_not_ inherited by subdirectories.  Files in `blogging`  and `music` are
+	normally included here.
 
  `*/[.]depends.make` 
 :   This contains make rules, definitions, and dependencies that apply to the
