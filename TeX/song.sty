@@ -355,11 +355,17 @@ Attribution-Noncommercial-Share Alike 4.0 License.}
 %%%	We force a pagebreak here to ensure that the previous song
 %%%	doesn't pick up the new filename in its header and footer.
 %%%     Songs now consist only of a song environment, so we don't have to
-%%%	turn off \documentstyle and \begin{document}...\end{document}.
+%%%     turn off \documentstyle and \begin{document}...\end{document}.
+%%%
+%%%     Reset the footnote counter so that footnote numbers in the songbook
+%%%     will match the ones in the looseleaf format.  They're mostly used
+%%%     as links to a CC license; having them increase without limit is
+%%%     silly.
 %%%
 \def\file#1{\newpage\begingroup
   \def\theFile{#1}
   \def\thisPage{\thepage}
+  \setcounter{footnote}{0}
   \input{#1}
   \addcontentsline{toc}{Song}{\hbox{\hbox to 2em{\hss\thisPage}%
       \hbox to 3em{\hss\theTiming}\;\hbox{\theSong\hss}}}
