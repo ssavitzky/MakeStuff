@@ -24,14 +24,38 @@
 \evensidemargin 0in
 \textwidth 6.5in
 
-% First cut at formatting with fancyhdr
+%%% Default formatting with fancyhdr
 % should define \inner and \outer for, e.g., ER,OL if twosided, else OL
 
+
+%%%
+%%% Special Pages, Page Headings 
+%%%
+
+%%% Define \OUT, \MID, \INN for use in fancyheaders:
+\if@twoside
+  \newcommand{\OUT}{EL,OR}
+  \newcommand{\MID}{EC,OC}
+  \newcommand{\INN}{ER,OL}
+  \newcommand{\LFT}{EL,OL}
+  \newcommand{\RHT}{ER,OR}
+\else
+  \newcommand{\OUT}{OR}
+  \newcommand{\MID}{OC}
+  \newcommand{\INN}{OL}
+  \newcommand{\LFT}{OL}
+  \newcommand{\RHT}{OR}
+\fi
+
+%%% Note:  page numbers are inconspicuous by design; they're not particularly
+%%% useful in a binder that new songs are frequently added to between
+%%% printings.
+%%%
 \pagestyle{fancy}
-\fancyhead[EL]{{\bf\large\thepage \hskip0.5em\theSong}}
-\fancyhead[OR]{{\bf\large\theSong\hskip0.5em\thepage}}
+\fancyhead[\OUT]{{\bf\large\theSong}}
 \fancyhead[ER]{\chord{\theTiming\hskip 1em\bf\theKey}}
 \fancyhead[OL]{\chord{\bf\theKey}\hskip 1em\theTiming}
+\fancyfoot[\MID]{\thepage}
 \fancyfoot[\INN]{\HSXlogo}
 \fancyfoot[\OUT]{FiLkTeX songbook}
 \renewcommand{\footrulewidth}{0.4pt}
