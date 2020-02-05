@@ -156,10 +156,10 @@ SONG_LOOSELEAF= '\documentclass[$(SIZE)letterpaper,twoside]{article}'		\
 %.txt:	%.flk
 	$(FLKTRAN) $< $@
 
-%.chords.txt: %.flk | %
+%.chords.txt: %.flk
 	WEBSITE=$(WEBSITE) WEBDIR=$(MYNAME) $(FLKTRAN) -c $< $@
 
-%.html: %.flk | %
+%.html: %.flk
 	WEBSITE=$(WEBSITE) WEBDIR=$(MYNAME) $(FLKTRAN) -t -b $< $@
 
 # Build into another directory, for constructing websites and songbooks.
