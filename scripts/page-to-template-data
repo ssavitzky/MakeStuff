@@ -148,6 +148,7 @@ def extract_body_contents(file):
     start_cut = re.compile(r'<cut\s')
     get_cut = re.compile(r'^(.*)<cut\s+text="([^"]*)"[^>]*>')
     end_cut = re.compile(r'^(.*)</cut\s*>')
+    colophon= re.compile(r'^<p.*class="colophon"')
     line = file.readline()
     while True:
         if re.search(r'<body', line):
@@ -164,6 +165,8 @@ def extract_body_contents(file):
             (line, match) = get_complete_tag(end_cut, line, file)
             body_text.append(match.group(1))
             continue;
+        # This would be a good place to check for and remove a colophon
+        
         # we also ought to replace <user name=NAME> and <lj user=NAME>
         # doing that right would require a more sophisticated parser.
         body_text.append(line)        
