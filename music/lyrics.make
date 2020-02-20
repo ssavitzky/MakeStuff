@@ -185,6 +185,8 @@ all::	$(ALLPDF)
 	@echo building PDF files
 all::	$(PRINT)
 
+zpdf:	$(ZPDF)
+
 # zongbook.pdf depends on all the files it references 
 zongbook.pdf: zongbook.tex $(ZONGS) $(TEXDIR)/song.sty
 
