@@ -46,7 +46,7 @@ ifndef name			# if we don't have a name
   ifdef title			# but we do have a title, slugfy it.
 	name := $(shell echo "$(title)" | 		\
 	  sed  -e 's/"//g' -e 's/\[.*\]//' 		\
-          -e 's/[ ]\+/-/g' -e 's/^-*//'  -e s/-*$$// 	\
+          -e 's/[ -]\+/-/g' -e 's/^-*//'  -e s/-*$$// 	\
           -e 's/[^-a-zA-Z0-9]//g' -e 's/^the-//i' | tr '[A-Z]' '[a-z]')
   endif
 endif
