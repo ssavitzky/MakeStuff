@@ -61,7 +61,7 @@ ifndef ENTRY
   ifdef name
     ENTRY := $(subst .$(EXT).$(EXT),.$(EXT),$(POST_ARCHIVE)$(DAYPATH)--$(name).$(EXT))
     ifndef title
-	title := $(shell <<<"$(name)" tr '-' ' ' )
+	title := $(shell echo "$(name)" | tr '-' ' ' )
     endif
   else ifneq ($(linked_draft),)
     ENTRY := $(linked_draft)
