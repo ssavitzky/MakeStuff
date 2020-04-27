@@ -20,7 +20,7 @@
 POST=charm
 MARKDOWN='kramdown -i GFM --no-hard-wrap'
 BLOGIN=mdlbear
-BLOGIN=`grep '^hlogin =' ~/.charmrc | head -1 | cut -d= -f 2 | cut -d' ' -f2`
+BLOGIN=`grep '^login =' ~/.charmrc | head -1 | cut -d= -f 2 | cut -d' ' -f2`
 BHOST=dreamwidth.org
 
 if [ "-n" == "$1" ]; then
