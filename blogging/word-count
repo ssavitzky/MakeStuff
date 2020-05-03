@@ -133,6 +133,8 @@ if $allYear; then
     yearWords=0
     yearCount=0
     for month in `seq 1 12`; do
+	(( $this_month < $month )) && (($this_year == $y)) && break
+	(( $month == 1 )) || [[ -z $verbose ]] || echo # blank line between months
 	mm=$(printf "%02d" $month)
 	count-words $(expand $y$sep$mm$sep)
 	yearWords=$(( $yearWords + $total ))
@@ -141,7 +143,7 @@ if $allYear; then
 	     in $y/$mm "(average $avg/post)"
     done
     avg=$(($yearWords / $yearCount))
-    echo '----------------------------------'
+    echo '---------------------------------'
     echo -e  "`printf %7d $yearWords`" words in $yearCount posts total \
 	 in $y "(average $avg/post)"
     echo '</pre>'
