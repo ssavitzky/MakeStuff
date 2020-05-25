@@ -644,6 +644,7 @@ sub deTeX {
 	   || $txt =~ /\\(ul|underline|link|subsection|subsubsection)\{/
 	   || $txt =~ /\\(emph|spoken)\{/
 	   || $txt =~ /\\(subsection|subsubsection)\*[^\{]*\{/
+	   || $txt =~ /\\(hskip)/
       ) {
 	my $tag = $1;
 	if ($tables && ($tag =~ /(em|bf|tt)/) && $txt =~ /\{\\$tag[^\}\[]*\[/) {
@@ -699,6 +700,15 @@ sub deTeX {
 	if ($tag eq "subsubsection") {
 	    $txt =~ s/\\subsubsection\*?\{/$SUBSUB/;
 	    $txt =~ s/\}/$_SUBSUB/;
+	}
+	if ($tag eq "hskip") {
+	    $txt =~ /\\hskip([0-9+])em/;
+	    print STDERR "hskip $1\n";
+	    my $sp = "";
+	    for (my $d = $1; $d > 0; $d--) {
+		$sp .= $SP;
+	    }
+	    $txt =~ s/\\hskip([0-9+])em/$sp/;
 	}
     }
     $txt =~ s/\\hfill//g;
