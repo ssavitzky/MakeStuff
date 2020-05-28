@@ -74,9 +74,14 @@ DATEDIRS = $(shell for d in $(ALLDIRS); do echo $$d | grep ^[0-9]; done)
 ### Paths for date-based file creation
 #   Defined using "=" for efficiency -- they are expanded only if used.
 #
-DAYPATH   = $(shell date "+%Y/%m/%d")
-MONTHPATH = $(shell date "+%Y/%m")
-MMDDPATH  = $(shell date "+%Y/%m%d")
+YYYY := $(shell date "+%Y")
+MM := $(shell date "+%m")
+DD := $(shell date "+%d")
+
+MONTHPATH = $(YYYY)/$(MM)
+DAYPATH   = $(MONTHPATH)/$(DD)
+MMDDPATH  = $(YYYY)/$(MM)$(DD)
+
 #
 # Timestamps
 #
