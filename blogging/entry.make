@@ -198,6 +198,45 @@ posted:
 .draft:: $(ENTRY)
 	ln -sf $< $@
 
+### Operations involving un-posted entries.
+#	RECENT_ENTRIES contains the names of all entries in the last 2 months.
+#	look back that far because we might be at the start of a month.
+RECENT_ENTRIES = $(shell for f in $$(ls -d $(POST_ARCHIVE)2*/* | tail -2); \
+			     do ls $$f/*; done)
+#	RECENT_DRAFTS is the (possibly empty) set of entries that haven't been posted
+RECENT_DRAFTS  = $(shell for g in $(RECENT_ENTRIES); \
+			     do grep -q Posted: $$g || echo $$g; done)
+MOST_RECENT_DRAFT = $(lastword $(RECENT_DRAFTS))
+
+## redraft:  (retrieve draft) Set .draft to the most recent unposted entry, if any.
+#	This is mainly for setting .draft after pulling a commit that contains
+#	a draft entry
+.PHONY: redraft updraft
+redraft:
+	@if [ ! -z "$(MOST_RECENT_DRAFT)" ]; then	\
+	    ln -sf $(MOST_RECENT_DRAFT) .draft;		\
+	    echo .draft "->"`readlink .draft`;		\
+	else						\
+	    echo there are no draft entries to link;	\
+	    rm -f .draft;				\
+	fi
+
+## updraft:  Move the most recent draft, if any, to today's path
+updraft:  redraft
+	@if [ -e .draft ]; then							\
+	    if readlink .draft | grep -q $(DAYPATH); then			\
+	      echo current draft is up to date;					\
+	    else								\
+	      today=$$(readlink .draft 						\
+		| sed -e s@[0-9][0-9][0-9][0-9]/[0-9][0-9]/[0-9][0-9]@$(DAYPATH)@); \
+	      mv $$(readlink .draft) $$today;					\
+	      ln -sf $$today .draft;						\
+	      echo .draft "->"`readlink .draft`;				\
+	    fi									\
+	else									\
+	    echo no draft to update;						\
+	fi
+
 ### reporting
 
 .PHONY: report-template wc wc-month wc-prev xp-text check
