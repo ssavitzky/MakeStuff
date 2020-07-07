@@ -85,7 +85,7 @@ include $(MFDIR)/targets.make
 ### report-vars - list important make variables
 #   Down at the end in case any of the lists needs to get appended to.
 
-.PHONY: report-vars report-set-vars report-all-vars
+.PHONY: report-vars report-set-vars report-raw-vars
 filteredVars = $(foreach v, $(reportVars), $(if $($(v)), $(v)))
 filteredStrs = $(foreach v, $(reportStrs), $(if $($(v)), $(v)))
 
