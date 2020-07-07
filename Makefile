@@ -85,7 +85,7 @@ include $(MFDIR)/targets.make
 ### report-vars - list important make variables
 #   Down at the end in case any of the lists needs to get appended to.
 
-.PHONY: report-vars
+.PHONY: report-vars report-set-vars report-all-vars
 filteredVars = $(foreach v, $(reportVars), $(if $($(v)), $(v)))
 filteredStrs = $(foreach v, $(reportStrs), $(if $($(v)), $(v)))
 
@@ -95,7 +95,10 @@ report-vars::
 	@echo -e "" $(foreach v,$(filteredVars),$(v)=$($(v)) "\n")
 	@echo -e "" $(foreach v,$(filteredStrs),$(v)=\""$($(v))"\" "\n")
 
-report-all-vars:
-	@$(foreach v,$(sort $(.VARIABLES)),$(info $(v)="$(value $(v))"  ))
+report-set-vars:
+	@$(foreach v,$(sort $(.VARIABLES)),$(if $(value $(v)),$(info $(v)="$($(v))")))
+
+report-raw-vars:	# note that this does not expand recursive variables
+	@$(foreach v,$(sort $(.VARIABLES)),$(info $(v)="$(value $(v))"))
 #
 ###### End of MakeStuff/Makefile.  Thanks for playing. ######
