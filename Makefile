@@ -6,6 +6,11 @@
 #
 ###
 
+
+### Basic configuration stuff:
+#	since we're requiring GNU make, there's no good reason not to require bash, too.
+SHELL = /bin/bash
+
 ### MakeStuff:  Figure out where we are and where the MakeStuff is: 
 #   BASEDIR is the directory that contains it, possibly as a symlink.
 #   Note that the former name of MakeStuff was Tools, but now that all active instances
@@ -87,7 +92,10 @@ filteredStrs = $(foreach v, $(reportStrs), $(if $($(v)), $(v)))
 report-vars::
 	@echo "" $(foreach v,$(varsLine1), $(v)=$($(v)) )
 	@echo "" $(foreach v,$(varsLine2), $(v)=$($(v)) )
-	@echo  "" $(foreach v,$(filteredVars),$(v)=$($(v)) "\n")
-	@echo "" $(foreach v,$(filteredStrs),$(v)=\""$($(v))"\" "\n")
+	@echo -e "" $(foreach v,$(filteredVars),$(v)=$($(v)) "\n")
+	@echo -e "" $(foreach v,$(filteredStrs),$(v)=\""$($(v))"\" "\n")
+
+report-all-vars:
+	@$(foreach v,$(sort $(.VARIABLES)),$(info $(v)="$(value $(v))"  ))
 #
-###### End of Tools/Makefile.  Thanks for playing. ######
+###### End of MakeStuff/Makefile.  Thanks for playing. ######
