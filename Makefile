@@ -31,8 +31,7 @@ endif
 ### TOOLDIR:  absolute path to MakeStuff.  All scripts, include files, and so on
 #   are located in TOOLDIR or its subdirectories.
 #
-TOOLDIR := $(BASEDIR)/$(shell if [ -d $(BASEDIR)/MakeStuff/make ]; then	\
-				 echo MakeStuff; else echo Tools; fi	)
+TOOLDIR := $(BASEDIR)/MakeStuff
 
 ### From this point we can start including stuff from TOOLDIR/make. 
 
@@ -55,10 +54,9 @@ include $(TOOLDIR)/make/rules.make
 #	 include files as well, so that's no longer a consideration.
 
 ### all -- the default target; must come first or confusion reigns.
-#	(actually, that's not entirely true:  we could set the default
-#	 target explicitly, and then it wouldn't matter.  That, however,
-#	 could confuse things for subdirectories that get this by
-#	 inclusion rather than symlinking. So we don't.)
+#	(Actually, that's not entirely true:  we could set the default
+#	 target explicitly, and then it wouldn't matter.  By leaving
+#	 it unspecified, we allow individual projects to set it.)
 
 .PHONY: all
 all::

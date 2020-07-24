@@ -9,39 +9,30 @@ MARKDOWN_FLAGS= -i GFM --no-hard-wrap -o html
 MFDIR	= $(TOOLDIR)/make
 
 # Compute relative paths to BASEDIR and TOOLDIR
-TOOLREL:= $(shell if [ -e MakeStuff ]; then echo MakeStuff; 	\
-		  elif [ -e Tools ]; then echo Tools;		\
-		  else d=""; while [ ! -d $$d/MakeStuff ] && [ ! -d $$d/Tools ]; \
-				do d=../$$d; done; 				\
-		       if [ -d  $$d/MakeStuff ]; then echo $${d}MakeStuff;	\
-						 else echo $${d}Tools; fi fi	)
-ifeq ($(TOOLREL),MakeStuff)
-      BASEREL:= ./
-else
-ifeq ($(TOOLREL),Tools)
-      BASEREL:= ./
-else
-      BASEREL:= $(dir $(TOOLREL))
-endif
-endif
+TOOLREL:= $(shell realpath --relative-to=. $(TOOLDIR))
+BASEREL:= $(shell realpath --relative-to=. $(BASEDIR))
 
 ### Rsync upload: DOTDOT is the path to this directory on $(HOST).
 #	Either can -- and should -- be overridden in the local config.make
 
 #	This hack works because the parent of our whole deployment tree is
-#	either /vv or ~/vv here, and ~/vv on the host.
-DOTDOT  := $(shell echo $(MYDIR) | sed s/^.*vv/vv/)
+#	either /vv or ~/vv here, and ~/vv on the host.  We can get away with
+#	using a recursive variable because DOTDOT and HOST are only used with
+#	the rsync* targets.
+DOTDOT	= $(shell echo $(MYDIR) | sed s/^.*vv/vv/)
 
 #	HOST is computed on the assumption that we're deploying to the same host
 #	that we're getting Tools from, which, as they say, works on my machine
-#	but is otherwise a bad assumption.
-HOST	 = $(shell cd $(TOOLDIR); git remote -v|grep origin|head -1 \
+#	but is otherwise a bad assumption.  We can't just use `git remote` in
+#	this directory because most of the directories we need rsync for aren't
+#	under git control, usually because they contain media files.
+HOST	= $(shell cd $(TOOLDIR); git remote -v|grep origin|head -1 \
 		  |cut -d ":" -f 1|cut -f 2)
 
 #	Note that we exclude git repositories -- those should be synchronized
 #	using git.  It is possible to use both git and rsync to push a tree
 #	containing large files.
-EXCLUDES := --exclude=Tracks --exclude=Master --exclude=Premaster \
+EXCLUDES = --exclude=Tracks --exclude=Master --exclude=Premaster \
 	    --exclude=\*temp --exclude=.audacity\* --exclude=.git
 #
 ###
