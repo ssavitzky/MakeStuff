@@ -65,8 +65,10 @@ deploy-rgit::
 push:	all push-this push-r
 
 commit:: | $(GIT_REPO)
-	-if $(commit_msg_overridden); then :; else msg_prefix="on "; fi;	\
-	 git commit -a -m "$${msg_prefix}$(COMMIT_MSG)" $(COMMIT_OPTS)
+	@if $(commit_msg_overridden); then :; else msg_prefix="on "; fi;	\
+	 if [ -z "`git status --porcelain`" ]; then echo Up to date.;		\
+	   else git commit -a -m "$${msg_prefix}$(COMMIT_MSG)" $(COMMIT_OPTS);	\
+	fi
 
 push-this:: | $(GIT_REPO)
 	-@if $(commit_msg_overridden); then :; else msg_pfx="Push from "; fi;	\
