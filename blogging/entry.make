@@ -218,7 +218,7 @@ redraft:
 	@most_recent_draft=$(MOST_RECENT_DRAFT);			\
 	if [ ! -z "$$most_recent_draft" ]; then				\
 	    ln -sf $$most_recent_draft .draft;				\
-	    echo most recent unposted entry is`readlink .draft`;	\
+	    echo .draft '->' `readlink .draft` '(most recent entry)';	\
 	else								\
 	    echo there are no unposted entries to link;			\
 	    rm -f .draft;						\
