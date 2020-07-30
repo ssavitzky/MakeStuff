@@ -3,15 +3,21 @@
 # flktran [options] infile outfile
 #	Perform format translation on filksong files.    
 
+# ChordPro: TODO
+#   split (Key\capoN) into {key Key} and {capo N}
+#   handle {chorus} and similar inline metadata
+
 ### Print usage info:
 sub usage {
     print "$0 [options] infile[.flk] [outfile].ext\n";
     print "	-b -bare	bare lyrics -- no headings\n";
     print "	-c -chords	output chords\n";
     print "	-h -html	output html\n";
+    print "	-n -dryrun	no action (dry run)\n";
     print "	-t -tables	use tables (implies -h -c)\n";
     print "	-v	verbose\n";
     print " Formats (extensions): \n";
+    print "	cho	ChordPro (also chord, chordpro, or cpro)\n";
     print "	flk	FlkTeX	(input; default)\n";
     print "	html	HTML\n";
     print "	tex	LaTeX -- sources .flk file\n";
@@ -29,12 +35,12 @@ $options = "";			# LaTeX style options
 $tables  = 0;			# use tables for HTML?
 $verbose = 0;
 $chords	 = 0;
+$dryrun  = 0;
 
 ### Adjustable parameters:
 
 $TABSTOP = 4;			# tabstop for indented constructs
 $WIDTH   = 72;			# line width for centering
-$AUTHOR  = "Stephen R. Savitzky"; # Author
 
 ### Variables set from environment:
 
@@ -46,12 +52,11 @@ $WEBDIR  =~ s|/$||;
 
 $indent  = 0;			# current indentation level
 $plain   = 0;			# true when inside plain (non-chorded) text
+$chorus  = 0;			# true inside a chorus or bridge
 
 $verse   = 0;			# number of verses seen so far
-$vlines  = 0;			# the number of lines in the current 
-				#    verse or refrain. 
-$plines  = 0;			# the number of lines in the current
-				#    plain text block.
+$vlines  = 0;			# the number of lines in the current verse or chorus
+$plines  = 0;			# the number of lines in the current text block
 $header  = 0;			# true after header done.
 
 ### Variables set from song macros:
@@ -84,6 +89,7 @@ while ($ARGV[0] =~ /^\-/) {
     elsif ($ARGV[0] eq "-t"|| $ARGV[0] eq "-tables") { 
 	shift; $tables = 1; $chords = 1; $html = 1; }
     elsif ($ARGV[0] eq "-v"|| $ARGV[0] eq "-verbose") { shift; $verbose = 1; }
+    elsif ($ARGV[0] eq "-n"|| $ARGV[0] eq "-dryrun") { shift; $dryrun = 1; }
     else { usage; die "unrecognized option $1\n"; }
 }
 
@@ -95,19 +101,26 @@ if ($html) { $outfmt = "html"; }
 
 # If $outfile ends in /, it's a directory.  In that case, the output
 # goes into the corresponding directory, in a file called lyrics.html
-
 if ($outfile =~ /\.html$/) { $outfmt = "html"; $html = 1; }
+if ($outfile =~ /\.c(h|pr)o[a-z]*$/) { $outfmt = "cpro"; $cpro = 1; $chords = 1; }
 if ($outfile && $outfile !~ /\./ && $outfile !~ /\/$/ && $outfmt) {
     $outfile .= ".$outfmt";
 }
+# The extension-handling and name-handling stuff is a mess, but we'll save
+# any major changes for the grand refactoring.  Right now we just want
+# to be able to handle ChordPro
 
 $html = $outfmt eq "html";
+$tables = 0 unless $html;
+
 $outfile =~ s|/lyrics.html$|/|;
+$outfile =~ s/^\.[a-z]+$//;	# just an extension: output goes to stdout
 
 if ($outfile =~ m|^(.*/)?([^/]+)(\.[^./]+)$|) {
     $filebase = "$2";
     $filedir  = ($1 eq "")? "." : $1;
     $shortname= $2;
+    $extension= $3;		# note that the extension includes the final "."
     $filename = "$2$3";
     $htmlfile = "$filebase.html";
 } elsif ($outfile =~ m|^(.*/)?([^/]+)/$|) {
@@ -129,11 +142,15 @@ if ($WEBSITE) {
 if ($verbose) {
     print STDERR "  infile=$infile; outfile=$outfile; format=$outfmt\n";
     print STDERR "  filedir=$filedir; filebase=$filebase; htmlfile=$htmlfile\n";
+    print STDERR "  html=$html; tables=$tables; cpro=$cpro; plain=$plain\n";
 }
+
+if ($dryrun) { exit 0; }
 if ($infile) { open(STDIN, $infile); }
 if ($outfile) { open(STDOUT, ">$outfile"); }
 
 ### Formatting constants:
+#   After the refactoring, these ought to end up as hash keys
 if ($html) {
     $EM  = "<em>";
     $_EM = "</em>";
@@ -164,6 +181,31 @@ if ($html) {
  ';
     $CCnotice = 
 '<a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/80x15.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License</a>.';
+} elsif ($cpro) {
+    $EM  = "_";			# there really isn't a good way to do \em, \bf, \tt, etc.
+    $_EM = "_";			# in ChordPro without referring to actual fonts.  :P
+    $BF  = "**";		# so use markdown and hope the app can render it.
+    $_BF = "**";		# It's still understandable even if not rendered.
+    $TT  = "`";
+    $_TT = "`";
+    $UL  = "_";
+    $_UL = "_";
+    $SPOKEN  = "{comment_italic: (spoken):";
+    $_SPOKEN = "}";
+    $SUBSEC  = "{textsize: 150%}";
+    $_SUBSEC = "{textsize: 100%}";;
+    $SUBSUB  = "{textsize: 120%}";
+    $_SUBSUB  = "{textsize: 100%}";
+    $NL  = "\n";
+    $NP  = "{new_page}";
+    $SP  = " ";
+    $AMP = "&";
+    $BVERSE = "{start_of_verse}\n"; # try this "\n";
+    $EVERSE = "{end_of_verse}\n";
+    $FLKTRAN = "flktran";
+    $SomeRightsReserved = "CC by-nc-sa/4.0";
+    $CCnotice = 'This work is licensed under a Creative Commons
+Attribution-Noncommercial-Share Alike 4.0 International License</a>. ';
 } else {
     $EM  = "_";
     $_EM = "_";
@@ -189,7 +231,6 @@ if ($html) {
     $SomeRightsReserved = "CC by-nc-sa/4.0";
     $CCnotice = 'This work is licensed under a Creative Commons
 Attribution-Noncommercial-Share Alike 4.0 International License</a>. ';
-
 }
 
 ### === Dispatch on input format:
@@ -206,7 +247,7 @@ while (<STDIN>) {
     elsif (/\\subtitle/)  	{ $subtitle = getContent($_); }
     elsif (/\\key/)  		{ $key = getContent($_); }
     elsif (/\\tags/)		{ $tags = getContent($_); }
-    elsif (/\\category/)	{ $tags = getContent($_); }
+    elsif (/\\category/)	{ $tags = getContent($_); }  # category -> tags
     elsif (/\\dedication/)	{ $dedication = getContent($_); }
     elsif (/\\license/) 	{ $license = getContent($_); }
     elsif (/\\timing/)  	{ $timing = getContent($_); }
@@ -222,10 +263,10 @@ while (<STDIN>) {
 
     # Environments: 
 
-    elsif (/\\begin\{refrain/)	{ begRefrain(); } # Refrain (deprecated)
-    elsif (/\\end\{refrain/)	{ endRefrain(); }
-    elsif (/\\begin\{chorus/)	{ begRefrain(); } # chorus (same as refrain for now)
-    elsif (/\\end\{chorus/)	{ endRefrain(); }
+    elsif (/\\begin\{refrain/)	{ begChorus(); } # Refrain (deprecated; use chorus)
+    elsif (/\\end\{refrain/)	{ endChorus(); }
+    elsif (/\\begin\{chorus/)	{ begChorus(); } # Chorus
+    elsif (/\\end\{chorus/)	{ endChorus(); }
     elsif (/\\begin\{bridge/)	{ begBridge(); }  # Bridge
     elsif (/\\end\{bridge/)	{ endBridge(); }
     elsif (/\\begin\{note/)	{ begNote(); } 	  # Note
@@ -256,6 +297,8 @@ while (<STDIN>) {
 ###	Each of the following routines handles a LaTeX macro.
 ###
 
+# after the refactoring, tag/cpro boilerplate ought to be functions
+
 ### Begin a song:
 ###	Stash the title, put out the header.
 sub begSong {
@@ -277,6 +320,10 @@ sub begSong {
 	    . ($sitename? "<a href='$WEBSITE'>$sitename</a>" : "")
 	    . expandPath("$WEBDIR/$htmlfile") . $alinks . "</h3>\n";
     }
+    if ($cpro) {
+	# maybe we should put out {new_song}?
+	print "{new_song}\n";
+    }
 }
 
 ### End a song:
@@ -292,6 +339,10 @@ sub endSong {
 	if ($cvsid) { print "   <i>$cvsid</i>\n"; }
 	print "</small></p>\n";
 	print "</body></html>\n" ;
+    } elsif ($cpro) {
+	if ($WEBSITE) {
+	    print "{meta: website $WEBSITE/$WEBDIR/$filedir$filebase}\n";
+	}
     } else {
 	if ($WEBSITE) {
 	    print "\n\nOnline:\n";
@@ -303,16 +354,20 @@ sub endSong {
 
 ### Begin a verse:
 ###	Called before processing the first line in the new verse.
+###	Note that in HTML, chorus and bridge are treated as (unnumbered) verses
+###     In ChordPro, verses, choruses, and bridges have different start/end tags.
 sub begVerse {
-    print $BVERSE;
-    $verse ++;			# bump the verse count.
     $vlines = 0;
+    print $BVERSE unless ($cpro && $chorus);
+    $verse ++ unless $chorus;			# bump the verse count.
 }
 
 ### End a verse:
 ###	Only called if there are actually lines in it.
 sub endVerse {
-    print $EVERSE;
+    if ($vlines) {
+	print $EVERSE unless ($cpro && $chorus);
+    }
     $vlines = 0;
 }
 
@@ -334,8 +389,19 @@ sub blankLine {
 ### Handle an inset
 sub doInset {
     endVerse();
+    my $content = getContent($_, $TABSTOP);
     if ($html) { print "<blockquote><i>\n"; }
-    indentLine(getContent($_, $TABSTOP) . "\n", $TABSTOP);
+    if ($cpro) {
+	if ($content =~ /^(refrain|chorus)$/i) {
+	    indentLine('{chorus', $TABSTOP);
+	} else {
+	    indentLine("{comment_italic: $content", $TABSTOP);
+	}
+	print "}"
+    } else {    
+	indentLine($content, $TABSTOP);
+    }
+    print "\n";
     if ($html) { print "</i></blockquote>\n"; }
 }
 
@@ -346,31 +412,47 @@ sub doTailnote {
     indentLine(getContent($_, 0) . "\n");
 }
 
-### Begin a refrain:
-sub begRefrain {
+### Begin a chorus:
+sub begChorus {
     my ($isBridge) = @_;
     my $cssClass = $isBridge? "bridge" : "chorus";
     if ($vlines) { endVerse(); }
+    print "\n";
     if ($html) { print "<blockquote class='$cssClass'>\n" if ($tables); }
+    if ($cpro) {
+	print "{start_of_$cssClass}\n";
+	# chordpro (the reference implementation) treats a bridge just like a verse
+	# so we add a comment to distinguish it.
+	print "{comment_italic: bridge:}\n" if ($isBridge);
+    }
     $indent += $TABSTOP;
+    $chorus ++;
     # Note that begVerse will get called when the first line appears,
     # so we don't have to deal with verse count, line count, or <pre>.
 }
 
-### End a refrain:
-sub endRefrain {
+### End a chorus:
+#   (also called a refrain; that usage is being phased out.)
+sub endChorus {
+    my ($isBridge) = @_;
+    my $cssClass = $isBridge? "bridge" : "chorus";
     if ($html) { 
 	endVerse(); 
-	print "</blockquote>" if ($tables);
+	print "</blockquote>\n" if ($tables);
+    }
+    if ($cpro) { 
+	endVerse();
+	print "{end_of_$cssClass}\n"; 
     }
     print "\n"; 
     $vlines = 0;
+    $chorus --;
     $indent -= $TABSTOP;
  }
 
 ### Begin a bridge:
 sub begBridge {
-    begRefrain(1);
+    begChorus(1);
     if ($html) { print "<blockquote>\n" if ($tables); }
     $indent += $TABSTOP;
     # Note that begVerse will get called when the first line appears,
@@ -379,7 +461,7 @@ sub begBridge {
 
 ### End a bridge:
 sub endBridge {
-    endRefrain();
+    endChorus(1);
     if ($html) { print "</blockquote>" if ($tables); }
     print "\n"; 
     $vlines = 0;
@@ -429,9 +511,10 @@ sub endQuote {
 
 sub doHeader {
     $header ++;
-    if ($bare)  { return; }
-    if ($html)	{ htmlHeader(); }
-    else	{ textHeader(); }
+    if ($bare)    { return; }
+    if ($html)	  { htmlHeader(); }
+    elsif ($cpro) { cproHeader(); }
+    else	  { textHeader(); }
 }
 
 sub center {
@@ -462,6 +545,34 @@ sub hcenter {
     print "$text\n";
 }
 
+sub directive {
+    my ($h, $text, $text2) = @_;
+    $text = $text2 . " " . $text if $text2;
+    print "{$h: $text}\n";
+}
+
+sub cproHeader {
+    directive ("title", $title);
+    if ($key)           {
+	# If there's a capo indication, that goes in the {capo} directive
+	if ($key =~ /([A-Za-z]+) *\\capo *([0-9]+)/) {
+	    $key = $1;
+	    $capo = $2;
+	}
+	directive "key", $key
+    }
+    if ($capo)          { directive "capo", $capo }
+    if ($subtitle) 	{ directive "subtitle", $subtitle; }
+    if ($notice) 	{ directive "comment_italic", $notice; }
+    if ($license)	{ directive "meta", "license", $license; }
+    if ($lyrics)        { directive "lyricist", $lyrics; }
+    if ($music)         { directive "composer", $music; } 
+    if ($timing)        { directive "time", $timing; }
+    if ($dedication) 	{ directive "meta", "dedication", $dedication; }
+    if ($description) 	{ directive "meta", "description", $description; }
+    print "\n";
+}
+    
 sub textHeader {
     center "$title\n";
     if ($subtitle) 	{ center "$subtitle\n"; }
@@ -470,6 +581,7 @@ sub textHeader {
     if ($dedication) 	{ center "$dedication\n"; }
     print "\n";
 }
+
 sub htmlHeader {
     hcenter 1, $title;
     if ($subtitle) 	{ hcenter 2, $subtitle; }
@@ -539,6 +651,11 @@ sub chordLine {
     $line =~ s/^[ \t]*//;
     $line =~ s/\\sus/sus/g;
     $line =~ s/\\min/m/g;
+    $line =~ s/\\maj/maj/g;
+
+    if ($cpro) {
+	return $line;
+    }
 
     for ($p = 0; $p < length($line); $p++) {
 	$c = substr($line, $p, 1); 
@@ -580,9 +697,10 @@ sub tableLine {
     $line = deTeX($line);
 
     $line =~ s/^[ \t]*//;
+    $line =~ s/[\n\r]//g;
+    # the following may be redundant if handled in deTeX
     $line =~ s/\\sus/sus/g;
     $line =~ s/\\min/m/g;
-    $line =~ s/[\n\r]//g;
 
     $cline .= "  <tr class=chords><td>";
     $dline .= "  <tr class=lyrics><td>";
@@ -665,7 +783,7 @@ sub deTeX {
 	}
 	if ($tag eq "spoken") { # italicize, but has the form \tag{...}  Does't handle chords
 	    $txt =~ s/\\spoken\{/$SPOKEN/;
-	    $txt =~ s/\}/$_EM/;
+	    $txt =~ s/\}/$_SPOKEN/;
 	}
 	if ($tag eq "tt") {
 	    $txt =~ s/\{\\tt[ \t\n]/$TT/; 
@@ -711,6 +829,15 @@ sub deTeX {
 	    $txt =~ s/\\hskip([0-9+])em/$sp/;
 	}
     }
+    # convert FlkTex stuff that shows up inside chords and key
+    $txt =~ s/\\sus/sus/g;
+    $txt =~ s/\\min/m/g;
+    $txt =~ s/\\maj/maj/g;
+    $txt =~ s/\\dim/dim/g;
+    $txt =~ s/\\sharp/#/g;
+    $txt =~ s/\\flat/b/g;    
+	
+    # convert TeX constructs
     $txt =~ s/\\hfill//g;
     $txt =~ s/---/--/g;
     $txt =~ s/\\&/$AMP/g;

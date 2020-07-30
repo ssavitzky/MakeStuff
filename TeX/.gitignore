@@ -1,6 +1,7 @@
 *.txt *.ps
 #.htaccess
 foo.*
+*.cho*
 0Index.html
 0List.html
 alphabet.html

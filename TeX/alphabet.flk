@@ -1,14 +1,13 @@
 \begin{song}{The Programmer's Alphabet}
-\cvsid{$Id: alphabet.flk,v 1.4 2010-10-14 06:48:15 steve Exp $}
 \notice{    Lyrics \copyright 1981, 1984 Stephen Savitzky.  \SomeRightsReserved
             To the tune of ``Sweet Betsy from Pike''}
 \tags{computer, mine}
-\key{C}
+\key{D(C\capo2)}
 \timing{4:20}
 \makesongtitle
 
 \small
-        [C]A is for ASCII, our [G7]Alphabet's [C]name
+        [C]A is for ASCII, our [G]Alphabet's [C]name
         [C]B is the Bugs, for which [G7]we get the blame.
         [C]C the Computer, which [F]never works [C]right, and
         [C]D is Debugging, the [G7]rest of the [C]night.
