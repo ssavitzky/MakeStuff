@@ -55,6 +55,7 @@ DIRNAMES := $(shell for f in $(subst .flk,,$(notdir $(ALLSONGS))); do echo $$f; 
 # Lists.  Just the ones we actually need
 ALLFLK   = $(patsubst %,%/lyrics.flk,$(DIRNAMES))
 ALLPDF   = $(patsubst %,%/lyrics.pdf,$(DIRNAMES))
+ALLCHO   = $(patsubst %,%/lyrics.cho,$(DIRNAMES))
 ALLHTML  = $(patsubst %,%/lyrics.html,$(DIRNAMES))
 ALLTEXT  = $(patsubst %,%/lyrics.txt,$(DIRNAMES)) \
 	   $(patsubst %,%/lyrics.chords.txt,$(DIRNAMES))
@@ -142,6 +143,9 @@ endif
 	WEBSITE=$(WEBSITE) WEBDIR=$(MYNAME) $(FLKTRAN) $< $@
 
 %/lyrics.chords.txt: %.flk | %
+	WEBSITE=$(WEBSITE) WEBDIR=$(MYNAME) $(FLKTRAN) -c $< $@
+
+%/lyrics.cho: %.flk | %
 	WEBSITE=$(WEBSITE) WEBDIR=$(MYNAME) $(FLKTRAN) -c $< $@
 
 #	This one makes a symlink to the appropriate lyric (.flk) file
@@ -249,7 +253,7 @@ all::	$(AUDIO_LINKS)
 ### Targets
 ###
 
-all::	$(DIRNAMES) $(ALLPDF) metadata $(ALLHTML) $(ALLTEXT)
+all::	$(DIRNAMES) $(ALLPDF) metadata $(ALLHTML) $(ALLTEXT) $(ALLCHO)
 
 .PHONY: metadata
 metadata::	$(patsubst %,%/metadata.yml, $(DIRNAMES))

@@ -159,6 +159,9 @@ SONG_LOOSELEAF= '\documentclass[$(SIZE)letterpaper,twoside]{article}'		\
 %.chords.txt: %.flk
 	WEBSITE=$(WEBSITE) WEBDIR=$(MYNAME) $(FLKTRAN) -c $< $@
 
+%.cho: %.flk
+	WEBSITE=$(WEBSITE) WEBDIR=$(MYNAME) $(FLKTRAN) -c $< $@
+
 %.html: %.flk
 	WEBSITE=$(WEBSITE) WEBDIR=$(MYNAME) $(FLKTRAN) -t -b $< $@
 
