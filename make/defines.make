@@ -9,8 +9,13 @@ MARKDOWN_FLAGS= -i GFM --no-hard-wrap -o html
 MFDIR	= $(TOOLDIR)/make
 
 # Compute relative paths to BASEDIR and TOOLDIR
-TOOLREL:= $(shell realpath --relative-to=. $(TOOLDIR))
-BASEREL:= $(shell realpath --relative-to=. $(BASEDIR))
+#  Note:  attempting to simplify this using `realpath` instead of a loop
+#	  makes the rules for %/Lyrics* in songs.make fail.
+BASEREL:= $(shell if [ -e MakeStuff ]; then echo .; 			\
+		  else d=""; while [ ! -d $$d/MakeStuff ]; do d=../$$d; done;	\
+		       echo $${d};					\
+		  fi)
+TOOLREL := $(BASEREL)/MakeStuff
 
 ### Rsync upload: DOTDOT is the path to this directory on $(HOST).
 #	Either can -- and should -- be overridden in the local config.make
