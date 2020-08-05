@@ -9,8 +9,6 @@ BUGS:
   o [scripts/import-blog-entries] need to slugify tags, too.  Keep ", "
   o [scripts/import-blog-entries] should replace cut and user tags.
   o [scripts/init-deployment] make deployable doesn't work.
-  o [make/songs.make] indices should indicate which songs have notes, audio, or postable
-    lyrics.  That will require actually looking at the metadata.
   o [deployment] post-update hooks are out of date; there should be a way to update them.
   o [flktran] need to handle \singer; math $$ in some macros;
   o [flktran] need to be able to specify CC license subtype; in particular my songs need
@@ -39,10 +37,6 @@ WAV->FLAC
   o upgrade makefiles in older record directories.
 
 songs.make, Songs/ improvements:
-  o (0315) note that some, perhaps all, includes can be done in mustache at
-    template-expansion time.
-  o BUG: etoolbox.sty not found on Dreamhost.
-  ? lyrics--*.pdf probably not worth the trouble in most cases.
   o eventually, make lyrics visible for logged-in band members; maybe fans.
   o web links for lyrics we don't own; on the songwriter's official site if possible. 
   o header should be #included and auto-generated; that's the way to do title and
@@ -81,7 +75,6 @@ TeX improvements
     * Separate packages for context-specific (i.e. scripting) macros. -> zingers
   o LaTeX2e
     . clean up obsolete constructs
-    * 0527 \comment instead of \ignore
     o parametrize page size and layout, e.g. for tablets.  See
       <a href="https://en.wikibooks.org/wiki/LaTeX/Page_Layout#Page_size_for_tablets"
       >LaTeX/Page Layout # Page size for tablets</a> 
@@ -94,7 +87,6 @@ tracks.make (was album.make)
     Master should be all you need to make album.rips.
 
 tags
-  o Use initials as tag instead of "mine", so "ss, nr" -- then have OURTAGS = ss nr
   o hierarchical: fmt.long, lic.cc, pub.{no,web}
     that way we can easily tell which tags not to copy over to the html
 
@@ -471,7 +463,30 @@ burning:  -> notes copied to tracks.make
     wget -q -O - https://mdlbear.dreamwidth.org/$(date +%Y/%m/%d/) \
        | grep 'class="entry-title"' | tail -1                      \
        | sed -E 's/^<[^>]*><[^>]*href="([^"]*)".*$/\1/'
-       
+
+2019
+====
+
+0206We and later
+  * [make/songs.make] indices should indicate which songs have notes, audio, or postable
+    lyrics.  That will require actually looking at the metadata.
+
+unknown
+  * (0315) note that some, perhaps all, includes can be done in mustache at
+    template-expansion time.
+  * BUG: etoolbox.sty not found on Dreamhost.
+  ? lyrics--*.pdf probably not worth the trouble in most 
+
+  * 0527 \comment instead of \ignore
+
+  * Use initials as tag instead of "mine", so "ss, nr" -- then have OURTAGS = ss nr
+ 
+2020
+====
+
+0805We
+  * add ChordPro output to flktran.pl 
+
 =now====Tools/to.do=====================================================================>|
 
 Local Variables:
