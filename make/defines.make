@@ -2,8 +2,8 @@
 
 # Utilities
 
-MARKDOWN=kramdown
-MARKDOWN_FLAGS= -i GFM --no-hard-wrap -o html
+MARKDOWN=pandoc
+MARKDOWN_FLAGS= -t html
 
 # MFDIR is where the make include files live
 MFDIR	= $(TOOLDIR)/make
