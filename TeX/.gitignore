@@ -2,6 +2,7 @@
 #.htaccess
 foo.*
 *.cho*
+README.html
 0Index.html
 0List.html
 alphabet.html
