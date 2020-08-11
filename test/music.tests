@@ -23,7 +23,7 @@ TEST_FILES = $(TEST_DIR_CONTENTS)		 	\
 test::
 	@echo testing basic functionality in Lyrics
 	cd Lyrics; make alphabet.pdf
-	@echo Lyrics/alphabet.ps should exist
+	@echo Lyrics/alphabet.pdf should exist
 	test -f Lyrics/alphabet.pdf
 
 test::
@@ -42,7 +42,8 @@ test::
 
 SONGS_EXPECTED_SUBDIRS = alphabet alpha beta
 SONGS_REJECTED_SUBDIRS = work-in-progress tagged-work-in-progress
-SONG_SUBDIR_FILES = index.html lyrics.html lyrics.pdf metadata.sh metadata.yml
+SONG_SUBDIR_FILES = index.html lyrics.html lyrics.pdf lyrics.cho \
+		    lyrics.txt lyrics.chords.txt metadata.sh metadata.yml
 
 test::
 	@echo testing in Songs.
@@ -55,29 +56,29 @@ test::
 	@for d in $(add-prefix Songs/, $(SONGS_REJECTED_SUBDIRS)); do		\
 		[ ! -d $$d ] || (echo $$d was made in error; false)		\
 	done
-	@echo song subdirs should contain lyrics.{pdf,html}, metadata.{sh,yml}
-	@echo song subdirs should contain executable index.html
+	@echo song subdirs should contain lyrics.{pdf,html,cho,txt,chords.txt}
+	@echo song subdirs should contain index.html, metadata.{sh,yml}
 	@cd Songs; for d in *; do						\
 		if test -d $$d; then for f in $(SONG_SUBDIR_FILES); do		\
 			test -f $$d/$$f || (echo $$d/$$f missing; false); 	\
 		done; fi;							\
-		test ! -d $$d -o -x $$d/index.html ||				\
-		(echo $$d/index.html not executable; false); 			\
 	done
 
 test::
 	@echo making sure that alpha/index.html includes lyrics
-	grep -q 'include virtual="lyrics.html"' Songs/beta/index.html 		\
-		|| echo beta/index.html should include lyrics
+	@grep -q 'include virtual="lyrics.html"' Songs/alpha/index.html 	\
+		|| (echo alpha/index.html should include lyrics, but does not; false)
 	@echo making sure that beta/index.html does not include lyrics
-	grep -vq 'include virtual="lyrics.html"' Songs/beta/index.html 		\
-		|| echo beta/index.html should not include lyrics
+	@if grep -q 'include virtual="lyrics.html"' Songs/beta/index.html; then	\
+	    echo beta/index.html should not include lyrics, but does; false; 	\
+	else true; fi
 
 # TODO:
 #	test more tag handling:  PD, REJ, web-ok
 #	look at the song index files
 #	add some audio files
 #	At some point we may want to make 1subdir-index.mustache if it doesn't exist
+#	write a test song that actually uses _all_ of the FlkTeX macros
 
 ### Files needed for setup
 

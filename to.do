@@ -10,11 +10,18 @@ BUGS:
   o [scripts/import-blog-entries] should replace cut and user tags.
   o [scripts/init-deployment] make deployable doesn't work.
   o [deployment] post-update hooks are out of date; there should be a way to update them.
-  o [flktran] need to handle \singer; math $$ in some macros;
   o [flktran] need to be able to specify CC license subtype; in particular my songs need
     to be CC-BY-SA-NC for monetization.
+  o [flktran] should be able to handle list environments and a subset of math.
   o [make/songs.make] body text in other formats, e.g. markdown
-    
+  o [charm-wrapper, defines.make] markdown processor.  charm-wrapper uses kramdown; the
+    MARKDOWN in defines was kramdown but is now pandoc; turns out I was using an outdated
+    gem for kramdown.  GitHub etc. are now using the <a href="http://spec.commonmark.org/"
+    >CommonMark Spec</a> -- cmark is a C implementation.  MakeStuff should either find
+    an implementation that works or get it from a config file if pandoc isn't available.
+  o MakeStuff should look for a global (i.e. home directory) config file for
+    system-dependent definitions.
+
 General:
   o in shared projects (e.g. github) make push should always happen on a feature branch,
     and can use -f.  That would make it possible to filter out commits that are only used
@@ -23,8 +30,7 @@ General:
 
 Blogging:
   o probably useful to have a .do -> .html formatter, too.
-  o Note: wget can get credentials from .netrc
-  o DW field size limits:  custom mood: 38, Music: 80, Location 80
+  = DW field size limits:  custom mood: 38, Music: 80, Location 80
 
 WAV->FLAC
   o Move to a workflow that uses flac instead of wav.  Audacity can export it,
@@ -36,13 +42,14 @@ WAV->FLAC
     to the ogg and mp3 files.
   o upgrade makefiles in older record directories.
 
-songs.make, Songs/ improvements:
-  o eventually, make lyrics visible for logged-in band members; maybe fans.
+songs.make, Songs/ improvements: (NOTE:  most of these aren't really MakeStuff issues.)
+  ~ eventually, make lyrics visible for logged-in band members; maybe fans.
+    It's security by obscurity, but lyrics.* are always there, just not indexed.
   o web links for lyrics we don't own; on the songwriter's official site if possible. 
   o header should be #included and auto-generated; that's the way to do title and
     navbar correctly - Songs/name currently aren't links.
   o be nice to have a song index on the left; maybe hideable.
-  o header/footer boilerplate should come from a template file
+  * header/footer boilerplate should come from a template file
   o use songlist files instead of passing list on the command line ?
     (Can make all.songs from listing)
   o Be nice if one could use Lyrics-suffix as an implicit tag.
@@ -52,14 +59,14 @@ songs.make, Songs/ improvements:
 
 TeX improvements
   @ <a href="http://www.ctan.org/pkg/etoolbox" >CTAN: Package etoolbox</a>
+  @ <a href="https://www.tug.org/texinfohtml/latex2e.html"
+    >LaTeX2e unofficial reference manual (October 2015)</a>
   o use \newcomand and \newcommand* (opposite of \long) for all definitions.
   o note that \indent is already defined - it adds paragraph indentation.  otoh, it's not
     used at all.  \Indent is used only in times-they-are-a-changin (where refrain would
     work equally well) and kitchen-heroes.  Rename to Refrain and Bridge respectively,
     define Indented, or, better, define indented with an optional length argument.  Use
     that with \refrainindent and \bridgeindent
-  @ <a href="https://www.tug.org/texinfohtml/latex2e.html"
-    >LaTeX2e unofficial reference manual (October 2015)</a>
   o filkbook document class
     see <a href="https://www.ctan.org/pkg/songbook" >CTAN: Package songbook</a>
     page styles:  broadside, filkbook.  option compact: no title pages
@@ -67,7 +74,7 @@ TeX improvements
     compact is the default when not twosided.
     subtitle and other metadata that prints on the song's first page needs to save as well
     as print, so that it can get duplicated on the title page
-  o songbook document class should define \songfile (renamed from file) and add a hook so
+  o filkbook document class should define \songfile (renamed from file) and add a hook so
     that \makesongtitle can add it to the TOC.  Suppose we could rename it "filk"
     o LaTeX2e for class and package writers:
       https://www.latex-project.org/help/documentation/clsguide.pdf
@@ -102,9 +109,9 @@ flktran HTML5 conversion
   @ <a href="http://www.html-tidy.org/" >HTML Tidy</a>
   @ <a href="http://www.w3schools.com/html/html5_migration.asp" >HTML5 Migration</a>
   . Web: Convert the main websites to HTML-5 and CSS.
-  o audio and track HTML5 elements.
+  ~ audio and track HTML5 elements. (track is for synchronized text like subtitles)
   o Need an "about" page to explain that ogg won't work in ie.
-  o Lyrics in HTML5 include files. Top-level tag should be [article class=lyrics]
+  * Lyrics in HTML5 include files. Top-level tag should be [article class=lyrics]
 
 songbook.make (proposed) - make plugin for Songbook directories
   o makes html  and pdf songbook in a subdirectory. can .gitignore [a-z]*.html
@@ -486,6 +493,10 @@ unknown
 
 0805We
   * add ChordPro output to flktran.pl 
+
+0811Tu
+  * [flktran] need to handle \singer; 
+  & bug-smashing in flktran -- finding edge cases in html conversion with check-html
 
 =now====Tools/to.do=====================================================================>|
 
