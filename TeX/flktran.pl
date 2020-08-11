@@ -50,14 +50,15 @@ $WEBDIR  =~ s|/$||;
 
 ### State variables:
 
-$indent  = 0;			# current indentation level
-$plain   = 0;			# true when inside plain (non-chorded) text
-$chorus  = 0;			# true inside a chorus or bridge
+$indent   = 0;			# current indentation level
+$plain    = 0;			# true when inside plain (non-chorded) text
+$chorus   = 0;			# true inside a chorus or bridge
 
-$verse   = 0;			# number of verses seen so far
-$vlines  = 0;			# the number of lines in the current verse or chorus
-$plines  = 0;			# the number of lines in the current text block
-$header  = 0;			# true after header done.
+$verse    = 0;			# number of verses seen so far
+$vlines   = 0;			# the number of lines in the current verse or chorus
+$plines   = 0;			# the number of lines in the current text block
+$header   = 0;			# true after header done.
+$verbatim = 0;			# true inside a verbatim environment -- <pre> in html
 
 ### Variables set from song macros:
 $bare = "";
@@ -156,10 +157,14 @@ if ($html) {
     $_EM = "</em>";
     $BF  = "<b>";
     $_BF = "</b>";
-    $TT  = "<tt>";
-    $_TT = "</tt>";
+    $TT  = "<code>";
+    $_TT = "</code>";
     $UL  = "<u>";
     $_UL = "</u>";
+    $PRE = "<pre>";
+    $_PRE= "</pre>";
+    $QUOTATION = "&nbsp;&nbsp;"; # sometimes used for indent inside spoken text
+    $_QUOTATION = "";
     $SPOKEN  = $EM . "(spoken) ";
     $_SPOKEN = $_EM;
     $SUBSEC  = "<h3>";
@@ -171,8 +176,9 @@ if ($html) {
     $SP  = "&nbsp;";
     $AMP = "&amp;";
     # it might be more sensible to use the cellpadding to space the verses.
-    $BVERSE = ($tables)? "<table cellpadding=0 cellspacing=0 class='verse'>\n<tr>" : "<pre class='verse'>\n";
-    $EVERSE = ($tables)? "</tr></table>\n" : "</pre>\n";
+    $BVERSE = ($tables)? "<table cellpadding=0 cellspacing=0 class='verse'>\n<tr><td>" 
+	                 : "<pre class='verse'>\n";
+    $EVERSE = ($tables)? "</td></tr></table>\n" : "</pre>\n";
     $FLKTRAN = "<a href='/Tools/TeX/flktran.html'><code>flktran</code></a>";
     # Creative Commons copyright notice
     $SomeRightsReserved =
@@ -190,6 +196,10 @@ if ($html) {
     $_TT = "`";
     $UL  = "_";
     $_UL = "_";
+    $PRE = "";			# I have no idea how to do this in chordpro
+    $_PRE= "";
+    $QUOTATION = "    ";	# sometimes used for indent inside spoken text
+    $_QUOTATION = "";
     $SPOKEN  = "{comment_italic: (spoken):";
     $_SPOKEN = "}";
     $SUBSEC  = "{textsize: 150%}";
@@ -215,6 +225,10 @@ Attribution-Noncommercial-Share Alike 4.0 International License</a>. ';
     $_TT = "";
     $UL  = "";
     $_UL = "";
+    $PRE = "";
+    $_PRE= "";
+    $QUOTATION = "";
+    $_QUOTATION = "";
     $SPOKEN  = "(spoken) ";
     $_SPOKEN = "";
     $SUBSEC  = "";
@@ -275,8 +289,13 @@ while (<STDIN>) {
     elsif (/\\end\{quotation/)	{ endQuote(); }
     elsif (/\\begin\{song/)	{ begSong($_); }  # Song
     elsif (/\\end\{song/)	{ endSong(); }
+    elsif (/\\begin\{verbatim/)	{ begVerbatim(); }  # verbatim
+    elsif (/\\end\{verbatim/)	{ endVerbatim(); }
 
     elsif (/\\inset/)		{ doInset(); }
+    # it's tempting to do:  elsif (/\\spoken/) 	{ doInset("(spoken) "); }
+    # that would make it difficult to ignore embedded emphasis.  The real
+    # solution may be to deprecate embedded emphasis.
     elsif (/\\tailnote/)	{ doTailnote(); }
 
     # Ignorable TeX macros:
@@ -284,6 +303,7 @@ while (<STDIN>) {
     elsif (/\\(oddsidemargin|evensidemargin|textwidth)/) {}
     elsif (/\\(begin|end)\{/)	{} # other environments get ignored
     elsif (/\\ignore/)		{ getContent($_); }
+    elsif (/\\comment/)		{ getContent($_); }
 
     # Default:
 
@@ -329,6 +349,7 @@ sub begSong {
 ### End a song:
 ###	End the file.
 sub endSong {
+    if ($vlines) { endVerse(); }
     if ($bare) { return; }
     if ($html) {
 	print "<hr>";
@@ -407,7 +428,7 @@ sub doInset {
 
 ### Handle a tailnote
 sub doTailnote {
-    endVerse(); 
+    if ($vlines) {endVerse(); }
     if ($html) { print "<p>\n"; }
     indentLine(getContent($_, 0) . "\n");
 }
@@ -471,14 +492,20 @@ sub endBridge {
 ### Begin a note:
 sub begNote {
     if ($vlines) { endVerse(); }
-    if ($html) { print "<small>"; }
+    if ($html) {
+	# We used to try to set this in a smaller font, but you can't
+	# nest paragraphs (block elements) inside of a <small> (inline element);
+    }
     $plines = 0;
     $plain ++;
 }
 
 ### End a note:
 sub endNote {
-    if ($html) { print "</small>\n"; }
+    if ($html) {
+	# We used to try to set this in a smaller font, but you can't
+	# nest paragraphs (block elements) inside of a <small> (inline element);
+    }
     $plines = 0;
     $plain --;
 }
@@ -500,6 +527,16 @@ sub endQuote {
     if ($html) { print "</blockquote>\n"; }
 }
 
+### Begin a verbatim section:
+sub begVerbatim {
+    print $PRE;
+    $verbatim ++;
+    
+}
+sub endVerbatim {
+    print $_PRE;
+    $verbatim --;
+}
 
 ########################################################################
 ###
@@ -608,7 +645,14 @@ sub footer {
 sub doLine {
     # Put out the header, if this is the very first line. 
     if (! $header) { doHeader(); }
-    if ($plain) {
+    if ($verbatim) {
+	if ($html) {
+	    s/\&/&amp;/;
+	    s/\</&lt;/;
+	    s/\>/&gt;/;
+	}
+	print $_;
+    } elsif ($plain) {
 	if ($plines == 0) { 
 	    if ($html) { print "<p>\n"; }
 	    else { print "\n"; }
@@ -748,7 +792,9 @@ sub tableLine {
 ###    be split across several lines.
 sub deTeX {
     my ($txt) = @_;		# input line
-
+    # ignore nested emphasis (i.e. in \spoken{...})
+    # The right thing would be to handle it in doLine using getContent
+    my ($em, $_em) = ("","");
     # Remove TeX comments (which eat the line break as well)
     # and extend the line until it contains no unmatched left braces
     while ($txt =~ /\%/ || $txt =~ /\{[^\}]*$/) {
@@ -760,7 +806,7 @@ sub deTeX {
     # the parts before and after the chord end up in different <td> cells.
     while ($txt =~ /\{\\(em|tt|bf|)[ \t\n]/
 	   || $txt =~ /\\(ul|underline|link|subsection|subsubsection)\{/
-	   || $txt =~ /\\(emph|spoken)\{/
+	   || $txt =~ /\\(emph|spoken|quotation)\{/
 	   || $txt =~ /\\(subsection|subsubsection)\*[^\{]*\{/
 	   || $txt =~ /\\(hskip)/
       ) {
@@ -774,16 +820,23 @@ sub deTeX {
 	    $txt =~ s/([ \t])\}/}$1/;
 	}
 	if ($tag eq "em") {
-	    $txt =~ s/\{\\em[ \t\n]/$EM/; 
-	    $txt =~ s/\}/$_EM/;
+	    $txt =~ s/\{\\em[ \t\n]/$em/; 
+	    $txt =~ s/\}/$_em/;
 	}
 	if ($tag eq "emph") { # italicize, but has the form \tag{...}  Does't handle chords
-	    $txt =~ s/\\emph\{/$EM/;
-	    $txt =~ s/\}/$_EM/;
+	    $txt =~ s/\\emph\{/$em/;
+	    $txt =~ s/\}/$_em/;
 	}
 	if ($tag eq "spoken") { # italicize, but has the form \tag{...}  Does't handle chords
 	    $txt =~ s/\\spoken\{/$SPOKEN/;
+	    $em = "";
+	    $_em = "";
 	    $txt =~ s/\}/$_SPOKEN/;
+	}
+	if ($tag eq "quotation") { # quotation in the form \tag{...}
+	    # used sometimes to get a paragraph indent inside of "spoken"
+	    $txt =~ s/\\quotation\{/$QUOTATION/;
+	    $txt =~ s/\}/$_QUOTATION/;
 	}
 	if ($tag eq "tt") {
 	    $txt =~ s/\{\\tt[ \t\n]/$TT/; 
@@ -801,6 +854,7 @@ sub deTeX {
 	    }	    
 	    $txt =~ s/\\$tag\{/$UL/; # ul and underline have the same replacement text
 	    $txt =~ s/\}/$_UL/;
+	    $txt =~ s/$UL *$_UL//; # remove empty underline elements
 	}
 	if ($tag eq "link") {
 	    while ($txt !~ /\\link\{[^\}]*\}\{[^\}]*\}/) { $txt .= <STDIN>; }
@@ -820,13 +874,12 @@ sub deTeX {
 	    $txt =~ s/\}/$_SUBSUB/;
 	}
 	if ($tag eq "hskip") {
-	    $txt =~ /\\hskip([0-9+])em/;
-	    print STDERR "hskip $1\n";
+	    $txt =~ /\\hskip([0-9]+)em/;
 	    my $sp = "";
 	    for (my $d = $1; $d > 0; $d--) {
 		$sp .= $SP;
 	    }
-	    $txt =~ s/\\hskip([0-9+])em/$sp/;
+	    $txt =~ s/\\hskip([0-9]+)em/$sp/;
 	}
     }
     # convert FlkTex stuff that shows up inside chords and key
