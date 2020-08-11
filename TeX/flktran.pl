@@ -293,9 +293,7 @@ while (<STDIN>) {
     elsif (/\\end\{verbatim/)	{ endVerbatim(); }
 
     elsif (/\\inset/)		{ doInset(); }
-    # it's tempting to do:  elsif (/\\spoken/) 	{ doInset("(spoken) "); }
-    # that would make it difficult to ignore embedded emphasis.  The real
-    # solution may be to deprecate embedded emphasis.
+    elsif (/\\spoken/) 		{ doInset("(spoken) "); }
     elsif (/\\tailnote/)	{ doTailnote(); }
 
     # Ignorable TeX macros:
@@ -350,6 +348,7 @@ sub begSong {
 ###	End the file.
 sub endSong {
     if ($vlines) { endVerse(); }
+    $plain ++; # strictly speaking should switch to plain LaTeX here
     if ($bare) { return; }
     if ($html) {
 	print "<hr>";
@@ -407,8 +406,10 @@ sub blankLine {
     }
 }
 
-### Handle an inset
+### Handle an inset.
+#   This is also used for \spoken{...} at the beginning of a line.
 sub doInset {
+    my ($prefix) = @_;
     endVerse();
     my $content = getContent($_, $TABSTOP);
     if ($html) { print "<blockquote><i>\n"; }
@@ -427,10 +428,13 @@ sub doInset {
 }
 
 ### Handle a tailnote
+#   DEPRECATED:  use \begin{note}...\end{note} for notes containing begin/end blocks
 sub doTailnote {
     if ($vlines) {endVerse(); }
     if ($html) { print "<p>\n"; }
     indentLine(getContent($_, 0) . "\n");
+    $plines = 0;
+    $plain ++;
 }
 
 ### Begin a chorus:
@@ -589,16 +593,16 @@ sub directive {
 }
 
 sub cproHeader {
-    directive ("title", $title);
+    directive("title", $title);
     if ($key)           {
 	# If there's a capo indication, that goes in the {capo} directive
 	if ($key =~ /([A-Za-z]+) *\\capo *([0-9]+)/) {
 	    $key = $1;
 	    $capo = $2;
 	}
-	directive "key", $key
+	directive("key", $key);
     }
-    if ($capo)          { directive "capo", $capo }
+    if ($capo)          { directive "capo", $capo; }
     if ($subtitle) 	{ directive "subtitle", $subtitle; }
     if ($notice) 	{ directive "comment_italic", $notice; }
     if ($license)	{ directive "meta", "license", $license; }
@@ -653,7 +657,8 @@ sub doLine {
 	}
 	print $_;
     } elsif ($plain) {
-	if ($plines == 0) { 
+	if ($plines == 0 && ! /\\(sub)*section/ && ! /\\(new|clear)page/) {
+	    # htmlTidy complains about an unnecessary <p> before <hr> or <hN>
 	    if ($html) { print "<p>\n"; }
 	    else { print "\n"; }
 	} 
@@ -910,8 +915,10 @@ sub deTeX {
 ### getContent(line): get what's between macro braces.
 sub getContent {
     my ($line) = @_;		# input line
-    # Throw away everything up to the "{"
+    # Throw away everything up to and including the "{"
     $line =~ s/^[^{]*\{//;
+    # deTex the line.  This converts everything that's complete on this line,
+    # so in particular all balanced pairs of braces will have been eliminated.
     $line = deTeX($line);
     # Suck in more lines if we haven't seen the closing brace
     while ($line !~ /\}/) { $line .= <STDIN>; $line = deTeX($line); }
