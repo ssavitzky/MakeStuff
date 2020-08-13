@@ -498,9 +498,11 @@ unknown
   * [flktran] need to handle \singer; 
   & bug-smashing in flktran -- finding edge cases in html conversion with check-html
 
+0812We
+  * cleanup in test/ - simplify the rules, make
+
 =now====Tools/to.do=====================================================================>|
 
 Local Variables:
     fill-column:90
 End:
-?

@@ -77,26 +77,29 @@ deploy: all pre-deploy deploy-this
 
 ### Include standard targets and local dependencies if present.
 #
-include $(MFDIR)/targets.make
+include $(TOOLDIR)/make/targets.make
 -include .depends.make depends.make
 
 ### report-vars - list important make variables
 #   Down at the end in case any of the lists needs to get appended to.
 
-.PHONY: report-vars report-set-vars report-raw-vars
+.PHONY: report-vars report-set-vars report-raw-vars report-var
 filteredVars = $(foreach v, $(reportVars), $(if $($(v)), $(v)))
 filteredStrs = $(foreach v, $(reportStrs), $(if $($(v)), $(v)))
 
 report-vars::
 	@echo "" $(foreach v,$(varsLine1), $(v)=$($(v)) )
 	@echo "" $(foreach v,$(varsLine2), $(v)=$($(v)) )
-	@echo -e "" $(foreach v,$(filteredVars),$(v)=$($(v)) "\n")
+	@echo -n -e "" $(foreach v,$(filteredVars),$(v)=$($(v)) "\n")
 	@echo -e "" $(foreach v,$(filteredStrs),$(v)=\""$($(v))"\" "\n")
 
 report-set-vars:
 	@$(foreach v,$(sort $(.VARIABLES)),$(if $(value $(v)),$(info $(v)="$($(v))")))
 
-report-raw-vars:	# note that this does not expand recursive variables
+report-raw-vars:  		# note that this does not expand recursive variables
 	@$(foreach v,$(sort $(.VARIABLES)),$(info $(v)="$(value $(v))"))
+
+report-var:			# report the value of a single variable
+	@echo $(var) = $($(var))
 #
 ###### End of MakeStuff/Makefile.  Thanks for playing. ######
