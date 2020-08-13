@@ -8,7 +8,10 @@ all::
 
 .PHONY: run setup test teardown
 
-run:: setup test teardown
+# Note:  we used to make run end with teardown, but that meant that
+#	 we couldn't examine the results.  Instead, we do teardown
+#	 _first_ to ensure that we're starting in a known state.
+run:: teardown setup test
 	@echo running tests for $(SUITE).tests
 
 TEST_DATA = music.data
@@ -44,7 +47,7 @@ SONGS_EXPECTED_SUBDIRS = alphabet alpha beta
 SONGS_REJECTED_SUBDIRS = work-in-progress tagged-work-in-progress
 SONG_SUBDIR_FILES = index.html lyrics.html lyrics.pdf lyrics.cho \
 		    lyrics.txt lyrics.chords.txt metadata.sh metadata.yml
-
+CHECK_HTML = ../blogging/check-html
 test::
 	@echo testing in Songs.
 	cd Songs; make
@@ -62,6 +65,13 @@ test::
 		if test -d $$d; then for f in $(SONG_SUBDIR_FILES); do		\
 			test -f $$d/$$f || (echo $$d/$$f missing; false); 	\
 		done; fi;							\
+	done
+	@echo song lyrics.html should pass check-html
+	@for d in Songs/*; do						\
+		if test -d $$d; then $(CHECK_HTML) $$d/lyrics.html 		\
+		   | grep 'No warnings or errors' 				\
+		   || (echo $$d/lyrics.html failed check; false);		\
+		fi								\
 	done
 
 test::
