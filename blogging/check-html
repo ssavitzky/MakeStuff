@@ -1,8 +1,26 @@
 #!/bin/bash
+# Check html files using html-tidy.
+#   This wrapper sets options suitable for posting to dreamwidth
+#   and similar sites.  You might want a different set of defaults
+#   for other use cases, although this is pretty generic except for
+#   suppressing warnings for unescaped ampersands (which occur all
+#   the time in query strings) and munging DW/LJ-specific-tags so
+#   that they won't look like tags, because there doesn't seem to
+#   be a reliable way of doing that in my version of tidy.
 
-(echo '<!DOCTYPE html><head><title/></head><body>'
- cat $1
- echo '</body>'
-)   | sed -E 's/(<\/?)(user|cut)/$1 $2/g' \
-    | tidy 2>&1 >/dev/null \
-    | sed  -e '/^$/q' 
+#   Ampersands are handled by escaping them wherever they occur, not
+#   just in URLs -- that will of course fail if they were introducing
+#   real entities, but we're only interested in the errors.
+
+#   Since we need to shove the munged file through standard input,
+#   the --gnu-emacs option doesn't do anything.  So we mung the
+#   output to put them in file:line:column format
+
+OPTIONS="--doctype auto --quote-ampersand yes \
+	 --show-body-only yes --show-info no -q --gnu-emacs yes "
+
+for f in $*; do
+    sed -E -e 's/(<\/?)(user|lj|lj-cut|cut)/$1 $2/g' -e 's/&/&amp;/g' $1 \
+	| tidy $OPTIONS 2>&1 >/dev/null \
+	| sed   -e "s|^|${1}:|" -e "s/line //" -e 's/ column /:/' ;
+done
