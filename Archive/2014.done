@@ -1,3 +1,5 @@
+2006
+====
 
 * 20060521 Move TeX in from ~steve; 
   * copy TeX and its CVS repo; leave the old one in place for now
@@ -22,6 +24,9 @@ TrackInfo: like SongInfo, but lists the info needed for an album tracklist
   * every track needs a songwriter in TOC format
   * 0120 hex formats need decimal alternatives (--dec flag)
   * 0120 need "files" format for Makefile dependencies, etc.
+
+2007
+====
 
 * 10070121 album.make:
   * use TRACKS = @trackfile instead of SONGS whenever TrackInfo is used.
@@ -117,6 +122,9 @@ Songs/Makefile
   ~ 20080820 Index headers are wrong; should be /Steve_Savitzky NOT ../.. 
     this loses when exporting.  Could maybe fix with templates.
   ~ 200808 make mp3s depend on the oggs to keep them in sync
+
+2014
+====
 
 201412 cleanup:
 
