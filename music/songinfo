@@ -1,6 +1,5 @@
 #!/usr/bin/perl
-# $Id: TrackInfo.pl,v 1.10 2010-06-13 18:09:48 steve Exp $
-# TrackInfo [options] infile... 
+# songinfo [options] infile... 
 #	<title>extract track info</title>
 
 ### Extracts information about a song from its .flk) file
@@ -309,10 +308,10 @@ sub setupFormattingConstants {
     if ($html) {
 	$EM  = "<em>";
 	$_EM = "</em>";
-	$BF  = "<b>";
-	$_BF = "</b>";
-	$TT  = "<tt>";
-	$_TT = "</tt>";
+	$BF  = "<strong>";
+	$_BF = "</strong>";
+	$TT  = "<code>";
+	$_TT = "</code>";
 	$UL  = "<u>";
 	$_UL = "</u>";
 	$SMALL = "<small>";
