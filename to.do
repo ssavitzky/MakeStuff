@@ -31,6 +31,7 @@ General:
 Blogging:
   o probably useful to have a .do -> .html formatter, too.
   = DW field size limits:  custom mood: 38, Music: 80, Location 80
+  o last-post should take date (yyyy/mm/dd/) on command line;
 
 WAV->FLAC
   o Move to a workflow that uses flac instead of wav.  Audacity can export it,
@@ -56,6 +57,7 @@ songs.make, Songs/ improvements: (NOTE:  most of these aren't really MakeStuff i
   o main audio files would of course be %/%.ogg.  Anything else should have a name like
     yyyy-mm-dd--event--%.ogg or albumname--nn-%.ogg - i.e., the path with / -> -
     There should be a script that does this for a list of files.
+  o TeX/index.pl -> indexer.pl to keep from confusing servers
 
 TeX improvements
   @ <a href="http://www.ctan.org/pkg/etoolbox" >CTAN: Package etoolbox</a>
@@ -98,6 +100,7 @@ tags
     that way we can easily tell which tags not to copy over to the html
 
 flktran
+  o flktran: put creation date into txt and html; don't allow double blank lines.
   o suppress excess blank lines in html
   o eliminate ~ (halfspace) - see aengus.flk
   o performance notes (\perf{...})
