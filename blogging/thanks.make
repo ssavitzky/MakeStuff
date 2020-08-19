@@ -4,8 +4,10 @@
 # Usage:	make thanks
 
 .PHONY: thanks
+
+thanks: PFX=thx_
 thanks:
-	$(MAKE) entry PFX=thx_ name=thankful-$(shell date +%A | tr [:upper:] [:lower:])
+	$(MAKE) entry name=thankful-$(shell date +%A | tr [:upper:] [:lower:])
 
 # NOTE:  PFX is normally not defined, so we end it with an underscore.
 define thx_TEMPLATE

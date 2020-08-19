@@ -29,53 +29,68 @@
 DEFAULT_EXT ?= html
 POSTCMD	?= $(TOOLDIR)/blogging/charm-wrapper
 #DONT_COMMIT_DRAFT = true
-
-## figure out what the extension for posts should be.
-ifndef EXT
-  ifdef name
-    # take the extension from the name, if it has one.
-    ifneq "$(suffix $(name))" ""
-      EXT = $(subst .,,$(suffix $(name)))
-    endif
-  endif
-endif
-# if not passed in or taken from the name, use the default.
-EXT ?= $(DEFAULT_EXT)
-
-ifndef name			# if we don't have a name
-  ifdef title			# but we do have a title, slugfy it.
-	name := $(shell echo "$(title)" | 		\
-	  sed  -e 's/"//g' -e 's/\[.*\]//' 		\
-          -e 's/[ -]\+/-/g' -e 's/^-*//'  -e s/-*$$// 	\
-          -e 's/[^-a-zA-Z0-9]//g' -e 's/^the-//i' | tr '[A-Z]' '[a-z]')
-  endif
-endif
-
-ifdef name
-  DRAFT	:= $(subst .$(EXT).$(EXT),.$(EXT),$(name).$(EXT))
-  name  := $(subst .$(EXT),,$(notdir $(DRAFT)))
-endif
-
-linked_draft := $(shell readlink .draft)
-ifndef ENTRY
-  ifdef name
-    ENTRY := $(subst .$(EXT).$(EXT),.$(EXT),$(POST_ARCHIVE)$(DAYPATH)--$(name).$(EXT))
-    ifndef title
-	title := $(shell echo "$(name)" | tr '-' ' ' )
-    endif
-  else ifneq ($(linked_draft),)
-    ENTRY := $(linked_draft)
-  else ifeq ($(DEFAULT_NAME),)
-      ENTRY := $(POST_ARCHIVE)$(DAYPATH)
-  else
-      ENTRY := $(POST_ARCHIVE)$(DAYPATH)--$(DEFAULT_NAME).$(EXT)
-  endif
-endif
+export POST_ARCHIVE
 
 HELP  	  := make [entry|draft|post] [name=<filename>] [title="<title>"]
-POSTED	   = $(subst /,-,$(DAYPATH)) $(HRTIME)
 
-export POST_ARCHIVE
+### Determine name, extension, and title.
+#   There are several different possibilities
+#   * name was defined on the command line.  It might have an extension, either from
+#     tab completion or because we want to use something other than the default
+#   * name wasn't defined, but title was, so we slugify it to get the name.
+#   * there's a symlink called .draft.  It can point to either a draft file in this
+#     directory, or a entry under construction
+#   * there's a default name
+
+ifdef name
+  $(info name=$(name) suffix=$(suffix $(name)))
+  ifneq "$(suffix $(name))" "" # take the extension from the name, if it has one.
+    EXT := $(subst .,,$(suffix $(name)))
+    override name := $(basename $(notdir $(name)))
+    # $(info name=$(name) suffix=$(suffix $(name)) EXT=$(EXT))
+  endif
+  ifndef title			# If we don't have a title, unslugify the name
+    title := $(shell echo "$(name)" | tr '-' ' ' )
+  endif
+else ifdef title		# if we have a title but no name, slugfy the title
+  name := $(shell echo "$(title)" | 						\
+	    sed  -e 's/"//g' -e 's/\[.*\]//' 					\
+		 -e 's/[ -]\+/-/g' -e 's/^-*//'  -e s/-*$$// 			\
+		 -e 's/[^-a-zA-Z0-9]//g' -e 's/^the-//i' | tr '[A-Z]' '[a-z]')
+else ifdef ENTRY		# ENTRY was defined on the command line
+  EXT := $(subst .,$(suffix $(ENTRY),))
+  name := $(basename $(ENTRY))
+else ifneq "$(wildcard .draft)" "" # .draft is a symlink
+  linked_draft := $(shell readlink .draft)
+  EXT := $(subst .,$(suffix $(linked_draft),))
+  name := $(basename $(linked_draft))
+  ifneq "$(dir $(linked_draft))" ""
+    # if .draft points to an entry, we use it.  Otherwise it points to a draft,
+    # and the eventual ENTRY is derived from its name.
+    ENTRY = $(linked_draft)
+  endif
+else ifdef DEFAULT_NAME
+  name := $(DEFAULT_NAME)
+endif
+
+# Use the default extension if it isn't defined.  This also handles the case where
+# EXT was defined as the suffix of something that doesn't have one.
+ifeq ($(EXT),)
+    EXT := $(DEFAULT_EXT)
+endif
+
+### Define DRAFT and ENTRY
+#   They are recursive, because $(name) might be passed as a target-specific variables.
+#   At most one of these will exist.  If they're already defined, it means that
+#   either .draft is a symlink, or ENTRY was passed on the command line.
+ifndef DRAFT
+  DRAFT = $(name).$(EXT)
+endif
+ifndef ENTRY
+  ENTRY = $(POST_ARCHIVE)$(DAYPATH)--$(name).$(EXT)
+endif
+
+POSTED	   = $(subst /,-,$(DAYPATH)) $(HRTIME)
 
 ### Targets ###
 
@@ -263,7 +278,7 @@ check:
 	$(TOOLDIR)/blogging/check-html .draft
 
 
-reportVars := $(reportVars) name title ENTRY DRAFT
+reportVars += name title ENTRY DRAFT EXT
 report-template:
 	@echo "$$TEMPLATE"
 
