@@ -5,13 +5,16 @@
 
 .PHONY: thanks
 
+### This illustrates using target-specific variables instead of invoking
+#   make recursively with a new name= definition on the command line
 thanks: PFX=thx_
-thanks:
-	$(MAKE) entry name=thankful-$(shell date +%A | tr [:upper:] [:lower:])
+thanks: name=thankful-$(shell date +%A | tr [:upper:] [:lower:])
+thanks: title = Thankful $(shell date +%A)
+thanks: entry
 
 # NOTE:  PFX is normally not defined, so we end it with an underscore.
 define thx_TEMPLATE
-Subject: Thankful $(shell date +%A)
+Subject: $(title)
 Tags: thanks, 
 Picture: turkey
 Music: 

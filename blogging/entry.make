@@ -43,11 +43,9 @@ HELP  	  := make [entry|draft|post] [name=<filename>] [title="<title>"]
 #   * there's a default name
 
 ifdef name
-  $(info name=$(name) suffix=$(suffix $(name)))
   ifneq "$(suffix $(name))" "" # take the extension from the name, if it has one.
     EXT := $(subst .,,$(suffix $(name)))
     override name := $(basename $(notdir $(name)))
-    # $(info name=$(name) suffix=$(suffix $(name)) EXT=$(EXT))
   endif
   ifndef title			# If we don't have a title, unslugify the name
     title := $(shell echo "$(name)" | tr '-' ' ' )
@@ -58,11 +56,11 @@ else ifdef title		# if we have a title but no name, slugfy the title
 		 -e 's/[ -]\+/-/g' -e 's/^-*//'  -e s/-*$$// 			\
 		 -e 's/[^-a-zA-Z0-9]//g' -e 's/^the-//i' | tr '[A-Z]' '[a-z]')
 else ifdef ENTRY		# ENTRY was defined on the command line
-  EXT := $(subst .,$(suffix $(ENTRY),))
+  EXT := $(subst .,,$(suffix $(ENTRY)))
   name := $(basename $(ENTRY))
 else ifneq "$(wildcard .draft)" "" # .draft is a symlink
   linked_draft := $(shell readlink .draft)
-  EXT := $(subst .,$(suffix $(linked_draft),))
+  EXT := $(subst .,,$(suffix $(linked_draft)))
   name := $(basename $(linked_draft))
   ifneq "$(dir $(linked_draft))" ""
     # if .draft points to an entry, we use it.  Otherwise it points to a draft,
@@ -105,24 +103,21 @@ help::
 #	the subject is, by default, today's date.
 #	Leaves .draft a symlink to the entry; name= is not required for posting.
 #
-entry:  $(ENTRY) .draft
+entry: 	name-required | $(POST_ARCHIVE)$(MONTHPATH)
+	[ ! -f $(ENTRY) ] || ( echo entry already exists; false )
+	@echo "$$$(PFX)TEMPLATE" > $(ENTRY)
+	git add $(ENTRY)
+	git commit -m "$(MYNAME): start $(ENTRY)" $(ENTRY)
+	ln -s $(ENTRY) .draft
 
 ## draft:  make a draft in the top level.  No link is needed.
 #	post with "make post name=<filename>"; name is required in this case
 #
-draft:	name-required $(DRAFT)
-
-$(ENTRY):
-	mkdir -p $(POST_ARCHIVE)$(MONTHPATH)
-	@echo "$$$(PFX)TEMPLATE" > $@
-	git add $@
-	git commit -m "$(MYNAME): start $(ENTRY)" $@
-
-$(DRAFT):
-	@echo "$$$(PFX)TEMPLATE" > $@
-	git add $@
+draft:	name-required
+	@echo "$$$(PFX)TEMPLATE" > $(DRAFT)
+	git add $(DRAFT)
 	[ ! -z $(DONT_COMMIT_DRAFT) ] || 			\
-	   git commit -m "$(MYNAME): start $(ENTRY)" $@
+	   git commit -m "$(MYNAME): start $(ENTRY)" $(DRAFT)
 
 ## Validation dependencies for posting:
 #
@@ -153,6 +148,12 @@ from-required:
 	   echo '$$(from) not defined."'; false; 	\
 	fi
 
+## Other dependencies
+
+# This is a prerequisite for entry:
+$(POST_ARCHIVE)$(MONTHPATH):
+	mkdir -p $@
+
 # pre-post:  move the entry to the correct location (yyyy/mm/dd--name) if necessary
 #	The entry is not committed; that's done in post, but if it hasn't been added
 #	git mv will fail and we do a plain mv followed by git add.
@@ -163,7 +164,7 @@ from-required:
 #	e.g. for appending an accurate word count.  It works because pre-post is
 #	idempotent.
 #
-pre-post:	name-or-entry-required draft-or-entry-required
+pre-post: name-or-entry-required draft-or-entry-required | $(POST_ARCHIVE)$(MONTHPATH)
 	if [ ! -f $(ENTRY) ]; then mkdir -p $(POST_ARCHIVE)$(MONTHPATH); 	   \
 	   git mv $(DRAFT) $(ENTRY) || ( mv  $(DRAFT) $(ENTRY); git add $(ENTRY) ) \
 	fi
