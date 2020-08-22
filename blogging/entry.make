@@ -16,7 +16,7 @@
 # Tweakable Parameters:
 #       DONT_COMMIT_DRAFT if defined, just add the draft without committing it.
 #	POST_ARCHIVE 	- if defined, this is the path to yyyy/...; it must end in /
-#		          Typically this will be ../ (slash required).  Defaults to .
+#		          Typically this will be ../ (slash required).  Defaults to empty
 #	DRAFTS	     	- if defined, directory where we keep drafts.  Used with Jekyll.
 #	EXT	     	- Filename extension.  Default is html; md is a popular alternative.
 #	PFX	     	- prepended to the template name.  See thanks.make for an example.
@@ -33,13 +33,16 @@ export POST_ARCHIVE
 
 HELP  	  := make [entry|draft|post] [name=<filename>] [title="<title>"]
 
-### Determine name, extension, and title.
+### DRAFT, ENTRY, draft, and entry
+#
+### Determine name, extension, and title; DRAFT and ENTRY
 #   There are several different possibilities
 #   * name was defined on the command line.  It might have an extension, either from
 #     tab completion or because we want to use something other than the default
 #   * name wasn't defined, but title was, so we slugify it to get the name.
+#   * ENTRY was passed on the command line.  DRAFT is irrelevant.
 #   * there's a symlink called .draft.  It can point to either a draft file in this
-#     directory, or a entry under construction
+#     directory, or a entry under construction; we use it to define ENTRY and DRAFT
 #   * there's a default name
 
 ifdef name
@@ -55,17 +58,21 @@ else ifdef title		# if we have a title but no name, slugfy the title
 	    sed  -e 's/"//g' -e 's/\[.*\]//' 					\
 		 -e 's/[ -]\+/-/g' -e 's/^-*//'  -e s/-*$$// 			\
 		 -e 's/[^-a-zA-Z0-9]//g' -e 's/^the-//i' | tr '[A-Z]' '[a-z]')
-else ifdef ENTRY		# ENTRY was defined on the command line
-  EXT := $(subst .,,$(suffix $(ENTRY)))
-  name := $(basename $(ENTRY))
-else ifneq "$(wildcard .draft)" "" # .draft is a symlink
+else ifdef entry		# entry was defined on the command line
+  EXT := $(subst .,,$(suffix $(entry)))
+  name := $(basename $(entry))
+else ifneq "$(strip $(shell test -f .draft || echo 1))" "1" # .draft is a (live) symlink
   linked_draft := $(shell readlink .draft)
-  EXT := $(subst .,,$(suffix $(linked_draft)))
-  name := $(basename $(linked_draft))
   ifneq "$(dir $(linked_draft))" ""
-    # if .draft points to an entry, we use it.  Otherwise it points to a draft,
-    # and the eventual ENTRY is derived from its name.
-    ENTRY = $(linked_draft)
+    # if .draft points to an entry, we use it as $(entry).  Otherwise it points to a draft
+    # file in the current directory, and entry is derived by appending its name to
+    # `$(DAYPATH)--`
+    entry = $(linked_draft)
+    draft = $(notdir $(linked_draft))
+    $(info using linked draft $(ENTRY))
+  else
+    entry = $(POST_ARCHIVE)$(DAYPATH)--$(linked_draft)
+    draft = $(linked_draft)
   endif
 else ifdef DEFAULT_NAME
   name := $(DEFAULT_NAME)
@@ -77,26 +84,50 @@ ifeq ($(EXT),)
     EXT := $(DEFAULT_EXT)
 endif
 
+# NAME starts out as the value of $(name) (or sluggified title) defined on the 
+#   command line.  It may be replaced by a target-specific variable; this
+#   avoids having to override the value of $(name), and is more consistent with
+#   PFX and EXT.  Note that we ignore the convention that makes uppercase names
+#   constants or configuration parameters and lowercase names internal variables,
+#   because defining uppercase names on the command line is annoying.
+
+NAME := $(name)
+
 ### Define DRAFT and ENTRY
-#   They are recursive, because $(name) might be passed as a target-specific variables.
-#   At most one of these will exist.  If they're already defined, it means that
-#   either .draft is a symlink, or ENTRY was passed on the command line.
-ifndef DRAFT
-  DRAFT = $(name).$(EXT)
-endif
-ifndef ENTRY
-  ENTRY = $(POST_ARCHIVE)$(DAYPATH)--$(name).$(EXT)
-endif
+#   $(DRAFT) and $(ENTRY) are the targets of `make draft` and `make entry` respectively.
+#   They depend on $(NAME), which might be a target-specific value that replaces or
+#   modifies the $(name) passed on the command line.  Their values do _not_ depend
+#   on a possible `.draft` symlink; this is considerably more consistent than the
+#   alternative.
+
+DRAFT ?= $(NAME).$(EXT)
+ENTRY ?= $(POST_ARCHIVE)$(DAYPATH)--$(NAME).$(EXT)
+
+### Define draft and entry
+#   $(entry) and $(draft) are the inputs to the posting recipes; they come from
+#   entry= defined on the command line, a name and/or title passed on the command
+#   line, or a `.draft` symlink if it exists and nothing was defined on the command
+#   line.  They depend on $(name), the value defined on the command line.
+draft ?= $(name).$(EXT)
+entry ?= $(POST_ARCHIVE)$(DAYPATH)--$(name).$(EXT)
 
 POSTED	   = $(subst /,-,$(DAYPATH)) $(HRTIME)
 
 ### Targets ###
 
-.PHONY: draft entry pre-post post
+.PHONY: draft entry pre-post post report-effective-vars
 .PHONY: from-required draft-or-entry-required name-or-entry-required name-required
 
 help:: 
 	@echo usage: '$(HELP)'
+
+# Useful debugging tool:  Add as a dependency to a target with target-specific vars.
+# 	see ./thanks.make for an example.
+#
+report-effective-vars:
+	@echo "draft =" $(draft), entry = $(entry)
+	@echo "name  =" $(name), NAME =  $(NAME), title = '\"$(title)\"'
+	@echo "DRAFT =" $(DRAFT), ENTRY = $(ENTRY)
 
 ## entry:  make an entry for today, and link .draft
 #	The commit gives us a record of the starting time.
@@ -108,16 +139,17 @@ entry: 	name-required | $(POST_ARCHIVE)$(MONTHPATH)
 	@echo "$$$(PFX)TEMPLATE" > $(ENTRY)
 	git add $(ENTRY)
 	git commit -m "$(MYNAME): start $(ENTRY)" $(ENTRY)
-	ln -s $(ENTRY) .draft
+	ln -sf $(ENTRY) .draft
 
-## draft:  make a draft in the top level.  No link is needed.
-#	post with "make post name=<filename>"; name is required in this case
+## draft:  make a draft in the top level.
+#	No link is needed.  post with "make post name=<filename>"
+#	name is required in this case -> hopefully not any more.
 #
 draft:	name-required
 	@echo "$$$(PFX)TEMPLATE" > $(DRAFT)
 	git add $(DRAFT)
 	[ ! -z $(DONT_COMMIT_DRAFT) ] || 			\
-	   git commit -m "$(MYNAME): start $(ENTRY)" $(DRAFT)
+	   git commit -m "$(MYNAME): start" $(DRAFT)
 
 ## Validation dependencies for posting:
 #
@@ -130,14 +162,14 @@ name-required:
 	fi
 
 name-or-entry-required:
-	@if [ -z $(name) ] && [ ! -f $(ENTRY) ]; then \
+	@if [ -z $(name) ] && [ ! -f $(entry) ]; then \
 	   echo '$$(name) not defined.\n  Use "$(HELP)"'; false; \
 	fi
 
 draft-or-entry-required:
-	@if [ ! -f $(DRAFT) ] && [ ! -e $(ENTRY) ]; then			\
+	@if [ ! -f $(draft) ] && [ ! -e $(entry) ]; then			\
 	    echo 'You need to "make draft|entry name=$(name)" first'; false;	\
-	elif [ "multiple-drafts" = "$(DRAFT)" ]; then				\
+	elif [ "multiple-drafts" = "$(draft)" ]; then				\
 	   echo 'More than one file in _drafts;'				\
 		'Specify one with name='; false; 				\
 	fi
@@ -148,11 +180,20 @@ from-required:
 	   echo '$$(from) not defined."'; false; 	\
 	fi
 
-## Other dependencies
+## rules for date-related directories
 
-# This is a prerequisite for entry:
+# This is a prerequisite for entry;
+ifdef POST_ARCHIVE
 $(POST_ARCHIVE)$(MONTHPATH):
 	mkdir -p $@
+endif
+
+$(MONTHPATH):
+	mkdir -p $@
+
+$(YYYY):
+	mkdir $@
+	ln -s ../Makefile $@
 
 # pre-post:  move the entry to the correct location (yyyy/mm/dd--name) if necessary
 #	The entry is not committed; that's done in post, but if it hasn't been added
@@ -165,10 +206,10 @@ $(POST_ARCHIVE)$(MONTHPATH):
 #	idempotent.
 #
 pre-post: name-or-entry-required draft-or-entry-required | $(POST_ARCHIVE)$(MONTHPATH)
-	if [ ! -f $(ENTRY) ]; then mkdir -p $(POST_ARCHIVE)$(MONTHPATH); 	   \
-	   git mv $(DRAFT) $(ENTRY) || ( mv  $(DRAFT) $(ENTRY); git add $(ENTRY) ) \
+	if [ ! -f $(entry) ]; then mkdir -p $(POST_ARCHIVE)$(MONTHPATH); 	   \
+	   git mv $(draft) $(entry) || ( mv  $(draft) $(entry); git add $(entry) ) \
 	fi
-	ln -sf $(ENTRY) .draft
+	ln -sf $(entry) .draft
 
 # post an entry.
 #	The date is recorded in the entry, followed by the url returned by $(POSTCMD)
@@ -181,17 +222,17 @@ pre-post: name-or-entry-required draft-or-entry-required | $(POST_ARCHIVE)$(MONT
 #	terminal; most terminal emulators, e.g. gnome-terminal, let you open it.
 #
 post:	pre-post
-	url=$$($(POSTCMD) $(ENTRY)); 	\
-	   sed -i -e '1,/^$$/ s@^$$@Posted:  $(POSTED) '"$$url"'\n@' $(ENTRY)
+	url=$$($(POSTCMD) $(entry)); 	\
+	   sed -i -e '1,/^$$/ s@^$$@Posted:  $(POSTED) '"$$url"'\n@' $(entry)
 	rm -f .draft
-	ln -sf $(ENTRY) .post
-	git add $(ENTRY)
-	git commit -m "posted $(ENTRY)" -a
-	grep Posted: $(ENTRY) | head -1
+	ln -sf $(entry) .post
+	git add $(entry)
+	git commit -m "posted $(entry)" -a
+	grep Posted: $(entry) | head -1
 
 # crosspost the latest post to LJ, for use when automatic crossposting is broken
 # this is fragile: it relies on there being two spaces after "Posted:"
-LAST_POST = $(shell if [ -e $(ENTRY) ]; then echo $(ENTRY); else readlink .post; fi)
+LAST_POST = $(shell if [ -e $(entry) ]; then echo $(entry); else readlink .post; fi)
 POSTED_URL = $(shell grep Posted: $(LAST_POST) | head -1 | cut -f5 -d' ')
 CROSSPOSTED = <p> Cross-posted from <a href=$(POSTED_URL)>$(JOURNAL)</a>
 
@@ -204,11 +245,11 @@ POST_URL=$(shell wget -q -O - https://$(JOURNAL)/$(DAYPATH)  	\
          | sed -E 's/^<[^>]*><[^>]*href="([^"]*)".*$$/\1/')
 
 posted:
-	sed -i -e '1,/^$$/ s@^$$@Posted:  $(POSTED) $(POST_URL)\n@' $(ENTRY)
-	git commit -m "posted $(ENTRY)" $(ENTRY)
+	sed -i -e '1,/^$$/ s@^$$@Posted:  $(POSTED) $(POST_URL)\n@' $(entry)
+	git commit -m "posted $(entry)" $(entry)
 	rm -f .draft
-	ln -sf $(ENTRY) .post
-	grep Posted: $(ENTRY) | head -1
+	ln -sf $(entry) .post
+	grep Posted: $(entry) | head -1
 
 # make .draft point to today's entry
 .draft:: $(ENTRY)
@@ -279,7 +320,7 @@ check:
 	$(TOOLDIR)/blogging/check-html .draft
 
 
-reportVars += name title ENTRY DRAFT EXT
+reportVars += name title entry draft ENTRY DRAFT EXT
 report-template:
 	@echo "$$TEMPLATE"
 
