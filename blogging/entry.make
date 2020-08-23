@@ -69,7 +69,6 @@ else ifneq "$(strip $(shell test -f .draft || echo 1))" "1" # .draft is a (live)
     # `$(DAYPATH)--`
     entry = $(linked_draft)
     draft = $(notdir $(linked_draft))
-    $(info using linked draft $(ENTRY))
   else
     entry = $(POST_ARCHIVE)$(DAYPATH)--$(linked_draft)
     draft = $(linked_draft)
