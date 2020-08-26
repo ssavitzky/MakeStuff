@@ -63,14 +63,16 @@ else ifdef entry		# entry was defined on the command line
   name := $(basename $(entry))
 else ifneq "$(strip $(shell test -f .draft || echo 1))" "1" # .draft is a (live) symlink
   linked_draft := $(shell readlink .draft)
-  ifneq "$(dir $(linked_draft))" ""
+  ifneq "$(dir $(linked_draft))" "./"
     # if .draft points to an entry, we use it as $(entry).  Otherwise it points to a draft
     # file in the current directory, and entry is derived by appending its name to
     # `$(DAYPATH)--`
+    $(info using linked draft $(linked_draft) as entry)
     entry = $(linked_draft)
     draft = $(notdir $(linked_draft))
   else
     entry = $(POST_ARCHIVE)$(DAYPATH)--$(linked_draft)
+    $(info constructing entry $(entry) from $(linked_draft))
     draft = $(linked_draft)
   endif
 else ifdef DEFAULT_NAME
@@ -147,8 +149,8 @@ entry: 	name-required | $(POST_ARCHIVE)$(MONTHPATH)
 draft:	name-required
 	echo "$$$(PFX)TEMPLATE" > $(DRAFT)
 	git add $(DRAFT)
-	[ ! -z $(DONT_COMMIT_DRAFT) ] || 			\
-	   git commit -m "$(MYNAME): start" $(DRAFT)
+	[ ! -z $(DONT_COMMIT_DRAFT) ] || 					\
+	   git commit -m "$(MYNAME): start $(DRAFT) on $(DAYPATH)" $(DRAFT)
 
 ## Validation dependencies for posting:
 #
