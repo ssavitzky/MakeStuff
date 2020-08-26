@@ -135,7 +135,7 @@ report-effective-vars:
 #
 entry: 	name-required | $(POST_ARCHIVE)$(MONTHPATH)
 	[ ! -f $(ENTRY) ] || ( echo entry already exists; false )
-	@echo "$$$(PFX)TEMPLATE" > $(ENTRY)
+	echo "$$$(PFX)TEMPLATE" > $(ENTRY)
 	git add $(ENTRY)
 	git commit -m "$(MYNAME): start $(ENTRY)" $(ENTRY)
 	ln -sf $(ENTRY) .draft
@@ -145,7 +145,7 @@ entry: 	name-required | $(POST_ARCHIVE)$(MONTHPATH)
 #	name is required in this case -> hopefully not any more.
 #
 draft:	name-required
-	@echo "$$$(PFX)TEMPLATE" > $(DRAFT)
+	echo "$$$(PFX)TEMPLATE" > $(DRAFT)
 	git add $(DRAFT)
 	[ ! -z $(DONT_COMMIT_DRAFT) ] || 			\
 	   git commit -m "$(MYNAME): start" $(DRAFT)
@@ -211,23 +211,29 @@ pre-post: name-or-entry-required draft-or-entry-required | $(POST_ARCHIVE)$(MONT
 	ln -sf $(entry) .draft
 
 # post an entry.
-#	The date is recorded in the entry, followed by the url returned by $(POSTCMD)
+#	The date is recorded in the entry, followed by the url returned by $(POSTCMD).
+#	The sed command that does that is identical to the one used in `posted:`;
+#	using a make variable instead of the shell variable that we used to use,
+#	makes the whole process transparent and easier to troubleshoot.
 #
-#	commit with -a because the draft might have been added but not committed
+#	We commit with -a because the draft might have been added but not committed;
+#	in that case we can't rely on `git mv` having added the deletion.
+#
 #	Assuming the post succeeded, remove the .draft link and replace it with
 #	.post, which makes the most recent entry easier to find for editing.
 #
 #	Finally, grep for the Posted: line, which gets the URL printed on the
 #	terminal; most terminal emulators, e.g. gnome-terminal, let you open it.
+#	Use tail on grep's results, to get the most recent Posted: line
 #
+run_post_cmd = $(shell $(POSTCMD) $(entry))
 post:	pre-post
-	url=$$($(POSTCMD) $(entry)); 	\
-	   sed -i -e '1,/^$$/ s@^$$@Posted:  $(POSTED) '"$$url"'\n@' $(entry)
+	sed -i -e '1,/^$$/ s@^$$@Posted:  $(POSTED) $(run_post_cmd)\n@' $(entry)
 	rm -f .draft
 	ln -sf $(entry) .post
 	git add $(entry)
 	git commit -m "posted $(entry)" -a
-	grep Posted: $(entry) | head -1
+	grep Posted: $(entry) | tail -1
 
 # crosspost the latest post to LJ, for use when automatic crossposting is broken
 # this is fragile: it relies on there being two spaces after "Posted:"
@@ -239,16 +245,17 @@ xpost:
 	(sed -e 's/<cut/<lj-cut/' -e 's@</cut@</lj-cut@' $(LAST_POST); \
 		echo "$(CROSSPOSTED)") | $(POSTCMD) -x
 
+# record posted date in an entry, assuming something went wrong posting it
+#
 POST_URL=$(shell wget -q -O - https://$(JOURNAL)/$(DAYPATH)  	\
          | grep 'class="entry-title"' | tail -1                 \
          | sed -E 's/^<[^>]*><[^>]*href="([^"]*)".*$$/\1/')
-
 posted:
 	sed -i -e '1,/^$$/ s@^$$@Posted:  $(POSTED) $(POST_URL)\n@' $(entry)
 	git commit -m "posted $(entry)" $(entry)
 	rm -f .draft
 	ln -sf $(entry) .post
-	grep Posted: $(entry) | head -1
+	grep Posted: $(entry) | tail -1
 
 # make .draft point to today's entry
 .draft:: $(ENTRY)

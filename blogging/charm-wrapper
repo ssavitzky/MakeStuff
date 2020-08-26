@@ -23,11 +23,15 @@ BLOGIN=mdlbear
 BLOGIN=`grep '^login =' ~/.charmrc | head -1 | cut -d= -f 2 | cut -d' ' -f2`
 BHOST=dreamwidth.org
 
+DEST='>/dev/null'
+
 if [ "-n" == "$1" ]; then
     ACTION=no_action
+    DEST=
     shift
-else
-    ACTION=""
+elif [ "-v" == "$1" ]; then
+    DEST=
+    shift
 fi
 
 if [ "-x" == "$1" ]; then
@@ -96,9 +100,9 @@ read_headers () {
 
     if [ "local" == "$PERMISSION" ]; then cat > /dev/null; echo $1; exit; fi
 
-    $FILTER | $ACTION $POST -q --subject "$SUBJECT" --mood "$MOOD" --pic "$PICTURE"\
-	    --tag "$TAGS" --permit "$PERMISSION" --location "$LOCATION"\
-	    --music "$MUSIC" --journal "$JOURNAL" > /dev/null
+    $FILTER | $ACTION $POST -q --subject "$SUBJECT" --mood "$MOOD" --pic "$PICTURE" \
+	    --tag "$TAGS" --permit "$PERMISSION" --location "$LOCATION" \
+	    --music "$MUSIC" --journal "$JOURNAL" $DEST
 
 } < "${1:-/dev/stdin}"
 
@@ -109,7 +113,7 @@ if [ ! -z "$XPOST" ] && [ -z "$RCFILE" ]; then
 	SUBJECT="$SUBJECT"
 	$ACTION charm -q --subject "$SUBJECT" --mood "$MOOD" --pic "$PICTURE"\
 		--tag "$TAGS" --permit "$PERMISSION" --location "$LOCATION"\
-		--music "$MUSIC" --journal "$JOURNAL" > /dev/null
+		--music "$MUSIC" --journal "$JOURNAL" $DEST
     } # < $1 # NOTE:  crossposting won't work when posting from STDIN.
 fi
 
