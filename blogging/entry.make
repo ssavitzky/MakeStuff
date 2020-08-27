@@ -206,7 +206,7 @@ $(YYYY):
 #	e.g. for appending an accurate word count.  It works because pre-post is
 #	idempotent.
 #
-pre-post: name-or-entry-required draft-or-entry-required | $(POST_ARCHIVE)$(MONTHPATH)
+pre-post:  draft-or-entry-required | $(POST_ARCHIVE)$(MONTHPATH)
 	if [ ! -f $(entry) ]; then mkdir -p $(POST_ARCHIVE)$(MONTHPATH); 	   \
 	   git mv $(draft) $(entry) || ( mv  $(draft) $(entry); git add $(entry) ) \
 	fi
@@ -214,9 +214,6 @@ pre-post: name-or-entry-required draft-or-entry-required | $(POST_ARCHIVE)$(MONT
 
 # post an entry.
 #	The date is recorded in the entry, followed by the url returned by $(POSTCMD).
-#	The sed command that does that is identical to the one used in `posted:`;
-#	using a make variable instead of the shell variable that we used to use,
-#	makes the whole process transparent and easier to troubleshoot.
 #
 #	We commit with -a because the draft might have been added but not committed;
 #	in that case we can't rely on `git mv` having added the deletion.
@@ -228,9 +225,9 @@ pre-post: name-or-entry-required draft-or-entry-required | $(POST_ARCHIVE)$(MONT
 #	terminal; most terminal emulators, e.g. gnome-terminal, let you open it.
 #	Use tail on grep's results, to get the most recent Posted: line
 #
-run_post_cmd = $(shell $(POSTCMD) $(entry))
 post:	pre-post
-	sed -i -e '1,/^$$/ s@^$$@Posted:  $(POSTED) $(run_post_cmd)\n@' $(entry)
+	url=$$($(POSTCMD) $(entry)); \
+	sed -i -e '1,/^$$/ s@^$$@Posted:  $(POSTED) '$${url}'\n@' $(entry)
 	rm -f .draft
 	ln -sf $(entry) .post
 	git add $(entry)
