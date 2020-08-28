@@ -10,12 +10,12 @@
 #
 thanks: PFX   := thx_
 thanks: NAME  := thankful-$(shell date +%A | tr [:upper:] [:lower:])
-thanks: title := Thankful $(shell date +%A)
+thanks: TITLE := Thankful $(shell date +%A)
 thanks: report-effective-vars entry
 
 # NOTE:  by convention, PFX ends with an underscore.
 define thx_TEMPLATE
-Subject: $(title)
+Subject: $(TITLE)
 Tags: thanks, 
 Picture: turkey
 Music: 

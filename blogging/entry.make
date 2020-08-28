@@ -92,7 +92,15 @@ endif
 #   constants or configuration parameters and lowercase names internal variables,
 #   because defining uppercase names on the command line is annoying.
 
-NAME := $(name)
+NAME  := $(name)
+
+# TITLE, similarly, starts out with the title defined on the command line.
+#   Most templates and shortcuts play fast-and-loose with it and use $(title);
+#   this is a legacy usage, but as long as the template and the shortcut match
+#   it doesn't matter.  The main default template uses TITLE, and there are
+#   probably still some shortcuts that are incorrect because of that.
+
+TITLE := $(title)
 
 ### Define DRAFT and ENTRY
 #   $(DRAFT) and $(ENTRY) are the targets of `make draft` and `make entry` respectively.
@@ -126,9 +134,10 @@ help::
 # 	see ./thanks.make for an example.
 #
 report-effective-vars:
-	@echo "draft =" $(draft), entry = $(entry)
-	@echo "name  =" $(name), NAME =  $(NAME), title = '\"$(title)\"'
-	@echo "DRAFT =" $(DRAFT), ENTRY = $(ENTRY)
+	@echo "name =" $(name),  title = '\"$(title)\"'
+	@echo "draft=" $(draft), entry = $(entry)
+	@echo "NAME =" $(NAME),  TITLE = '\"$(TITLE)\"'
+	@echo "DRAFT=" $(DRAFT), ENTRY = $(ENTRY) from command or target
 
 ## entry:  make an entry for today, and link .draft
 #	The commit gives us a record of the starting time.
@@ -157,11 +166,15 @@ draft:	name-required
 #	Multiple drafts can occur if drafts are kept in a separate directory;
 #	that's the case in Jekyll blogs for example.
 
+#	name-required is a dependency of entry and draft; it checks $(NAME),
+#	but suggests $(name) because name=xxx is what goes on the commad line.
 name-required:
-	@if [ -z $(name) ]; then \
+	@if [ -z $(NAME) ]; then \
 	   echo '$$(name) not defined.\n  Use "$(HELP)"'; false; \
 	fi
 
+#	name-or-entry-required does not appear to be in use, and will probably
+#	go away at some point unless it acquires one.
 name-or-entry-required:
 	@if [ -z $(name) ] && [ ! -f $(entry) ]; then \
 	   echo '$$(name) not defined.\n  Use "$(HELP)"'; false; \
@@ -226,8 +239,9 @@ pre-post:  draft-or-entry-required | $(POST_ARCHIVE)$(MONTHPATH)
 #	Use tail on grep's results, to get the most recent Posted: line
 #
 post:	pre-post
-	url=$$($(POSTCMD) $(entry)); \
-	sed -i -e '1,/^$$/ s@^$$@Posted:  $(POSTED) '$${url}'\n@' $(entry)
+	url=$$($(POSTCMD) $(entry)); 	\
+	echo url=:$$url:; 		\
+	sed -i -e '1,/^$$/ s@^$$@Posted:  $(POSTED) '"$$url"'\n@' $(entry)
 	rm -f .draft
 	ln -sf $(entry) .post
 	git add $(entry)
@@ -250,11 +264,15 @@ POST_URL=$(shell wget -q -O - https://$(JOURNAL)/$(DAYPATH)  	\
          | grep 'class="entry-title"' | tail -1                 \
          | sed -E 's/^<[^>]*><[^>]*href="([^"]*)".*$$/\1/')
 posted:
-	sed -i -e '1,/^$$/ s@^$$@Posted:  $(POSTED) $(POST_URL)\n@' $(entry)
+	url=$$($(TOOLDIR)/blogging/last-post); 	\
+	echo url=:$$url:; 			\
+	sed -i -e '1,/^$$/ s@^$$@Posted:  $(POSTED) '"$$url"'\n@' $(entry)
 	git commit -m "posted $(entry)" $(entry)
 	rm -f .draft
 	ln -sf $(entry) .post
 	grep Posted: $(entry) | tail -1
+
+#	sed -i -e '1,/^$$/ s@^$$@Posted:  $(POSTED) $(POST_URL)\n@' $(entry)
 
 # make .draft point to today's entry
 .draft:: $(ENTRY)
@@ -332,7 +350,7 @@ report-template:
 # The default entry template.
 #     A redefinition in .config.make will silently override it
 define TEMPLATE
-Subject: $(title)
+Subject: $(TITLE)
 Access: public
 Tags: 
 Music: 
