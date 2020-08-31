@@ -228,8 +228,15 @@ pre-post:  draft-or-entry-required | $(POST_ARCHIVE)$(MONTHPATH)
 # post an entry.
 #	The date is recorded in the entry, followed by the url returned by $(POSTCMD).
 #
+#	We verify that $(POSTCMD) actually _does_ return a URL.  Earlier, we were
+#	dumping charm's output to /dev/null; now the hope is that it might
+#	eventually return a URL, and in any case we need to see any error messages
+#	it prints.  We now do the right thing and test POSTCMD's output to see
+#	whether it starts with a URL, and run ./last-post to get it if it doesn't.
+#	That means that we can stop trying to do it in charm-wrapper.
+#
 #	We commit with -a because the draft might have been added but not committed;
-#	in that case we can't rely on `git mv` having added the deletion.
+#	in that case we can't rely on `git mv` having noticed the deletion.
 #
 #	Assuming the post succeeded, remove the .draft link and replace it with
 #	.post, which makes the most recent entry easier to find for editing.
@@ -239,8 +246,9 @@ pre-post:  draft-or-entry-required | $(POST_ARCHIVE)$(MONTHPATH)
 #	Use tail on grep's results, to get the most recent Posted: line
 #
 post:	pre-post
-	url=$$($(POSTCMD) $(entry)); 	\
-	echo url=:$$url:; 		\
+	url=$$($(POSTCMD) $(entry)); echo posting returned :$$url:;	\
+	echo "$$url" | grep -q -E '^(http|file|[0-9./])' 		\
+	     || url=$$($(TOOLDIR)/blogging/last-post $(JOURNAL));	\
 	sed -i -e '1,/^$$/ s@^$$@Posted:  $(POSTED) '"$$url"'\n@' $(entry)
 	rm -f .draft
 	ln -sf $(entry) .post
@@ -264,7 +272,7 @@ POST_URL=$(shell wget -q -O - https://$(JOURNAL)/$(DAYPATH)  	\
          | grep 'class="entry-title"' | tail -1                 \
          | sed -E 's/^<[^>]*><[^>]*href="([^"]*)".*$$/\1/')
 posted:
-	url=$$($(TOOLDIR)/blogging/last-post); 	\
+	url=$$($(TOOLDIR)/blogging/last-post $(JOURNAL)); 	\
 	echo url=:$$url:; 			\
 	sed -i -e '1,/^$$/ s@^$$@Posted:  $(POSTED) '"$$url"'\n@' $(entry)
 	git commit -m "posted $(entry)" $(entry)

@@ -117,12 +117,7 @@ if [ ! -z "$XPOST" ] && [ -z "$RCFILE" ]; then
     } # < $1 # NOTE:  crossposting won't work when posting from STDIN.
 fi
 
-# print out the url of the last thing we posted:
-#  Note: this may not work if the post isn't public; it might if one puts
-#  the appropriate credentials in .netrc -> doesn't, at least not for LJ.
-#  and since my livejournal is marked adults-only, this doesn't even work for
-#  public posts on LJ.
-
-wget -q -O - https://$BLOGIN.$BHOST/$(date +%Y/%m/%d/) \
-   | grep 'class="entry-title"' | tail -1                      \
-   | sed -E 's/^<[^>]*><[^>]*href="([^"]*)".*$/\1/'
+# Trying to compensate for the fact that charm doesn't return the URL
+# of the post causes havoc in many edge cases.  What we really need
+# to do is replace charm with something that works right.  Meanwhile,
+# we compensate as best we can in `entry.make`.
