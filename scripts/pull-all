@@ -1,7 +1,22 @@
 #!/bin/bash
 #  Recursively find all directories with git repos, and try to pull them.
+#  If we start in a directory that has a repo, we only pull subdirectories
+#  that have the same origin.  If the current directory does _not_ have a
+#  repo, run pull-all in all subdirectories it exists in.
 
-GIT_HOST=savitzky.net
+
+has_origin () {
+    [[ -d $1/.git ]] && (git -C $1 remote | grep -q origin)
+}
+
+get_origin () {
+    git -C $1 remote get-url origin | sed -E 's/^[^@]*\@([^:]*).*$/\1/'
+}
+
+if has_origin .; then
+    GIT_HOST=$(get_origin .)
+fi
+
 NO_OP=false
 TIME=0
 VERBOSE=false
@@ -11,12 +26,15 @@ default_t='default '
 usage () {
     cat <<EOF
 $0 [options]
-   Recursively find all git repos; try to pull if origin matches ${GIT_HOST}
+   If the current directory has a git origin,
+      pull it and all all subdirectories with the same origin.
+   Otherwise, recurse into each subdirectory that either
+      has an origin or a copy of pull-all
    options:
       -h or --help	   - print this message and exit
       -n or --no-op  	   - print directories without pulling
-      -s or --site SITE    - site to pull from (${default_s}${GIT_HOST}; can be a basic regex)
-      -t or --time TIME    - wait time seconds between pulls (${default_t}$TIME)
+      -s or --site SITE    - pull if origin matches SITE (can be a basic regex)
+      -t or --time TIME    - wait TIME seconds between pulls (${default_t}$TIME)
       -v or --verbose	   - print more information 
 EOF
 }
@@ -53,13 +71,18 @@ while [[ ! -z "$1" ]]; do
     esac
 done
 
-has_origin () {
-    [[ -d $1 ]] && (git -C $1 remote | grep -q origin)
-}
+if [[ -z $GIT_HOST ]]; then
+    for d in *; do
+	 if [[ ! -L $d ]] && has_origin $d; then
+	     (echo '  *' $d ; cd $d; ../pull-all "$@")
+	 elif  [[ ! -L $d ]] && [[ -x $d/pull-all ]] ; then
+	     (echo '***' $d ; cd $d; ./pull-all "$@")
+	 fi
+    done
+    exit
+fi
 
-get_origin () {
-    git -C $1 remote get-url origin
-}
+$VERBOSE && echo $PWD pulling from $GIT_HOST
 
 flags="${*:---ff-only}"
 repos=`find . -name .git -print | sort`
