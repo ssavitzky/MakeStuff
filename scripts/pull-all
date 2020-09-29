@@ -112,20 +112,21 @@ repos=`find . -name .git -print | sort`
 export pfx="$pfx"'   '
 
 for f in $repos; do
-    if has_origin $f/..; then
+    d=$(dirname $f)
+    if has_origin $d; then
 	if get_origin $f | grep -q "$GIT_HOST"; then
-	    [[ $(dirname $f) = . ]] || echo -ne "$pfx" $(dirname $f)"\t"
+	    [[ $d = . ]] || echo -ne "$pfx" $d"\t"
 	    # note: pull has to be done from a working tree, not a repo.
-	    $NO_OP || git -C $(dirname $f) pull $flags
+	    $NO_OP || (git -C $d pull $flags; git -C $d status --short)
 	    $NO_OP && echo
 	    sleep $TIME # some sites restrict you to some small number of ssh connections
     	    # in a row, so throttle back.  Better to use controlmaster if you can
 	else
-	    $VERBOSE && echo -e "$pfx" $(dirname $f)"\t ***" origin not $GIT_HOST
+	    $VERBOSE && echo -e "$pfx" $d"\t ***" origin not $GIT_HOST
 	fi
     elif [[ -d $f ]]; then
-	$VERBOSE && echo -e "$pfx" $(dirname $f)"\t ***" no origin
+	$VERBOSE && echo -e "$pfx" $d"\t ***" no origin
     else
-	$VERBOSE && echo -e "$pfx" $(dirname $f)"\t ***" .git not a directory
+	$VERBOSE && echo -e "$pfx" $d"\t ***" .git not a directory
     fi
 done
