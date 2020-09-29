@@ -6,17 +6,19 @@
 
 
 has_origin () {
-    [[ -d $1/.git ]] && (git -C $1 remote | grep -q origin)
+    [[ -d $1/.git/refs/remotes/origin ]]
 }
 
 get_origin () {
-    git -C $1 remote get-url origin | sed -E 's/^[^@]*\@([^:]*).*$/\1/'
+    git -C $1 remote get-url origin | sed -E 's/^([^@]*@)?([^:]*).*$/\2/'
 }
 
 if has_origin .; then
     GIT_HOST=$(get_origin .)
 fi
 
+ARGS="$@"
+DIR=`pwd -P`
 NO_OP=false
 TIME=0
 VERBOSE=false
@@ -71,27 +73,48 @@ while [[ ! -z "$1" ]]; do
     esac
 done
 
+stars="${stars:-***}"
+
+# TODO: it would be nice if we had a different format for multiple
+#       levels of nested directories containing `pull-all`, but right
+#       now we don't have any.
+# The right thing is probably to add spaces in front of $pfx, which we
+# set just before the repo loop.
+
 if [[ -z $GIT_HOST ]]; then
     for d in *; do
-	 if [[ ! -L $d ]] && has_origin $d; then
-	     (echo '  *' $d ; cd $d; ../pull-all "$@")
-	 elif  [[ ! -L $d ]] && [[ -x $d/pull-all ]] ; then
-	     (echo '***' $d ; cd $d; ./pull-all "$@")
-	 fi
+	if [[ -L $d ]] || [[ ! -d $d ]]; then
+	    :			# skip symlinks and plain files
+	elif [[ -x $d/pull-all ]] ; then
+	    # we want to use $d/pull-all if it exists, but if $d also has an origin
+	    # we know that the first thing it will do is `git pull .`, so we suppress
+	    # the newline and add a tab so that its result starts on the current line.
+	    if has_origin $d; then echo -ne "$stars" $d: "\t";
+	                      else echo "$stars" $d:;
+	    fi
+	    (cd $d; stars='  *'  ./pull-all $ARGS)
+	elif has_origin $d; then
+	    # in this case, we _know_ that $d has an origin, so...
+	    echo -ne "$stars" $d "\t"
+	    (cd $d; stars='  *' $DIR/pull-all $ARGS)
+	fi
     done
     exit
 fi
 
-$VERBOSE && echo $PWD pulling from $GIT_HOST
+$VERBOSE && echo $PWD pulling from \"$GIT_HOST\" $ARGS
 
 flags="${*:---ff-only}"
 repos=`find . -name .git -print | sort`
-pfx='   '
+
+# The prefix is supposed to indicate the nesting level of directories where
+# we used pull-all instead of looping through the repos.  It has not been tested.
+export pfx="$pfx"'   '
 
 for f in $repos; do
-    if has_origin $f; then
+    if has_origin $f/..; then
 	if get_origin $f | grep -q "$GIT_HOST"; then
-	    echo -ne "$pfx" $(dirname $f)"\t"
+	    [[ $(dirname $f) = . ]] || echo -ne "$pfx" $(dirname $f)"\t"
 	    # note: pull has to be done from a working tree, not a repo.
 	    $NO_OP || git -C $(dirname $f) pull $flags
 	    $NO_OP && echo
