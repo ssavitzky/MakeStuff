@@ -24,7 +24,7 @@ Mood: grateful
 <p> Today I am grateful for...
 
 <ul>
-  <li>
+  <li> 
 </ul>
 endef
 export thx_TEMPLATE
