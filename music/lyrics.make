@@ -195,7 +195,7 @@ all::	$(PRINT)
 # zongbook.pdf depends on all the files it references 
 zongbook.pdf: zongbook.tex $(ZONGS) $(TEXDIR)/song.sty
 zongbook-print.pdf: zongbook.pdf
-	gs -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -dCompatibilityLevel=1.2 -dPDFSETTINGS=/prepress -dColorImageResolution=600  -dEmbedAllFonts=true -sOutputFile="$@" "$<"
+	gs -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -dCompatibilityLevel=1.2 -dPDFX -dPDFSETTINGS=/prepress -dColorImageResolution=600  -dEmbedAllFonts=true -sOutputFile="$@" "$<"
 
 ###
 ### Lists:
