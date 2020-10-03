@@ -139,10 +139,12 @@ export TEXINPUTS
 # long and a short word.
 SONG_PREAMBLE = '\documentclass[$(SIZE)a4paper,enabledeprecatedfontcommands]{scrartcl}'			\
 		'\usepackage[utf8]{inputenc}'                                   \
+		'\usepackage{graphicx}'                                         \
 		'\usepackage[protrusion=true,expansion=true,tracking=true,stretch=10,shrink=250]{microtype}'                                   \
 		'\usepackage{song,zingers,zongbook,uniinput}'
 SONG_LOOSELEAF= '\documentclass[$(SIZE)a4paper,enabledeprecatedfontcommands]{scrartcl}'		\
 		'\usepackage[utf8]{inputenc}'                                   \
+		'\usepackage{graphicx}'                                         \
 		'\usepackage[protrusion=true,expansion=true,tracking=true,stretch=10,shrink=250]{microtype}'                                   \
 		'\usepackage{song,zingers,zongbook,uniinput}'
 
@@ -151,12 +153,12 @@ SONG_LOOSELEAF= '\documentclass[$(SIZE)a4paper,enabledeprecatedfontcommands]{scr
 %.pdf:	%.flk
 	for step in first-run references; do echo q | $(PDFLATEX) $(TEXOPTS) -jobname $*	\
 		$(SONG_LOOSELEAF) '\begin{document}\input{$<}\end{document}'; done
-	rm -f $*.log $*.aux
+	rm -f $*.log $*.aux ./stdin.tex ./-.dep 89/* ./snippet-name*--*ly ./snippet-map-*.ly
 
 %.dvi:	%.flk
 	echo q | $(LATEX) $(TEXOPTS) -jobname $*				\
 		$(SONG_PREAMBLE) '\begin{document}\input{$<}\end{document}'
-	rm -f $*.log $*.aux
+	rm -f $*.log $*.aux ./-.dep 89/* ./snippet-name*--*ly ./snippet-map-*.ly
 
 %.txt:	%.flk
 	$(FLKTRAN) $< $@
@@ -192,6 +194,8 @@ all::	$(PRINT)
 
 # zongbook.pdf depends on all the files it references 
 zongbook.pdf: zongbook.tex $(ZONGS) $(TEXDIR)/song.sty
+zongbook-print.pdf: zongbook.pdf
+	gs -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -dCompatibilityLevel=1.5 -dPDFSETTINGS=/prepress -dColorImageResolution=600  -dEmbedAllFonts=true -sOutputFile="$@" "$<"
 
 ###
 ### Lists:
