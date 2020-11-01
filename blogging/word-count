@@ -98,14 +98,17 @@ count-words () {
     missed=0
     last=0
     for f in $files ; do
-	# pandoc uses dashes as list bullets, so we have to take them out so they
-	# don't get counted.
+	# the initial `sed` removes the email-style header from posts.
+	#   (FIXME: removes thefirst paragraph if there isn't a header)
+	# the final `tr` removes the dashes that pandoc uses as list bullets
 	if [[ ! -z $remove_stats ]] && [[ "$f" != "${f%.html}" ]]; then
 	    # optionally remove stats ("<pre>....stats:" - "</pre>") from html files
-	    wc=$(sed -e '/^<pre>[a-zA-Z]* stats\:$/,/^<\/pre>/d' $f | 
-		 pandoc -f html -t plain | tr -- " -" "  " | wc -w  )
+	    wc=$(sed -e '1,/^ *$/d' $f |
+		     sed -e '/^<pre>[a-zA-Z]* stats\:$/,/^<\/pre>/d' | 
+		     pandoc -f html -t plain | tr -- " -" "  " | wc -w)
 	else
-	    wc=$(pandoc -i $f -t plain | tr -- " -" "  " | wc -w)
+	    wc=$(sed -e '1,/^ *$/ d' $f |
+		     pandoc -f html -t plain | tr -- " -" "  " | wc -w)
 	fi
 	total=$(( $total + $wc))
 	count=$(( $count + 1))
