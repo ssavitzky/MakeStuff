@@ -112,7 +112,7 @@ check_for_renamed_master () {
     if git  -C $d branch | grep -q master && git -C $d branch -a | grep -q origin/main; then
 	echo rename master branch to main
 	git -C $d branch -m master main
-	git -C $d symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/main
+	git -C $d remote set-head origin main
 	git -C $d branch -u origin/main main
     fi
 }
