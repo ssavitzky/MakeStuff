@@ -113,9 +113,9 @@ maybe_rename_master () {
     git -C $d fetch --prune
     if git  -C $d branch | grep -q master && git -C $d branch -a | grep -q origin/main; then
 	echo rename master branch to main
-	$NO_OP git -C $d branch -m master main
-	$NO_OP git -C $d remote set-head origin main
-	$NO_OP git -C $d branch -u origin/main main
+	$NO_OP || git -C $d branch -m master main
+	$NO_OP || git -C $d remote set-head origin main
+	$NO_OP || git -C $d branch -u origin/main main
     fi
     # return with non-zero exit code if current branch is neither main nor master
     git -C $d branch | grep -q '* main' ||  git -C $d branch | grep -q '* master'
