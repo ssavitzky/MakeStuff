@@ -104,17 +104,21 @@ fi
 
 $VERBOSE && echo $PWD pulling from \"$GIT_HOST\" $ARGS
 
-# Check for master having been renamed to main.
-#   FIXME the check is done inefficiently and only detects renames to main.
-check_for_renamed_master () {
+# Rename master to main if it has been renamed on origin but not here
+#   returns true if the current branch is one or the other, because
+#   we don't want to pull if it isn't.
+#   FIXME: the check is done inefficiently and only detects renames to main.
+maybe_rename_master () {
     local d=$1
     git -C $d fetch --prune
     if git  -C $d branch | grep -q master && git -C $d branch -a | grep -q origin/main; then
 	echo rename master branch to main
-	git -C $d branch -m master main
-	git -C $d remote set-head origin main
-	git -C $d branch -u origin/main main
+	$NO_OP git -C $d branch -m master main
+	$NO_OP git -C $d remote set-head origin main
+	$NO_OP git -C $d branch -u origin/main main
     fi
+    # return with non-zero exit code if current branch is neither main nor master
+    git -C $d branch | grep -q '* main' ||  git -C $d branch | grep -q '* master'
 }
 
 flags="${*:---ff-only}"
@@ -130,8 +134,11 @@ for f in $repos; do
 	if get_origin $f | grep -q "$GIT_HOST"; then
 	    [[ $d = . ]] || echo -ne "$pfx" $d"\t"
 	    # note: pull has to be done from a working tree, not a repo.
-	    $NO_OP || check_for_renamed_master $d
-	    $NO_OP || (git -C $d pull $flags; git -C $d status --short)
+	    if maybe_rename_master $d; then 
+		$NO_OP || (git -C $d pull $flags; git -C $d status --short)
+	    else
+		echo current branch is neither main nor master, so don\'t pull
+	    fi
 	    $NO_OP && echo
 	    sleep $TIME # some sites restrict you to some small number of ssh connections
     	    # in a row, so throttle back.  Better to use controlmaster if you can
