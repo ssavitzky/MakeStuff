@@ -142,7 +142,7 @@ if $allYear; then
 	count-words $(expand $y$sep$mm$sep)
 	yearWords=$(( $yearWords + $total ))
 	yearCount=$(( $yearCount + $count ))
-	echo -e  "`printf %7d $total`" words in "`printf %2d $count`" posts"\t"  \
+	echo -e  "`printf %7d $total`" words in "`printf %2d $count`" posts  \
 	     in $y/$mm "(average $avg/post)"
     done
     avg=$(($yearWords / $yearCount))
