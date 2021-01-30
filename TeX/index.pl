@@ -192,7 +192,7 @@ if ($outfmt eq "dsc") {		# .htaccess description lines
 } elsif ($outfmt eq "html" && $tables) {	# HTML table
     print "<table class='songlist'>\n";
     print "<tr><th>ogg</th><th>mp3</th>"
-	. ($lyrics? "<th>pdf</th><th align=left>file</th>" : "")
+	. ($lyrics? "<th>pdf</th>" : "")
 	. "<th>time</th>";
     print "<th align=left> Title </tr>\n ";
     for ($j = 0; $j < $i; $j++) {
