@@ -98,7 +98,7 @@ GIT_REPO := $(shell d=$(MYPATH); 					\
 		  done; [ -d $$d/.git ] && echo $$d/.git)
 
 ifdef GIT_REPO
-  GIT_COMMIT = $(git log --format=format:%H -n1)
+  GIT_COMMIT = $(shell git log --format=format:%H -n1)
 
   # The commit when we started make.  We can use this to see whether we made a
   #     new commit as part of the deployment process.
