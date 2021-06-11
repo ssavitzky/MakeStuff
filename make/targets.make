@@ -61,6 +61,9 @@ deploy-rgit::
 #	* it recurses automatically into git-controled subdirectories,
 #	* ...but doesn't require a makefile with a push target there.
 #
+#	See also, ../blogging/save.make, which uses push --force-with-lease to
+#	eliminate trivial commits while working on draft posts and to.do logs
+#
 .PHONY: push push-this push-r commit
 push:	all push-this push-r
 
@@ -107,7 +110,7 @@ push-R::
 # pull does pull --rebase
 #	It's simpler than push because it doesn't do a build first.
 #	It's still split up, so that you can run the pieces separately
-#
+
 .PHONY: pull pull-this pull-r
 pull: pull-this pull-r
 
@@ -123,7 +126,6 @@ pull-r::
 		then make pull;					\
 		else git pull --rebase; fi)			\
 	done
-
 
 ### rsync deployment ###
 
