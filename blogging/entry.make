@@ -144,7 +144,7 @@ report-effective-vars:
 #	the subject is, by default, today's date.
 #	Leaves .draft a symlink to the entry; name= is not required for posting.
 #
-entry: 	name-required | $(POST_ARCHIVE)$(MONTHPATH)
+entry: 	name-required .MM | $(POST_ARCHIVE)$(MONTHPATH)
 	[ ! -f $(ENTRY) ] || ( echo entry already exists; false )
 	echo "$$$(PFX)TEMPLATE" > $(ENTRY)
 	git add $(ENTRY)
@@ -201,6 +201,11 @@ ifdef POST_ARCHIVE
 $(POST_ARCHIVE)$(MONTHPATH):
 	mkdir -p $@
 endif
+
+#	.MM is a shortcut to $(POST_ARCHIVE)/YYYY/MM
+.PHONY: .MM
+.MM:	$(POST_ARCHIVE)$(MONTHPATH)
+	ln -sf $< $@
 
 $(MONTHPATH):
 	mkdir -p $@
