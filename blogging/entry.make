@@ -203,9 +203,9 @@ $(POST_ARCHIVE)$(MONTHPATH):
 endif
 
 #	.MM is a shortcut to $(POST_ARCHIVE)/YYYY/MM
-.PHONY: .MM
 .MM:	$(POST_ARCHIVE)$(MONTHPATH)
-	ln -sf $< $@
+	rm -f $@
+	ln -s $< $@
 
 $(MONTHPATH):
 	mkdir -p $@
