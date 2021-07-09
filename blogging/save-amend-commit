@@ -1,0 +1,26 @@
+#!/bin/sh
+#   This script is used as the value of GIT_EDITOR to amend the current commit
+#   message in `make save`.  The new commit message is passed in $NEW_MESSAGE,
+#   and the file containing the old message to amend is passed in $1.  We assume
+#   that each new message is a single line.
+
+#   We want to prepend the new commit message, which keeps the list of "saved"
+#   lines in reverse chronological order.  That way the history is preserved
+#   and the one-line commit message is always the most recent one.  The following
+#   sed script prepends the new message and a newline, and deletes the newline that
+#   followed the previous one.
+
+case $1 in
+    --append) shift
+	      echo "$NEW_MESSAGE" >> $1
+	      exit ;;
+esac
+
+script="1i$NEW_MESSAGE\n
+
+2d"
+sed -i -e "$script" $1
+
+
+
+

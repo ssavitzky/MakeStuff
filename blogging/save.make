@@ -17,6 +17,11 @@
 #	TODO: It's also an open question whether it should be allowed to clobber a
 #	commit made on a different day.
 #
+#	to keep save history, should append each save time to the commit message.
+#	See https://stackoverflow.com/questions/42857506/\
+#	    how-to-automatically-git-commit-amend-to-append-to-last-commit-message#42857774
+#	OLD_MSG=$(git log --format=%B -n1)
+#	GIT_EDITOR="echo 'appended line' >> $1" git commit --amend
 
 .PHONY: save Save
 
@@ -25,12 +30,19 @@ save_may_amend = $(findstring Saved on $(shell hostname),$(last_commit_subject))
 ifdef SAVE_MAY_AMEND_PUSH
 save_may_amend += $(findstring Push from $(shell hostname),$(last_commit_subject))
 endif
+
+build_new_commit_message = echo 'Saved on $(COMMIT_MSG)' >> $$1;
+# not working
+#echo >> $$1;	\
+#			    git log -n1 --format=%B | sed 2d >> $$1
+
 save:
 	@if [ -z "`git status --porcelain`" ]; then echo Up to date -- not saving.;	\
 	    echo See whether push is required; git push;				\
 	elif [ ! -z "$(save_may_amend)" ]; then						\
 	    echo Save will amend existing commit $(last_commit_subject);		\
-	    git commit -a --amend -m "Saved on $(COMMIT_MSG)";				\
+	    GIT_EDITOR=$(TOOLDIR)/blogging/save-amend-commit				\
+		NEW_MESSAGE='Saved on $(COMMIT_MSG)' git commit -a --amend;		\
 	    git push --force-with-lease || (echo === pull --rebase needed; false)	\
 	else										\
 	    echo Saving.  Previous commit was not a save, so not forcing;		\
