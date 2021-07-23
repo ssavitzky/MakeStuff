@@ -1,4 +1,3 @@
-
 ### MakeStuff plugin to safely amend trivial commits
 #
 #	Usually included along with .blog.defaults.make; it may be used separately in
@@ -14,8 +13,8 @@
 #	It's an open question whether to save if the last operation was `make push`
 #	... so we make it an option, controled by SAVE_MAY_AMEND_PUSH
 #
-#	TODO: It's also an open question whether it should be allowed to clobber a
-#	commit made on a different day.
+#	It's also an open question whether it should be allowed to clobber a commit made
+#	on a different day.  To allow that, define SAVE_MAY_IGNORE_DATE
 #
 #	to keep save history, should append each save time to the commit message.
 #	See https://stackoverflow.com/questions/42857506/\
@@ -25,10 +24,17 @@
 
 .PHONY: save Save
 
-last_commit_subject = $(wordlist 1,3,$(subst -, ,$(shell git log -n1 --format=%f)))
-save_may_amend = $(findstring Saved on $(shell hostname),$(last_commit_subject))
+ifdef SAVE_MAY_IGNORE_DATE
+save_test = 3
+else
+save_test = 7
+endif
+
+last_commit_subject = $(subst -, ,$(shell git log -n1 --format=%f))
+trimmed_commit_subject = $(wordlist 1,$(save_test),$(last_commit_subject)))
+save_may_amend = $(findstring Saved on $(shell hostname),$(trimmed_commit_subject))
 ifdef SAVE_MAY_AMEND_PUSH
-save_may_amend += $(findstring Push from $(shell hostname),$(last_commit_subject))
+save_may_amend += $(findstring Push from $(shell hostname),$(trimmed_commit_subject))
 endif
 
 build_new_commit_message = echo 'Saved on $(COMMIT_MSG)' >> $$1;
@@ -37,10 +43,10 @@ build_new_commit_message = echo 'Saved on $(COMMIT_MSG)' >> $$1;
 #			    git log -n1 --format=%B | sed 2d >> $$1
 
 save:
-	@if [ -z "`git status --porcelain`" ]; then echo Up to date -- not saving.;	\
-	    echo See whether push is required; git push;				\
+	@if [ -z "`git status --porcelain`" ]; then 					\
+	    echo Save: commit not needed; git push;					\
 	elif [ ! -z "$(save_may_amend)" ]; then						\
-	    echo Save will amend existing commit $(last_commit_subject);		\
+	    echo Save: amending $(trimmed_commit_subject);				\
 	    GIT_EDITOR=$(TOOLDIR)/blogging/save-amend-commit				\
 		NEW_MESSAGE='Saved on $(COMMIT_MSG)' git commit -a --amend;		\
 	    git push --force-with-lease || (echo === pull --rebase needed; false)	\
