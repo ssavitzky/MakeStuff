@@ -26,37 +26,36 @@
 
 ifdef SAVE_MAY_IGNORE_DATE
 save_test = 3
+save_tail = $(wordlist 1,1,$(COMMIT_MSG))
 else
 save_test = 7
+save_tail = $(wordlist 1,5,$(COMMIT_MSG))
 endif
-
+# save_msg_tail is the last part of the _next_ commit message.
 last_commit_subject = $(subst -, ,$(shell git log -n1 --format=%f))
-trimmed_commit_subject = $(wordlist 1,$(save_test),$(last_commit_subject)))
-save_may_amend = $(findstring Saved on $(shell hostname),$(trimmed_commit_subject))
+trimmed_commit_subject = $(wordlist 1,$(save_test),$(last_commit_subject))
+save_may_amend = $(findstring Saved on $(save_tail),$(trimmed_commit_subject))
 ifdef SAVE_MAY_AMEND_PUSH
-save_may_amend += $(findstring Push from $(shell hostname),$(trimmed_commit_subject))
+save_may_amend += $(findstring Push from $(save_tail),$(trimmed_commit_subject))
 endif
 
 build_new_commit_message = echo 'Saved on $(COMMIT_MSG)' >> $$1;
-# not working
-#echo >> $$1;	\
-#			    git log -n1 --format=%B | sed 2d >> $$1
 
 save:
 	@if [ -z "`git status --porcelain`" ]; then 					\
 	    echo Save: commit not needed; git push;					\
 	elif [ ! -z "$(save_may_amend)" ]; then						\
-	    echo Save: amending $(trimmed_commit_subject);				\
+	    echo Save: amending $(trimmed_commit_subject) ...;				\
 	    GIT_EDITOR=$(TOOLDIR)/blogging/save-amend-commit				\
 		NEW_MESSAGE='Saved on $(COMMIT_MSG)' git commit -a --amend;		\
 	    git push --force-with-lease || (echo === pull --rebase needed; false)	\
 	else										\
-	    echo Saving.  Previous commit was not a save, so not forcing;		\
+	    echo Save:  Previous commit not matched, so not amending;			\
 	    git commit -a -m "Saved on $(COMMIT_MSG)";					\
 	    git push || (echo === pull --rebase needed; false)				\
 	fi
 
 # Save: works like save: only it will also overwrite `Push from` commits.
 
-Save: save_may_amend += $(findstring Push from $(shell hostname),$(last_commit_subject))
+Save: save_may_amend += $(findstring Push from $(shell hostname),$(trimmed_commit_subject))
 Save: save
