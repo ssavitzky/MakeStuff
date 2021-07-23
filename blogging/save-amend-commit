@@ -10,6 +10,9 @@
 #   sed script prepends the new message and a newline, and deletes the newline that
 #   followed the previous one.
 
+#   It is possible to append the new message to the previous one, which preserves
+#   the original first line, by passing the `--append` flag.
+
 case $1 in
     --append) shift
 	      echo "$NEW_MESSAGE" >> $1
