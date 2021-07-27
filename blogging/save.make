@@ -50,7 +50,7 @@ save:
 		NEW_MESSAGE='Saved on $(COMMIT_MSG)' git commit -a --amend;		\
 	    git push --force-with-lease || (echo === pull --rebase needed; false)	\
 	else										\
-	    echo Save:  Previous commit not matched, so not amending;			\
+	    echo Save: will not amend $(trimmed_commit_subject) ...;			\
 	    git commit -a -m "Saved on $(COMMIT_MSG)";					\
 	    git push || (echo === pull --rebase needed; false)				\
 	fi
