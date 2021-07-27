@@ -10,17 +10,20 @@
 #	commits that differ in only a line or two.  Errors if something else as been
 #	committed since the last save.
 #
-#	It's an open question whether to save if the last operation was `make push`
-#	... so we make it an option, controled by SAVE_MAY_AMEND_PUSH
+#	save retains previous subject lines in the commit message; this is done by
+#	setting GIT_EDITOR to save-amend-commit
 #
-#	It's also an open question whether it should be allowed to clobber a commit made
-#	on a different day.  To allow that, define SAVE_MAY_IGNORE_DATE
+# Options:
+#   set SAVE_MAY_AMEND_PUSH to allow a save to amend a previous commit that starts with
+#	`Push from` ...  You can use `make push` to start a new sequence of saves.  You
+#	can use `make Save` to do this rather than setting the variable on the command
+#	line.
 #
-#	to keep save history, should append each save time to the commit message.
-#	See https://stackoverflow.com/questions/42857506/\
+#   set	SAVE_MAY_IGNORE_DATE to allow a save to amend a save commit made on a different
+#	day.
+#
+# See also: https://stackoverflow.com/questions/42857506/\
 #	    how-to-automatically-git-commit-amend-to-append-to-last-commit-message#42857774
-#	OLD_MSG=$(git log --format=%B -n1)
-#	GIT_EDITOR="echo 'appended line' >> $1" git commit --amend
 
 .PHONY: save Save
 
