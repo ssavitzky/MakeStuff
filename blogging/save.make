@@ -46,7 +46,7 @@ build_new_commit_message = echo 'Saved on $(COMMIT_MSG)' >> $$1;
 
 save:
 	@if [ -z "`git status --porcelain`" ]; then 					\
-	    echo Save: commit not needed; git push;					\
+	    echo Save: nothing to commit, working tree clean; git push;			\
 	elif [ ! -z "$(save_may_amend)" ]; then						\
 	    echo Save: amending $(trimmed_commit_subject) ...;				\
 	    GIT_EDITOR=$(TOOLDIR)/blogging/save-amend-commit				\
