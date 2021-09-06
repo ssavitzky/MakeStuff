@@ -199,7 +199,6 @@ from-required:
 # This is a prerequisite for entry;
 $(POST_ARCHIVE)$(MONTHPATH):
 	mkdir -p $@
-endif
 
 #	.MM is a shortcut to $(POST_ARCHIVE)/YYYY/MM
 .MM:	$(POST_ARCHIVE)$(MONTHPATH)
