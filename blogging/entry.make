@@ -197,7 +197,6 @@ from-required:
 ## rules for date-related directories
 
 # This is a prerequisite for entry;
-ifdef POST_ARCHIVE
 $(POST_ARCHIVE)$(MONTHPATH):
 	mkdir -p $@
 endif
@@ -206,9 +205,6 @@ endif
 .MM:	$(POST_ARCHIVE)$(MONTHPATH)
 	rm -f $@
 	ln -s $< $@
-
-$(MONTHPATH):
-	mkdir -p $@
 
 $(YYYY):
 	mkdir $@
@@ -223,6 +219,9 @@ $(YYYY):
 #	"make post", so that it won't require a name= if it's done separately,
 #	e.g. for appending an accurate word count.  It works because pre-post is
 #	idempotent.
+#
+#	It's not clear that we need to make $(POST_ARCHIVE)$(MONTHPATH) in the
+#	recipe -- it's a prerequisite.
 #
 pre-post:  draft-or-entry-required | $(POST_ARCHIVE)$(MONTHPATH)
 	if [ ! -f $(entry) ]; then mkdir -p $(POST_ARCHIVE)$(MONTHPATH); 	   \
