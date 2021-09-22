@@ -1,0 +1,76 @@
+#!/bin/bash
+#
+# Preview a MakeStuff blog post, an HTML body with an email-like
+# header, by converting it to an HTML page on STDOUT.  The subject
+# becomes the contents of the <title> and <h1> tags.  The rest of the
+# header information is put at the end of the body text.
+
+MARKDOWN='kramdown -i GFM --no-hard-wrap'
+
+case "$1" in
+    *.md) FILTER="$MARKDOWN"
+	  ;;
+    *) FILTER=cat
+       ;;
+esac
+
+shopt -s extglob # Required to trim whitespace; see below
+
+read_headers () {
+    while IFS=':' read key value; do
+	# trim whitespace in "value"
+	value=${value##+([[:space:]])}; value=${value%%+([[:space:]])}
+
+	[ -z "$key" ] && break	# the separator line between headers and body
+
+	case "$key" in
+	    [sS]ubject|[tT]itle) SUBJECT="$value"
+		    ;;
+	    [mM]usic) MUSIC="$value"
+		    ;;
+	    [tT]ags) TAGS="${value//[\[\]]/}" # remove brackets from tag list
+		  ;;
+	    [Mm]ood) MOOD="$value"
+		  ;;
+	    [Pp]icture) PICTURE="$value"
+		     ;;
+	    [Ll]ocation) LOCATION="$value"
+		      ;;
+	    [Aa]ccess) PERMISSION="$value"
+		    ;;
+	    [Pp]ermission) PERMISSION="$value"
+		    ;;
+	    [Jj]ournal) JOURNAL="$value" # Journal to post to instead of default
+		    ;;
+	    [Cc]rosspost) XPOST="$value" # Journal to post to *in addition to* default
+		    ;;
+	    ---)
+		[ ! -z $yaml_started ] && break;
+		yaml_started=1
+		;;
+	    "--text follows this line--") break  # Handle emacs's separator
+					;;
+	esac
+    done
+}
+
+{
+    read_headers
+
+    echo "<html><head>"
+    echo "  <title>$SUBJECT</title>"
+    echo "</head><body>"
+    echo "<h1>$SUBJECT</h1>"
+    echo
+    $FILTER 
+
+} < "${1:-/dev/stdin}"
+
+if [ $print_header ]; then
+    echo "<pre>"
+    for field in SUBJECT TAGS MOOD PICTURE LOCATION PERMISSION; do
+	echo -e "$field:\t" "${!field}"
+    done
+    echo "</pre>"
+fi
+echo "</body></html>"
