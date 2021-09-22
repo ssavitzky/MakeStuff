@@ -7,12 +7,38 @@
 
 MARKDOWN='kramdown -i GFM --no-hard-wrap'
 
-case "$1" in
-    *.md) FILTER="$MARKDOWN"
-	  ;;
-    *) FILTER=cat
-       ;;
-esac
+usage () {
+    cat <<EOF
+    Usage: $0 [options] file
+    options:
+	-h | --help
+     	-t --headers[=top]
+	-b --headers=bottom
+	-y --headers=yaml   suppresses HTML head and body tags
+EOF
+}
+
+while true; do
+    case "$1" in
+	-h|--help) usage; exit 0 ;;
+
+	-t|--headers|--headers=top) headers=top;    shift ;;
+	-b|--headers=bottom)        headers=bottom; shift ;;
+	-y|--headers=yaml)          headers=yaml;   shift ;;
+
+	*.md) FILTER="$MARKDOWN"; break ;;
+	*.html) FILTER=cat;       break ;;
+
+	-*) echo unrecognized option "$1"
+	    usage
+	    exit 1
+	    ;;
+	*) echo unrecognized file type "$1"
+	   usage
+	   exit 1
+	   ;;
+    esac
+done
 
 shopt -s extglob # Required to trim whitespace; see below
 
@@ -24,25 +50,25 @@ read_headers () {
 	[ -z "$key" ] && break	# the separator line between headers and body
 
 	case "$key" in
-	    [sS]ubject|[tT]itle) SUBJECT="$value"
+	    [sS]ubject|[tT]itle) Subject="$value"
 		    ;;
-	    [mM]usic) MUSIC="$value"
+	    [mM]usic) Music="$value"
 		    ;;
-	    [tT]ags) TAGS="${value//[\[\]]/}" # remove brackets from tag list
+	    [tT]ags) Tags="${value//[\[\]]/}" # remove brackets from tag list
 		  ;;
-	    [Mm]ood) MOOD="$value"
+	    [Mm]ood) Mood="$value"
 		  ;;
-	    [Pp]icture) PICTURE="$value"
+	    [Pp]icture) Picture="$value"
 		     ;;
-	    [Ll]ocation) LOCATION="$value"
+	    [Ll]ocation) Location="$value"
 		      ;;
-	    [Aa]ccess) PERMISSION="$value"
+	    [Aa]ccess) Permission="$value"
 		    ;;
-	    [Pp]ermission) PERMISSION="$value"
+	    [Pp]ermission) Permission="$value"
 		    ;;
-	    [Jj]ournal) JOURNAL="$value" # Journal to post to instead of default
+	    [Jj]ournal) Journal="$value" # Journal to post to instead of default
 		    ;;
-	    [Cc]rosspost) XPOST="$value" # Journal to post to *in addition to* default
+	    [Cc]rosspost) Xpost="$value" # Journal to post to *in addition to* default
 		    ;;
 	    ---)
 		[ ! -z $yaml_started ] && break;
@@ -54,23 +80,41 @@ read_headers () {
     done
 }
 
+print_headers () {
+    echo "<table>"
+    for field in Mood Location Music Permission Picture Subject Tags; do
+	[ -z "${!field}" ] || \
+	    echo -e "    <tr><th>$field:</th><td>${!field}</td><tr>"
+    done
+    echo "</table>"
+    echo
+}
+
+print_yaml_headers () {
+    echo "---"
+    for field in Mood Location Music Permission Picture Subject Tags; do
+	[ -z "${!field}" ] || \
+	    echo -e "$field: ${!field}"
+    done
+    echo "---"
+    echo
+}
+
 {
     read_headers
 
-    echo "<html><head>"
-    echo "  <title>$SUBJECT</title>"
-    echo "</head><body>"
-    echo "<h1>$SUBJECT</h1>"
-    echo
-    $FILTER 
+    if [ ! "$headers" = yaml ]; then
+	echo "<html><head>"
+	echo "  <title>$Subject</title>"
+	echo "</head><body>"
+	echo "<h1>$Subject</h1>"
+	echo
+    fi
+    [ "$headers" = top ] && print_headers
+    [ "$headers" = yaml ] && print_yaml_headers
+    $FILTER
+    [ "$headers" = bottom ] && print_headers
 
 } < "${1:-/dev/stdin}"
 
-if [ $print_header ]; then
-    echo "<pre>"
-    for field in SUBJECT TAGS MOOD PICTURE LOCATION PERMISSION; do
-	echo -e "$field:\t" "${!field}"
-    done
-    echo "</pre>"
-fi
-echo "</body></html>"
+[ "$headers" = yaml ] || echo "</body></html>"
