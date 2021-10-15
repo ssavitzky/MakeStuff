@@ -48,12 +48,12 @@ save:
 	@if [ -z "`git status --porcelain`" ]; then 					\
 	    echo Save: nothing to commit, working tree clean; git push;			\
 	elif [ ! -z "$(save_may_amend)" ]; then						\
-	    echo Save: amending $(trimmed_commit_subject) ...;				\
+	    echo Save: amending  $(trimmed_commit_subject) ...;				\
 	    GIT_EDITOR=$(TOOLDIR)/blogging/save-amend-commit				\
 		NEW_MESSAGE='Saved on $(COMMIT_MSG)' git commit -a --amend;		\
 	    git push --force-with-lease || (echo === pull --rebase needed; false)	\
 	else										\
-	    echo Save: will not amend $(trimmed_commit_subject) ...;			\
+	    echo Save: following $(trimmed_commit_subject) ...;				\
 	    git commit -a -m "Saved on $(COMMIT_MSG)";					\
 	    git push || (echo === pull --rebase needed; false)				\
 	fi
