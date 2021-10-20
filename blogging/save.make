@@ -23,7 +23,7 @@
 #	day.
 #
 # See also: https://stackoverflow.com/questions/42857506/\
-#	    how-to-automatically-git-commit-amend-to-append-to-last-commit-message#42857774
+ #	    how-to-automatically-git-commit-amend-to-append-to-last-commit-message#42857774
 
 .PHONY: save Save
 
@@ -44,21 +44,22 @@ endif
 
 build_new_commit_message = echo 'Saved on $(COMMIT_MSG)' >> $$1;
 
-save:
+Save save:
 	@if [ -z "`git status --porcelain`" ]; then 					\
-	    echo Save: nothing to commit, working tree clean; git push;			\
+	    echo $@: nothing to commit, working tree clean; git push;			\
 	elif [ ! -z "$(save_may_amend)" ]; then						\
-	    echo Save: amending  $(trimmed_commit_subject) ...;				\
+	    echo $@: amending  $(trimmed_commit_subject) ...;				\
 	    GIT_EDITOR=$(TOOLDIR)/blogging/save-amend-commit				\
 		NEW_MESSAGE='Saved on $(COMMIT_MSG)' git commit -a --amend;		\
 	    git push --force-with-lease || (echo === pull --rebase needed; false)	\
 	else										\
-	    echo Save: following $(trimmed_commit_subject) ...;				\
+	    echo $@: following $(last_commit_subject);					\
 	    git commit -a -m "Saved on $(COMMIT_MSG)";					\
 	    git push || (echo === pull --rebase needed; false)				\
 	fi
 
-# Save: works like save: only it will also overwrite `Push from` commits.
+# Save: works like save:, but it will also overwrite `Push from` commits.
 
 Save: save_may_amend += $(findstring Push from $(shell hostname),$(trimmed_commit_subject))
-Save: save
+
+
