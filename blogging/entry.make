@@ -130,6 +130,13 @@ POSTED	   = $(subst /,-,$(DAYPATH)) $(HRTIME)
 help:: 
 	@echo usage: '$(HELP)'
 
+
+### make help -- list special targets defined in .config.make
+.PHONY: help
+help:: | .config.make
+	@echo ' ###' Additional targets in $(notdir $(shell pwd)):
+	@grep '[#]## make' .config.make | sort | sed -e 's/###/     /'
+
 # Useful debugging tool:  Add as a dependency to a target with target-specific vars.
 # 	see ./thanks.make for an example.
 #
