@@ -146,14 +146,24 @@ report-effective-vars:
 	@echo "NAME =" $(NAME),  TITLE = '\"$(TITLE)\"'
 	@echo "DRAFT=" $(DRAFT), ENTRY = $(ENTRY) from command or target
 
+
+## .expanded.aux -- expanded draft/entry template.
+#	We want to use $(file > $(ENTRY), $($(PFX)TEMPLATE)) to write the entry
+#	instead of echo "$$$(PFX)TEMPLATE" > $(ENTRY).  That way we don't need to
+#	export it as an environment variable.  It expands prior to running the
+#	rule, so we expand into an auxiliary file with an extension git will
+#	ignore, because it will stick around in case we use `make -n`.
+#
+.expanded.aux:: ; $(file > $@, $($(PFX)TEMPLATE))
+
 ## entry:  make an entry for today, and link .draft
 #	The commit gives us a record of the starting time.
 #	the subject is, by default, today's date.
 #	Leaves .draft a symlink to the entry; name= is not required for posting.
 #
-entry: 	name-required .MM | $(POST_ARCHIVE)$(MONTHPATH)
+entry: 	name-required .MM .expanded.aux | $(POST_ARCHIVE)$(MONTHPATH)
 	[ ! -f $(ENTRY) ] || ( echo entry already exists; false )
-	echo "$$$(PFX)TEMPLATE" > $(ENTRY)
+	mv .expanded.aux  $(ENTRY)
 	git add $(ENTRY)
 	git commit -m "$(MYNAME): start $(ENTRY)" $(ENTRY)
 	ln -sf $(ENTRY) .draft
@@ -162,8 +172,8 @@ entry: 	name-required .MM | $(POST_ARCHIVE)$(MONTHPATH)
 #	No link is needed.  post with "make post name=<filename>"
 #	name is required in this case -> hopefully not any more.
 #
-draft:	name-required
-	echo "$$$(PFX)TEMPLATE" > $(DRAFT)
+draft:	name-required .expanded.aux
+	mv .expanded.aux $(DRAFT)
 	git add $(DRAFT)
 	[ ! -z $(DONT_COMMIT_DRAFT) ] || 					\
 	   git commit -m "$(MYNAME): start $(DRAFT) on $(DAYPATH)" $(DRAFT)
@@ -376,11 +386,10 @@ Mood:
 Location: $(DEFAULT_LOCATION)
 Picture:
 
+
 <p> 
 
 endef
-
-export TEMPLATE
 
 ### A little history:
 #
