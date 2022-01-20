@@ -27,4 +27,3 @@ Mood: grateful
   <li> 
 </ul>
 endef
-export thx_TEMPLATE
