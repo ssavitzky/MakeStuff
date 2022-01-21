@@ -154,7 +154,7 @@ report-effective-vars:
 #	rule, so we expand into an auxiliary file with an extension git will
 #	ignore, because it will stick around in case we use `make -n`.
 #
-.expanded.aux:: ; $(file > $@, $($(PFX)TEMPLATE))
+.expanded.aux:: ; $(file > $@,$($(PFX)TEMPLATE))
 
 ## entry:  make an entry for today, and link .draft
 #	The commit gives us a record of the starting time.
