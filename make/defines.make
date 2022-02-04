@@ -68,21 +68,30 @@ DATEDIRS = $(shell for d in $(ALLDIRS); do echo $$d | grep '^[0-9]{2,4}$$'; done
 ###
 
 ### Paths for date-based file creation
-#   Defined using "=" for efficiency -- they are expanded only if used.
+#   We start by calling `date` once, and extracting the components
+#   Set `date=<string>` on the command line to pass `-d <string> to `date`
 #
-YYYY := $(shell date "+%Y")
-MM := $(shell date "+%m")
-DD := $(shell date "+%d")
+DATE := $(shell date "+%Y %m %d %H %M %S" $(if $(date), -d "$(date)",))
+YYYY := $(word 1,$(DATE))
+MM   := $(word 2,$(DATE))
+DD   := $(word 3,$(DATE))
+H    := $(word 4,$(DATE))
+M    := $(word 4,$(DATE))
+S    := $(word 4,$(DATE))
+
+#   Paths are defined using "=" for efficiency -- they are expanded only if used.
 
 MONTHPATH = $(YYYY)/$(MM)
 DAYPATH   = $(MONTHPATH)/$(DD)
 MMDDPATH  = $(YYYY)/$(MM)$(DD)
 
 #
-# Timestamps
+#   Timestamps
 #
-TIME	  = $(shell date "+%H%M%S")
-HRTIME	  = $(shell date "+%H:%M")
+TIME	  = $(H)$(M)$(S)
+HRTIME	  = $(H):$(M)
+
+#   TIMESTAMP is UTC, so do that separately and only if we need it
 TIMESTAMP = $(shell date -u +%Y%m%dT%H%M%SZ)
 #
 ###
