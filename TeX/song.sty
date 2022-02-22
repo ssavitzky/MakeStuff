@@ -68,7 +68,7 @@
 %%%	    \up		prints as double uparrow, e.g. F(D\up3)
 %%%		used to indicate barre chords and the like.
 %%%	    *		indicates chords with B or E string raised
-%%%	    \capo	{\it capo} used in, e.g.  \key{F\; (D\capo3)}
+%%%	    \capo	{\itshape capo} used in, e.g.  \key{F\; (D\capo3)}
 %%%	    \;		em space
 %%%
 %%%
@@ -95,7 +95,7 @@
 \def\dedication#1{\global\def\theDedication{#1}
   \ifcompact\begin{center}\footnotesize #1\end{center}\fi}
 \def\subtitle#1{\global\def\theSubtitle{#1}
-  \ifcompact\begin{center}\bf #1\end{center}\fi}
+  \ifcompact\begin{center}\bfseries #1\end{center}\fi}
 \def\license#1{\global\def\theLicense{#1}
   \ifcompact\begin{center}\small #1\end{center}\fi}
 
@@ -254,8 +254,8 @@ Attribution-Share Alike 4.0 License.}
 %%% Annotations for songs
 %%%
 
-\def\inset#1{{\hskip1em\it #1}}
-\def\inst#1{{\it #1}}
+\def\inset#1{{\hskip1em\itshape #1}}
+\def\inst#1{{\itshape #1}}
 \def\singer#1{{\hskip-.5em\tt #1}} %\hskip-1em seems excessive
 \def\spoken#1{{\sl #1}}
 \def\verse{\par\medskip\par}
@@ -391,7 +391,7 @@ Attribution-Share Alike 4.0 License.}
 %%% Chords.
 %%%	Note that chords are set in math mode
 %%%
-\def\chordfont{\sf}
+\def\chordfont{\normalfont}
 \def\chord #1{{\footnotesize\strut$\chordfont #1$}}
 \def\@chord #1{\makebox[0pt][l]{\raisebox{.9em}{\chord{#1}}}}
 
@@ -400,8 +400,8 @@ Attribution-Share Alike 4.0 License.}
 \def\maj{\mbox{maj}}
 \def\min{\mbox{m}}
 \def\sus{\mbox{sus}}
-\def\capo{\mbox{\ \it capo\ }}
-\def\drop{\mbox{\ \it drop\ }}
+\def\capo{\mbox{\ \itshape capo\ }}
+\def\drop{\mbox{\ \itshape drop\ }}
 \def\up{\Uparrow}
 \def\add{\&}
 %\def\sharp{\#}
