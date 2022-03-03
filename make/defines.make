@@ -71,13 +71,14 @@ DATEDIRS = $(shell for d in $(ALLDIRS); do echo $$d | grep '^[0-9]{2,4}$$'; done
 #   We start by calling `date` once, and extracting the components
 #   Set `date=<string>` on the command line to pass `-d <string> to `date`
 #
-DATE := $(shell date "+%Y %m %d %H %M %S" $(if $(date), -d "$(date)",))
+DATE := $(shell date "+%Y %m %d %H %M %S %A" $(if $(date), -d "$(date)",))
 YYYY := $(word 1,$(DATE))
 MM   := $(word 2,$(DATE))
 DD   := $(word 3,$(DATE))
 H    := $(word 4,$(DATE))
-M    := $(word 4,$(DATE))
-S    := $(word 4,$(DATE))
+M    := $(word 5,$(DATE))
+S    := $(word 6,$(DATE))
+DAY  := $(word 7,$(DATE))	# full weekday name
 
 #   Paths are defined using "=" for efficiency -- they are expanded only if used.
 
