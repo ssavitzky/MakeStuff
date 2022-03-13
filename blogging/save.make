@@ -45,7 +45,7 @@ endif
 build_new_commit_message = echo 'Saved on $(COMMIT_MSG)' >> $$1;
 
 Save save:
-	@if [ -z "$$(git status --porcelain)" ]; then 					\
+	@if [ -z "$$(git status --porcelain --untracked-files=no)" ]; then		\
 	    echo $@: nothing to commit, working tree clean; git push;			\
 	elif [ ! -z "$(save_may_amend)" ]; then						\
 	    echo $@: amending  $(trimmed_commit_subject) ...;				\
