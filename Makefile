@@ -80,7 +80,7 @@ deploy: all pre-deploy deploy-this
 include $(TOOLDIR)/make/targets.make
 -include .depends.make depends.make
 
-### report-vars - list important make variables
+### make report-vars - list important make variables
 #   Down at the end in case any of the lists needs to get appended to.
 
 .PHONY: report-vars report-set-vars report-raw-vars report-var
@@ -93,13 +93,18 @@ report-vars::
 	@echo -n -e "" $(foreach v,$(filteredVars),$(v)=$($(v)) "\n")
 	@echo -e "" $(foreach v,$(filteredStrs),$(v)=\""$($(v))"\" "\n")
 
+### make report-set-vars, report-raw-vars, report-var
+#   note the use of @: (where ``: is equivalent to `true`) with `$(info)` to keep make
+#   from saying "nothing to be done for...".  `$(info...)` expands to the empty string,
+#   so if you put it in a recipe on a line by itself make doesn't treat it as a command.
+
 report-set-vars:
-	@$(foreach v,$(sort $(.VARIABLES)),$(if $(value $(v)),$(info $(v)="$($(v))")))
+	@: @$(foreach v,$(sort $(.VARIABLES)),$(if $(value $(v)),$(info $(v)="$($(v))")))
 
 report-raw-vars:  		# note that this does not expand recursive variables
-	@$(foreach v,$(sort $(.VARIABLES)),$(info $(v)="$(value $(v))"))
+	@: @$(foreach v,$(sort $(.VARIABLES)),$(info $(v)="$(value $(v))"))
 
-report-var:			# report the value of a single variable
-	@echo $(var) = $($(var))
+report-var::			# report the value of a single variable
+	@: $(info $(var) = $($(var)))
 #
 ###### End of MakeStuff/Makefile.  Thanks for playing. ######
