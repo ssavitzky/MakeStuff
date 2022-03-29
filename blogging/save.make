@@ -44,9 +44,11 @@ endif
 
 build_new_commit_message = echo 'Saved on $(COMMIT_MSG)' >> $$1;
 
+nothing_to_commit = [ -z "$$(git status --porcelain=v1 --untracked-files=no)" ]
+
 Save save:
-	@if [ -z "$$(git status --porcelain --untracked-files=no)" ]; then		\
-	    echo $@: nothing to commit, working tree clean; git push;			\
+	@if $(nothing_to_commit); then							\
+	    echo $@: nothing to commit, working tree clean; git push; 			\
 	elif [ ! -z "$(save_may_amend)" ]; then						\
 	    echo $@: amending  $(trimmed_commit_subject) ...;				\
 	    GIT_EDITOR=$(TOOLDIR)/blogging/save-amend-commit				\
@@ -55,7 +57,7 @@ Save save:
 	else										\
 	    echo $@: following $(last_commit_subject);					\
 	    git commit -a -m "Saved on $(COMMIT_MSG)";					\
-	    git push || (echo === pull --rebase needed; false)				\
+	    git push || (echo === pull --rebase needed; false)                          \
 	fi
 
 # Save: works like save:, but it will also overwrite `Push from` commits.
