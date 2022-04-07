@@ -43,9 +43,12 @@ save_may_amend += $(findstring Push from $(save_tail),$(trimmed_commit_subject))
 endif
 
 build_new_commit_message = echo 'Saved on $(COMMIT_MSG)' >> $$1;
-
 nothing_to_commit = [ -z "$$(git status --porcelain=v1 --untracked-files=no)" ]
 
+### make save; make Save
+#	$(COMMIT_OPTS) is inserted into the _first_ commit in a save series;
+#	it appends to the commit the same way that push does.  In particular,
+#	it puts in the "undone" counts when run in Journals/Dog
 Save save:
 	@if $(nothing_to_commit); then							\
 	    echo $@: nothing to commit, working tree clean; git push; 			\
@@ -56,7 +59,7 @@ Save save:
 	    git push --force-with-lease || (echo === pull --rebase needed; false)	\
 	else										\
 	    echo $@: following $(last_commit_subject);					\
-	    git commit -a -m "Saved on $(COMMIT_MSG)";					\
+	    git commit -a -m "Saved on $(COMMIT_MSG)" $(COMMIT_OPTS);			\
 	    git push || (echo === pull --rebase needed; false)                          \
 	fi
 
