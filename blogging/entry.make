@@ -298,6 +298,10 @@ posted:
 	git commit -m "posted $(entry)" $(entry)
 	rm -f .draft
 	ln -sf $(entry) .post
+	if [ -f .draft.d ]; then		\
+		rm -f .post.d;			\
+		mv .draft.d .post.d;		\
+	fi
 	grep Posted: $(entry) | tail -1
 
 #	sed -i -e '1,/^$$/ s@^$$@Posted:  $(POSTED) $(POST_URL)\n@' $(entry)
