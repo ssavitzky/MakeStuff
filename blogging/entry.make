@@ -260,6 +260,8 @@ pre-post:  draft-or-entry-required | $(POST_ARCHIVE)$(MONTHPATH)
 #
 #	Assuming the post succeeded, remove the .draft link and replace it with
 #	.post, which makes the most recent entry easier to find for editing.
+#	If .draft.d (used for images and other resources for the post) exists,
+#	move that to .post.d.
 #
 #	Finally, grep for the Posted: line, which gets the URL printed on the
 #	terminal; most terminal emulators, e.g. gnome-terminal, let you open it.
@@ -272,6 +274,10 @@ post:	pre-post
 	sed -i -e '1,/^$$/ s@^$$@Posted:  $(POSTED) '"$$url"'\n@' $(entry)
 	rm -f .draft
 	ln -sf $(entry) .post
+	if [ -f .draft.d ]; then                \
+		rm -f .post.d;                  \
+		mv .draft.d .post.d;            \
+	fi
 	git add $(entry)
 	git commit -m "posted $(entry)" -a
 	grep Posted: $(entry) | tail -1
@@ -286,11 +292,18 @@ xpost:
 	(sed -e 's/<cut/<lj-cut/' -e 's@</cut@</lj-cut@' $(LAST_POST); \
 		echo "$(CROSSPOSTED)") | $(POSTCMD) -x
 
-# record posted date in an entry, assuming something went wrong posting it
+# Hack to get the URL of the most recent post.  Not used anymore --
+#	that's done using the ./last-post script.  See posted:
 #
 POST_URL=$(shell wget -q -O - https://$(JOURNAL)/$(DAYPATH)  	\
          | grep 'class="entry-title"' | tail -1                 \
          | sed -E 's/^<[^>]*><[^>]*href="([^"]*)".*$$/\1/')
+
+# record posted date in an entry, assuming something went wrong posting it.
+#	The most common thing that goes wrong is trying to post
+#	without a net connection, but bugs in the posting command are
+#	also pretty common.  It's a hack.
+#
 posted:
 	url=$$($(TOOLDIR)/blogging/last-post $(JOURNAL)); 	\
 	echo url=:$$url:; 			\
