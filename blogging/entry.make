@@ -274,7 +274,7 @@ post:	pre-post
 	sed -i -e '1,/^$$/ s@^$$@Posted:  $(POSTED) '"$$url"'\n@' $(entry)
 	rm -f .draft
 	ln -sf $(entry) .post
-	if [ -f .draft.d ]; then                \
+	if [ -d .draft.d ]; then                \
 		rm -f .post.d;                  \
 		mv .draft.d .post.d;            \
 	fi
@@ -311,7 +311,7 @@ posted:
 	git commit -m "posted $(entry)" $(entry)
 	rm -f .draft
 	ln -sf $(entry) .post
-	if [ -f .draft.d ]; then		\
+	if [ -d .draft.d ]; then		\
 		rm -f .post.d;			\
 		mv .draft.d .post.d;		\
 	fi
