@@ -272,9 +272,9 @@ post:	pre-post
 	echo "$$url" | grep -q -E '^(http|file|[0-9./])' 		\
 	     || url=$$($(TOOLDIR)/blogging/last-post $(JOURNAL));	\
 	sed -i -e '1,/^$$/ s@^$$@Posted:  $(POSTED) '"$$url"'\n@' $(entry)
-	rm -f .draft
+	rm -f .draft .post.d
 	ln -sf $(entry) .post
-	if [ -d .draft.d ]; then                \
+	if [ -e .draft.d ]; then                \
 		rm -f .post.d;                  \
 		mv .draft.d .post.d;            \
 	fi
