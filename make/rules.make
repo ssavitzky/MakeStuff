@@ -40,7 +40,7 @@ endif
 %.ps:	%.dvi
 	dvips -q -o $*.ps $*.dvi 
 
-# ps to pdf
+### ps to pdf
 
 %.pdf:	%.ps
 	ps2pdf $*.ps $*.pdf
@@ -52,9 +52,14 @@ endif
 %.pdf: %.eps
 	 ps2pdf $<
 
-# Markdown to html
+### Markdown to html
 
 %.html: %.md
-	$(MARKDOWN) $(MARKDOWN_FLAGS) $< > $@
+	$(MARKDOWN) $< -o $@
+
+### Markdown to PDF
+
+%.pdf: %.md
+	$(MARKDOWN) $< -o $@
 
 ###### end of rules.make ######
