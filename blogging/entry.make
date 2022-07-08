@@ -173,6 +173,7 @@ entry: 	name-required .MM .expanded.aux | $(POST_ARCHIVE)$(MONTHPATH)
 #	name is required in this case -> hopefully not any more.
 #
 draft:	name-required .expanded.aux
+	[ ! -f $(DRAFT) ] || ( echo draft already exists; false )
 	mv .expanded.aux $(DRAFT)
 	git add $(DRAFT)
 	[ ! -z $(DONT_COMMIT_DRAFT) ] || 					\
