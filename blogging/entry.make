@@ -117,8 +117,14 @@ ENTRY ?= $(POST_ARCHIVE)$(DAYPATH)--$(NAME).$(EXT)
 #   entry= defined on the command line, a name and/or title passed on the command
 #   line, or a `.draft` symlink if it exists and nothing was defined on the command
 #   line.  They depend on $(name), the value defined on the command line.
-draft ?= $(name).$(EXT)
-entry ?= $(POST_ARCHIVE)$(DAYPATH)--$(name).$(EXT)
+#
+#   $(draft_d) and $(entry_d) are the corresponding resource directories; they
+#   won't exist except for, e.g., WordPress posts in GS
+#
+draft   ?= $(name).$(EXT)
+draft_d ?= $(name).d
+entry   ?= $(POST_ARCHIVE)$(DAYPATH)--$(name).$(EXT)
+entry_d ?= $(POST_ARCHIVE)$(DAYPATH)--$(name).d
 
 POSTED	   = $(subst /,-,$(DAYPATH)) $(HRTIME)
 
@@ -245,6 +251,8 @@ pre-post:  draft-or-entry-required | $(POST_ARCHIVE)$(MONTHPATH)
 	   git mv $(draft) $(entry) || ( mv  $(draft) $(entry); git add $(entry) ) \
 	fi
 	ln -sf $(entry) .draft
+	if [ -d $(draft_d) ]; then mv $(draft_d) $(entry_d); fi
+	if [ -d $(entry_d) ]; then rm -f .draft.d; ln -sf $(entry_d) .draft.d; fi
 
 # post an entry.
 #	The date is recorded in the entry, followed by the url returned by $(POSTCMD).
@@ -260,6 +268,7 @@ pre-post:  draft-or-entry-required | $(POST_ARCHIVE)$(MONTHPATH)
 #	in that case we can't rely on `git mv` having noticed the deletion.
 #
 #	Assuming the post succeeded, remove the .draft link and replace it with
+
 #	.post, which makes the most recent entry easier to find for editing.
 #	If .draft.d (used for images and other resources for the post) exists,
 #	move that to .post.d.
