@@ -338,11 +338,12 @@ posted:
 #	look back that far because we might be at the start of a month.
 #	Use the fact that valid months and entries start with a digit.
 RECENT_ENTRIES = $(shell for m in $$(ls -d $(POST_ARCHIVE)2*/[0-9]* | tail -2); \
-			     do ls $$m/[0-9]*; done)
+			     do ls $$m/[0-9]*.[hm]*; done)
 #	RECENT_DRAFTS is the (possibly empty) set of entries that haven't been posted
 RECENT_DRAFTS  = $(shell for g in $(RECENT_ENTRIES); \
 			     do grep -q Posted: $$g || echo $$g; done)
-MOST_RECENT_DRAFT = $(lastword $(RECENT_DRAFTS))
+ MOST_RECENT_DRAFT = $(lastword $(RECENT_DRAFTS))
+ MOST_RECENT_DRAFT_D = $(addsuffix .d, $(basename $(lastword $(RECENT_DRAFTS))))
 
 ## redraft:  (retrieve draft) Set .draft to the most recent unposted entry, if any.
 #	This is can be used to set .draft after pulling a commit that contains a
@@ -351,9 +352,13 @@ MOST_RECENT_DRAFT = $(lastword $(RECENT_DRAFTS))
 .PHONY: redraft updraft
 redraft:
 	@most_recent_draft=$(MOST_RECENT_DRAFT);			\
-	if [ ! -z "$$most_recent_draft" ]; then				\
+	if [ ! -z "$$most_recent_draft" ]; then 			\
 	    ln -sf $$most_recent_draft .draft;				\
 	    echo .draft '->' `readlink .draft` '(most recent entry)';	\
+	    most_recent_draft_d=$(MOST_RECENT_DRAFT_D);			\
+	    if [ ! -z "$$most_recent_draft_d" ] && [ -d $$most_recent_draft_d ]; then	\
+	        ln -sf $$most_recent_draft_d .draft.d;			\
+	        echo .draft.d '->' `readlink .draft.d` ; fi;		\
 	else								\
 	    echo there are no unposted entries to link;			\
 	    rm -f .draft;						\
