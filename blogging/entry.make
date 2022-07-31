@@ -67,7 +67,7 @@ else ifneq "$(strip $(shell test -f .draft || echo 1))" "1" # .draft is a (live)
     # if .draft points to an entry, we use it as $(entry).  Otherwise it points to a draft
     # file in the current directory, and entry is derived by appending its name to
     # `$(DAYPATH)--`
-    $(info using linked draft $(linked_draft) as entry)
+    $(info Current .draft -> $(linked_draft))
     entry = $(linked_draft)
     draft = $(notdir $(linked_draft))
   else
