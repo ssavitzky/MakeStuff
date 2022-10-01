@@ -31,8 +31,8 @@ ifdef SAVE_MAY_IGNORE_DATE
 save_test = 3
 save_tail = $(wordlist 1,1,$(COMMIT_MSG))
 else
-save_test = 7
-save_tail = $(wordlist 1,5,$(COMMIT_MSG))
+save_test = 6
+save_tail = $(shell echo $(wordlist 1,4,$(COMMIT_MSG)))
 endif
 # save_msg_tail is the last part of the _next_ commit message.
 last_commit_subject = $(subst -, ,$(shell git log -n1 --format=%f))
@@ -41,6 +41,9 @@ save_may_amend = $(findstring Saved on $(save_tail),$(trimmed_commit_subject))
 ifdef SAVE_MAY_AMEND_PUSH
 save_may_amend += $(findstring Push from $(save_tail),$(trimmed_commit_subject))
 endif
+
+# for debugging: 
+#	@echo "$(save_tail)" : "$(save_may_amend)" :  $(trimmed_commit_subject)
 
 build_new_commit_message = echo 'Saved on $(COMMIT_MSG)' >> $$1;
 nothing_to_commit = [ -z "$$(git status --porcelain=v1 --untracked-files=no)" ]
