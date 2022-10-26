@@ -65,7 +65,7 @@ deploy-rgit::
 #	eliminate trivial commits while working on draft posts and to.do logs
 #
 .PHONY: push push-this push-r commit
-push:	all push-this push-r
+push::	all push-this push-r
 
 commit:: | $(GIT_REPO)
 	@if $(commit_msg_overridden); then :; else msg_prefix="on "; fi;	\

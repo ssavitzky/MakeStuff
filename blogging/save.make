@@ -52,7 +52,7 @@ nothing_to_commit = [ -z "$$(git status --porcelain=v1 --untracked-files=no)" ]
 #	$(COMMIT_OPTS) is inserted into the _first_ commit in a save series;
 #	it appends to the commit the same way that push does.  In particular,
 #	it puts in the "undone" counts when run in Journals/Dog
-Save save:
+Save save::
 	@if $(nothing_to_commit); then							\
 	    echo $@: nothing to commit, working tree clean; git push; 			\
 	elif [ ! -z "$(save_may_amend)" ]; then						\
@@ -68,6 +68,6 @@ Save save:
 
 # Save: works like save:, but it will also overwrite `Push from` commits.
 
-Save: save_may_amend += $(findstring Push from $(shell hostname),$(trimmed_commit_subject))
+Save:: save_may_amend += $(findstring Push from $(shell hostname),$(trimmed_commit_subject))
 
 
