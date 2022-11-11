@@ -213,6 +213,7 @@ else
 	@echo NO TEMPLATING ENGINE DEFINED
 endif
 
+ifeq ($(MYNAME),Songs)
 # Ogg and mp3 files.  
 #	They have no dependencies to prevent their being constantly rebuilt.
 #	It might be better to make the mp3s depend on the oggs.
@@ -222,6 +223,7 @@ endif
 	sox $(shell $(TRACKINFO) format=files $*) -w -t wav - | \
 	  lame -b 64 -S $(shell $(TRACKINFO) $(SONGLIST_FLAGS)  \
 	   --mp3 $*) $@
+endif
 
 AUDIO_LINKS = $(shell for f in *; do \
 		[ -e $$f/$$f.ogg ] && echo $$f/audio-links.html; done | uniq)

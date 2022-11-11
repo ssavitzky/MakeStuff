@@ -160,7 +160,8 @@ endif
 #	to be revised.  For the moment, look for Tracks or one or the other of
 #	*.songs or *.tracks (the latter indicating an album's recording directory)
 #
-hasSongs  = $(if $(findstring /Songs,$(MYPATH))$(wildcard *.songs),songs.make)
+# hasSongs  = $(if $(findstring /Songs,$(MYPATH))$(wildcard *.songs),songs.make)
+hasSongs  = $(if $(findstring /Songs,$(MYPATH)),songs.make)
 hasTracks = $(if $(wildcard *songs *.tracks Tracks),tracks.make)
 hasLyrics = $(if $(hasTracks),,$(if $(wildcard *.flk),lyrics.make))
 # Note that MUSIC_D may need to be changed later.
