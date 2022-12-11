@@ -398,7 +398,9 @@ wc-last:
 xp-text:
 	echo "$(CROSSPOSTED)"
 
-check:
+### make check -- check for HTML errors
+#	double-colon so that we can make additional checks in subdirectories
+check::
 	@[ -L .draft ] || (echo .draft does not exist && false)
 	$(TOOLDIR)/blogging/check-html .draft
 
