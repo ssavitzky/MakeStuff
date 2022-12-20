@@ -151,7 +151,7 @@ SONG_LOOSELEAF= '\documentclass[$(SIZE)a4paper,enabledeprecatedfontcommands]{scr
 .SUFFIX: flk
 
 %.pdf:	%.flk
-	for step in first-run references; do echo q | $(PDFLATEX) $(TEXOPTS) -jobname $*	\
+	for step in first-run references pagenumbers; do echo q | $(PDFLATEX) $(TEXOPTS) -jobname $*	\
 		$(SONG_LOOSELEAF) '\begin{document}\input{$<}\end{document}'; done
 	rm -f $*.log $*.aux ./stdin.tex ./-.dep 89/* ./snippet-name*--*ly ./snippet-map-*.ly
 
