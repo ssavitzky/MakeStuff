@@ -128,6 +128,35 @@ entry_d ?= $(POST_ARCHIVE)$(DAYPATH)--$(name).d
 
 POSTED	   = $(subst /,-,$(DAYPATH)) $(HRTIME)
 
+
+### make .MMDD and .MMDD.d (where MMDD is a future posting date)
+# 	These symlinks provide stable links to drafts of future posts.
+#	They get removed when the entry is finally posted.  At that point the actual
+#	date will match the link, making it easy to find the day's post.
+
+# NoTE: This stuff was taken out of GS/.config.make and generalized by adding
+#	$(POST_ARCHIVE) to the path, and replacing .md with .$(EXT).  It has
+#	not been extensively tested, so watch out for bugs.
+
+.PHONY: .mmdd
+ifneq "$(wildcard $(POST_ARCHIVE)$(DAYPATH)--*)" ""
+$(info draft is "$(wildcard $(POST_ARCHIVE)$(DAYPATH)--*)")
+.$(MM)$(DD): | $(firstword $(wildcard $(POST_ARCHIVE)$(DAYPATH)--*.$(EXT)))
+	ln -snf $| $@
+
+ifneq "$(wildcard $(POST_ARCHIVE)$(DAYPATH)--*.d)" ""
+.mmdd: | entry.d .$(MM)$(DD) .$(MM)$(DD).d
+.$(MM)$(DD).d: | $(firstword $(wildcard $(POST_ARCHIVE)$(DAYPATH)--*.d))
+	ln -snf $| $@
+else
+.mmdd: | .$(MM)$(DD)
+endif
+else
+.mmdd:
+	$(error make .mmdd requires an entry at $(POST_ARCHIVE)$(DAYPATH)--...)
+	$(error did you forget to add date=mm/dd to the command line\?)
+endif
+
 ### Targets ###
 
 .PHONY: draft entry pre-post post report-effective-vars
