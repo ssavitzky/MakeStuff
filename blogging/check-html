@@ -20,7 +20,11 @@ OPTIONS="--doctype auto --quote-ampersand yes \
 	 --show-body-only yes --show-info no -q --gnu-emacs yes "
 
 for f in $*; do
-    sed -E -e 's/(<\/?)(user|lj|lj-cut|cut)/$1 $2/g' -e 's/&/&amp;/g' $1 \
-	| tidy $OPTIONS 2>&1 >/dev/null \
-	| sed   -e "s|^|${1}:|" -e "s/line //" -e 's/ column /:/' ;
+    if [[ -e $f ]]; then
+       sed -E -e 's/(<\/?)(user|lj|lj-cut|cut)/$1 $2/g' -e 's/&/&amp;/g' $1 \
+	   | tidy $OPTIONS 2>&1 >/dev/null \
+	   | sed   -e "s|^|${1}:|" -e "s/line //" -e 's/ column /:/'
+    else
+	echo $f does not exist.
+    fi
 done
