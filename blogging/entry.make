@@ -67,7 +67,7 @@ else ifneq "$(strip $(shell test -f .draft || echo 1))" "1" # .draft is a (live)
     # if .draft points to an entry, we use it as $(entry).  Otherwise it points to a draft
     # file in the current directory, and entry is derived by appending its name to
     # `$(DAYPATH)--`
-    $(info Current .draft -> $(linked_draft))
+    $(info Using existing entry $(linked_draft))
     entry = $(linked_draft)
     draft = $(notdir $(linked_draft))
   else
@@ -140,7 +140,7 @@ POSTED	   = $(subst /,-,$(DAYPATH)) $(HRTIME)
 
 .PHONY: .mmdd
 ifneq "$(wildcard $(POST_ARCHIVE)$(DAYPATH)--*)" ""
-$(info draft is "$(wildcard $(POST_ARCHIVE)$(DAYPATH)--*)")
+# $(info .draft -> "$(wildcard $(POST_ARCHIVE)$(DAYPATH)--*)")
 .$(MM)$(DD): | $(firstword $(wildcard $(POST_ARCHIVE)$(DAYPATH)--*.$(EXT)))
 	ln -snf $| $@
 
@@ -400,7 +400,7 @@ redraft:
 updraft:  redraft
 	@if [ -e .draft ]; then							\
 	    if readlink .draft | grep -q $(DAYPATH); then			\
-	      echo current .draft is `readlink .draft`;				\
+	      echo .draft -> `readlink .draft`;				\
 	    else								\
 	      today=$$(readlink .draft 						\
 		      | sed -E s@[0-9]{4}/[0-9][0-9]/[0-9][0-9]@$(DAYPATH)@);	\
