@@ -45,14 +45,14 @@ EXCLUDES = $(addprefix --exclude=, Tracks Master Premaster \*temp .audacity\* .g
 ### Subdirectories:
 #	Note that $(SUBDIRS) only includes real directories with a Makefile
 ALLDIRS  := $(subst /,,$(filter %/,$(shell ls -F)))
-SUBDIRS  := $(shell for d in $(ALLDIRS); do \
-	     if [ -e $$d/Makefile -a ! -L $$d ]; then echo $$d; fi; done)
+SUBDIRS  := $(shell for d in  $(wildcard */Makefile); do \
+		if [ ! -L $$(dirname $$d) ]; then echo $$(dirname $$d); fi; done)
 
 # real (not linked) subdirs containing git repositories.
 #    Note that we do not require a Makefile, only .git.
 
-GITDIRS := $(shell for d in $(ALLDIRS); do \
-		if [ -d $$d/.git -a ! -L $$d ]; then echo $$d; fi; done)
+GITDIRS := $(shell for d in  $(wildcard */.git); do \
+		if [ ! -L $$(dirname $$d) ]; then echo $$(dirname $$d); fi; done)
 
 ### Different types of subdirectories.
 #   Collection:  capitalized name
