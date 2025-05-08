@@ -22,7 +22,7 @@ Music:
 Mood: grateful
 Location: $(DEFAULT_LOCATION)
 
-<p> Today I am grateful for...
+<p> Today I am thankful for...
 
 <ul>
   <li> 
