@@ -2,7 +2,15 @@
 
 BLOG=${1:-mdlbear.dreamwidth.org}
 
+### as of sometime in 1H2025, using wget to get the date pages stopped working.
+#   In fact, you can no longer get anything at all from wget or curl to the
+#   mdlbear.dreamwidth.org.  This is probably an anti-robot measure.
+
+#   So what we do now is grep the first permalink out of the RSS feed;
+#   arguably, this is what we should have been doing in the first place.
+
 ### this prints out the URL of the last post you made today:
-    wget -q -O - https://$BLOG/$(date +%Y/%m/%d/)  \
-       | grep 'class="entry-title"' | tail -1                    \
-       | sed -E 's/^<[^>]*><[^>]*href="([^"]*)".*$/\1/'
+wget -q -O - https://$BLOG/data/rss \
+    | grep '<guid' | head -1 \
+    |  sed -E 's/ *<guid[^>]*>(.*)<\/guid>/\1/'
+
