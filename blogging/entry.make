@@ -430,7 +430,8 @@ xp-text:
 ### make check -- check for HTML errors
 #	double-colon so that we can make additional checks in subdirectories
 check::
-	$(TOOLDIR)/blogging/check-html .draft
+	[ ! -e .draft ] || \
+	  $(TOOLDIR)/blogging/check-html .draft
 	$(TOOLDIR)/blogging/check-html .post
 
 reportVars += name title entry draft ENTRY DRAFT EXT
