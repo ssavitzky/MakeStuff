@@ -61,12 +61,17 @@ deploy-rgit::
 #	* it recurses automatically into git-controled subdirectories,
 #	* ...but doesn't require a makefile with a push target there.
 #
+#	See also, ../blogging/save.make, which uses push --force-with-lease to
+#	eliminate trivial commits while working on draft posts and to.do logs
+#
 .PHONY: push push-this push-r commit
-push:	all push-this push-r
+push::	all push-this push-r
 
 commit:: | $(GIT_REPO)
-	-if $(commit_msg_overridden); then :; else msg_prefix="on "; fi;	\
-	 git commit -a -m "$${msg_prefix}$(COMMIT_MSG)" $(COMMIT_OPTS)
+	@if $(commit_msg_overridden); then :; else msg_prefix="on "; fi;	\
+	 if [ -z "`git status --porcelain`" ]; then echo Up to date.;		\
+	   else git commit -a -m "$${msg_prefix}$(COMMIT_MSG)" $(COMMIT_OPTS);	\
+	fi
 
 push-this:: | $(GIT_REPO)
 	-@if $(commit_msg_overridden); then :; else msg_pfx="Push from "; fi;	\
@@ -105,7 +110,7 @@ push-R::
 # pull does pull --rebase
 #	It's simpler than push because it doesn't do a build first.
 #	It's still split up, so that you can run the pieces separately
-#
+
 .PHONY: pull pull-this pull-r
 pull: pull-this pull-r
 
@@ -121,7 +126,6 @@ pull-r::
 		then make pull;					\
 		else git pull --rebase; fi)			\
 	done
-
 
 ### rsync deployment ###
 

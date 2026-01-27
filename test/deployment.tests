@@ -4,11 +4,11 @@ SUITE = deployment
 TESTS = 
 
 all::
-	echo make targets for $(SUITE): run  = setup test teardown
+	echo make targets for $(SUITE): run  = teardown setup test
 
 .PHONY: run setup test teardown
 
-run:: setup test teardown
+run:: teardown setup test
 	@echo running tests for $(SUITE).tests
 
 TEST_DATA = deployment.data
@@ -92,7 +92,8 @@ test::
 
 ### boilerplate
 
-setup::
+# setup depends on teardown to make sure that we always start from a known state.
+setup::	
 	@echo setting up $(SUITE).tests
 
 setup:: | $(TEST_DIRS) $(TEST_FILES)

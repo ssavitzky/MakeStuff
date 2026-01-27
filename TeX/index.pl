@@ -192,7 +192,7 @@ if ($outfmt eq "dsc") {		# .htaccess description lines
 } elsif ($outfmt eq "html" && $tables) {	# HTML table
     print "<table class='songlist'>\n";
     print "<tr><th>ogg</th><th>mp3</th>"
-	. ($lyrics? "<th>pdf</th><th align=left>file</th>" : "")
+	. ($lyrics? "<th>pdf</th>" : "")
 	. "<th>time</th>";
     print "<th align=left> Title </tr>\n ";
     for ($j = 0; $j < $i; $j++) {
@@ -202,10 +202,14 @@ if ($outfmt eq "dsc") {		# .htaccess description lines
 	    (-f "$d$fn/$fn.ogg")? "<a href='$d$fn/$fn.ogg'>ogg</a>" : "";
 	my $audio_m =
 	    (-f "$d$fn/$fn.mp3")? "<a href='$d$fn/$fn.mp3'>mp3</a>" : "";
+	my $lyrics_link =
+	    (-f "$d$fn/lyrics.pdf" && (-f "$d$fn/metadata.yml")
+	     && 5 < length(`grep webok $d$fn/metadata.yml`))?
+	    "<a href='$d$fn/lyrics.pdf'>pdf</a>": "";
 	print "<tr> ";
 	print "  <td valign='top'> $audio_o </td>";
 	print "  <td valign='top'> $audio_m </td>";
-	if ($lyrics) { print "  <td valign='top'> <a href='$d$fn/lyrics.pdf'>pdf</a>";}
+	if ($lyrics) { print "  <td valign='top'> $lyrics_link";}
 	print "  <td valign='top'> $times{$fn}	</td>";
 	print "  <td valign='top'> <a href='$d$fn/'>", $titles{$fn};
 	if ($subtitles{$fn}) {print " <small>($subtitles{$fn})</small>"; }

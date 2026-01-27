@@ -55,7 +55,7 @@ INDEX = index.pl
 
 # flk to HTML, Text
 .flk.html:
-	perl flktran.pl $* $*.html
+	perl flktran.pl -t $* $*.html
 
 .flk.txt:
 	perl flktran.pl $* $*.txt
@@ -68,7 +68,7 @@ INDEX = index.pl
 	echo '\documentstyle[fontsize=12pt,a4paper,enabledeprecatedfontcommands,song,twocolumns,zongbook]{scrartcl}' > $@
 	echo '\usepackage[utf8]{inputenc}' >> $@
 	echo '\usepackage[protrusion=true,expansion=true,tracking=true,stretch=10,shrink=250]{microtype}' >> $@
-	echo '\usepackage{song,zingers,zongbook,uniinput}' >> $@
+	echo '\usepackage{song,zongbook,zingers,uniinput}' >> $@
 	echo '\begin{document}'		>> $@
 	echo '\file{'$*.flk'}'		>> $@
 	echo '\end{document}'		>> $@

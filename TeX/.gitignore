@@ -1,9 +1,12 @@
 *.txt *.ps
 #.htaccess
 foo.*
+*.cho*
+README.html
 0Index.html
 0List.html
 alphabet.html
+alphabet.txt
 chord
 published
 stuff.html

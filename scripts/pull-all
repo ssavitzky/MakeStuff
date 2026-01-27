@@ -1,7 +1,24 @@
 #!/bin/bash
 #  Recursively find all directories with git repos, and try to pull them.
+#  If we start in a directory that has a repo, we only pull subdirectories
+#  that have the same origin.  If the current directory does _not_ have a
+#  repo, run pull-all in all subdirectories it exists in.
 
-GIT_HOST=savitzky.net
+
+has_origin () {
+    [[ -d $1/.git/refs/remotes/origin ]]
+}
+
+get_origin () {
+    git -C $1 remote get-url origin | sed -E 's/^([^@]*@)?([^:]*).*$/\2/'
+}
+
+if has_origin .; then
+    GIT_HOST=$(get_origin .)
+fi
+
+ARGS="$@"
+DIR=`pwd -P`
 NO_OP=false
 TIME=0
 VERBOSE=false
@@ -11,12 +28,15 @@ default_t='default '
 usage () {
     cat <<EOF
 $0 [options]
-   Recursively find all git repos; try to pull if origin matches ${GIT_HOST}
+   If the current directory has a git origin,
+      pull it and all all subdirectories with the same origin.
+   Otherwise, recurse into each subdirectory that either
+      has an origin or a copy of pull-all
    options:
       -h or --help	   - print this message and exit
       -n or --no-op  	   - print directories without pulling
-      -s or --site SITE    - site to pull from (${default_s}${GIT_HOST}; can be a basic regex)
-      -t or --time TIME    - wait time seconds between pulls (${default_t}$TIME)
+      -s or --site SITE    - pull if origin matches SITE (can be a basic regex)
+      -t or --time TIME    - wait TIME seconds between pulls (${default_t}$TIME)
       -v or --verbose	   - print more information 
 EOF
 }
@@ -53,33 +73,81 @@ while [[ ! -z "$1" ]]; do
     esac
 done
 
-has_origin () {
-    [[ -d $1 ]] && (git -C $1 remote | grep -q origin)
-}
+stars="${stars:-***}"
 
-get_origin () {
-    git -C $1 remote get-url origin
+# TODO: it would be nice if we had a different format for multiple
+#       levels of nested directories containing `pull-all`, but right
+#       now we don't have any.
+# The right thing is probably to add spaces in front of $pfx, which we
+# set just before the repo loop.
+
+if [[ -z $GIT_HOST ]]; then
+    for d in *; do
+	if [[ -L $d ]] || [[ ! -d $d ]]; then
+	    :			# skip symlinks and plain files
+	elif [[ -x $d/pull-all ]] ; then
+	    # we want to use $d/pull-all if it exists, but if $d also has an origin
+	    # we know that the first thing it will do is `git pull .`, so we suppress
+	    # the newline and add a tab so that its result starts on the current line.
+	    if has_origin $d; then echo -ne "$stars" $d: "\t";
+	                      else echo "$stars" $d:;
+	    fi
+	    (cd $d; stars='  *'  ./pull-all $ARGS)
+	elif has_origin $d; then
+	    # in this case, we _know_ that $d has an origin, so...
+	    echo -ne "$stars" $d "\t"
+	    (cd $d; stars='  *' $DIR/pull-all $ARGS)
+	fi
+    done
+    exit
+fi
+
+$VERBOSE && echo $PWD pulling from \"$GIT_HOST\" $ARGS
+
+# Rename master to main if it has been renamed on origin but not here
+#   returns true if the current branch is one or the other, because
+#   we don't want to pull if it isn't.
+#   FIXME: the check is done inefficiently and only detects renames to main.
+maybe_rename_master () {
+    local d=$1
+    git -C $d fetch --prune
+    if git  -C $d branch | grep -q master && git -C $d branch -a | grep -q origin/main; then
+	echo rename master branch to main
+	$NO_OP || git -C $d branch -m master main
+	$NO_OP || git -C $d remote set-head origin main
+	$NO_OP || git -C $d branch -u origin/main main
+    fi
+    # return with non-zero exit code if current branch is neither main nor master
+    git -C $d branch | grep -q '* main' ||  git -C $d branch | grep -q '* master'
 }
 
 flags="${*:---ff-only}"
 repos=`find . -name .git -print | sort`
-pfx='   '
+
+# The prefix is supposed to indicate the nesting level of directories where
+# we used pull-all instead of looping through the repos.  It has not been tested.
+export pfx="$pfx"'   '
 
 for f in $repos; do
-    if has_origin $f; then
+    d=$(dirname $f)
+    if has_origin $d; then
 	if get_origin $f | grep -q "$GIT_HOST"; then
-	    echo -ne "$pfx" $(dirname $f)"\t"
+	    [[ $d = . ]] || echo -ne "$pfx" $d"\t"
 	    # note: pull has to be done from a working tree, not a repo.
-	    $NO_OP || git -C $(dirname $f) pull $flags
+	    if maybe_rename_master $d; then 
+		$NO_OP || (git -C $d pull $flags; git -C $d status --short)
+	    else
+		echo current branch is neither main nor master, so don\'t pull
+	    fi
 	    $NO_OP && echo
 	    sleep $TIME # some sites restrict you to some small number of ssh connections
     	    # in a row, so throttle back.  Better to use controlmaster if you can
 	else
-	    $VERBOSE && echo -e "$pfx" $(dirname $f)"\t ***" origin not $GIT_HOST
+	    $VERBOSE && echo -e "$pfx" $d"\t ***" origin not $GIT_HOST
 	fi
     elif [[ -d $f ]]; then
-	$VERBOSE && echo -e "$pfx" $(dirname $f)"\t ***" no origin
+	$VERBOSE && echo -e "$pfx" $d"\t ***" no origin
     else
-	$VERBOSE && echo -e "$pfx" $(dirname $f)"\t ***" .git not a directory
+	$VERBOSE && echo -e "$pfx" $d"\t ***" .git not a directory
     fi
 done

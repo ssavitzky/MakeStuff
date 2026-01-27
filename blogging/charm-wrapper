@@ -1,0 +1,123 @@
+#!/bin/bash
+#
+# Post to Dreamwidth using charm -q.
+#  The post comes from STDIN; subject, etc. come from email-like headers.  See:
+#  https://stackoverflow.com/questions/24943170/how-to-parse-http-headers-using-bash
+#  https://stackoverflow.com/questions/6980090/how-to-read-from-a-file-or-stdin-in-bash
+#  This is a quick hack because I'm too lazy to add the functionality to charm.
+
+# The -x option crossposts to livejournal, using the alternate .charmrc-lj config file.
+# (Note that the Crosspost: header specifies a community or alternate blog on Dreamwidth.)
+
+# Note for testing.  charm won't let you post two in a row with the same subject!
+# It does not appear to be a problem for cross-posting, though.  It looks like
+# charm only archives the second (crossposted) post.
+
+# A simple test script:
+# (echo Access: private; echo Subject: test3; echo Tags: test, software; \
+#  echo "--text follows this line--" ; echo test headers) | charm-wrapper
+
+POST=charm
+MARKDOWN='kramdown -i GFM --no-hard-wrap'
+BLOGIN=mdlbear
+BLOGIN=`grep '^login =' ~/.charmrc | head -1 | cut -d= -f 2 | cut -d' ' -f2`
+BHOST=dreamwidth.org
+
+DEST='>/dev/null'
+
+if [ "-n" == "$1" ]; then
+    ACTION=no_action
+    DEST=
+    shift
+elif [ "-v" == "$1" ]; then
+    DEST=
+    shift
+fi
+
+if [ "-x" == "$1" ]; then
+    RCFILE=~/.charmrc-lj
+    POST="charm -f $RCFILE"
+    BHOST=livejournal.com
+    shift
+fi
+
+case "$1" in
+    *.md) FILTER="$MARKDOWN"
+	  ;;
+    *) FILTER=cat
+       ;;
+esac
+
+no_action () {
+    echo -- $*
+    cat
+}
+
+shopt -s extglob # Required to trim whitespace; see below
+
+read_headers () {
+    while IFS=':' read key value; do
+	# trim whitespace in "value"
+	value=${value##+([[:space:]])}; value=${value%%+([[:space:]])}
+
+	[ -z "$key" ] && break	# the separator line between headers and body
+
+	case "$key" in
+	    [sS]ubject|[tT]itle) SUBJECT="$value"
+		    ;;
+	    [mM]usic) MUSIC="$value"
+		    ;;
+	    [tT]ags) TAGS="${value//[\[\]]/}" # remove brackets from tag list
+		  ;;
+	    [Mm]ood) MOOD="$value"
+		  ;;
+	    [Pp]icture) PICTURE="$value"
+		     ;;
+	    [Ll]ocation) LOCATION="$value"
+		      ;;
+	    [Aa]ccess) PERMISSION="$value"
+		    ;;
+	    [Pp]ermission) PERMISSION="$value"
+		    ;;
+	    [Jj]ournal) JOURNAL="$value" # Journal to post to instead of default
+		    ;;
+	    [Cc]rosspost) XPOST="$value" # Journal to post to *in addition to* default
+		    ;;
+	    ---)
+		[ ! -z $yaml_started ] && break;
+		yaml_started=1
+		;;
+	    "--text follows this line--") break  # Handle emacs's separator
+					;;
+	esac
+    done
+}
+
+{
+    read_headers
+    # posts with local access don't get posted
+    # This is in contrast to "private", which get posted but are only visible to the user
+
+    if [ "local" == "$PERMISSION" ]; then cat > /dev/null; echo $1; exit; fi
+
+    $FILTER | $ACTION $POST -q --subject "$SUBJECT" --mood "$MOOD" --pic "$PICTURE" \
+	    --tag "$TAGS" --permit "$PERMISSION" --location "$LOCATION" \
+	    --music "$MUSIC" --journal "$JOURNAL" $DEST
+
+} < "${1:-/dev/stdin}"
+
+if [ ! -z "$XPOST" ] && [ -z "$RCFILE" ]; then
+    (cat $1; echo '(crossposted from $BLOGIN)' ) | {
+	read_headers
+	JOURNAL=$XPOST
+	SUBJECT="$SUBJECT"
+	$ACTION charm -q --subject "$SUBJECT" --mood "$MOOD" --pic "$PICTURE"\
+		--tag "$TAGS" --permit "$PERMISSION" --location "$LOCATION"\
+		--music "$MUSIC" --journal "$JOURNAL" $DEST
+    } # < $1 # NOTE:  crossposting won't work when posting from STDIN.
+fi
+
+# Trying to compensate for the fact that charm doesn't return the URL
+# of the post causes havoc in many edge cases.  What we really need
+# to do is replace charm with something that works right.  Meanwhile,
+# we compensate as best we can in `entry.make`.

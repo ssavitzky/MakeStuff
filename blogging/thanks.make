@@ -4,17 +4,27 @@
 # Usage:	make thanks
 
 .PHONY: thanks
-thanks:
-	$(MAKE) entry PFX=thx_ name=thankful-$(shell date +%A | tr [:upper:] [:lower:])
 
-# NOTE:  PFX is normally not defined, so we end it with an underscore.
+### This illustrates using target-specific variables instead of invoking
+#   make recursively with a new name= definition on the command line.
+#
+thanks: PFX   := thx_
+thanks: NAME  := thankful-$(shell echo $(DAY) | tr [:upper:] [:lower:])
+thanks: TITLE := Thankful $(DAY)
+thanks: report-effective-vars entry
+
+# NOTE:  by convention, PFX ends with an underscore.
 define thx_TEMPLATE
-Subject: Thankful $(shell date +%A)
+Subject: $(TITLE)
 Tags: thanks, 
 Picture: turkey
 Music: 
 Mood: grateful
+Location: $(DEFAULT_LOCATION)
 
-<p> 
+<p> Today I am thankful for...
+
+<ul>
+  <li> 
+</ul>
 endef
-export thx_TEMPLATE

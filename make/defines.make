@@ -1,83 +1,108 @@
 #!/usr/bin/make  ### make/defines.make -- standard definitions for makefiles
 
-# MFDIR is where the make include files live
-MFDIR	= $(TOOLDIR)/make
+# Utilities
+
+MARKDOWN=pandoc
+MARKDOWN_FLAGS= -t html
 
 # Compute relative paths to BASEDIR and TOOLDIR
-TOOLREL:= $(shell if [ -e MakeStuff ]; then echo MakeStuff; 	\
-		  elif [ -e Tools ]; then echo Tools;		\
-		  else d=""; while [ ! -d $$d/MakeStuff ] && [ ! -d $$d/Tools ]; \
-				do d=../$$d; done; 				\
-		       if [ -d  $$d/MakeStuff ]; then echo $${d}MakeStuff;	\
-						 else echo $${d}Tools; fi fi	)
-ifeq ($(TOOLREL),MakeStuff)
-      BASEREL:= ./
-else
-ifeq ($(TOOLREL),Tools)
-      BASEREL:= ./
-else
-      BASEREL:= $(dir $(TOOLREL))
-endif
-endif
+#  Note:  attempting to simplify this using `realpath -L` instead of a loop
+#	  fails because realpath computes the relative path to MakeStuff's
+#	  install directory.  What we usually want is the path to a direct
+#	  ancestor directory that contains a _symlink_ to MakeStuff.
+BASEREL:= $(shell if [ -e MakeStuff ]; then echo .; 			\
+		  else d=""; while [ ! -d $$d/MakeStuff ]; do d=../$$d; done;	\
+		       echo $${d};					\
+		  fi)
+TOOLREL := $(BASEREL)MakeStuff
 
 ### Rsync upload: DOTDOT is the path to this directory on $(HOST).
 #	Either can -- and should -- be overridden in the local config.make
 
 #	This hack works because the parent of our whole deployment tree is
-#	either /vv or ~/vv here, and ~/vv on the host.
-DOTDOT  := $(shell echo $(MYDIR) | sed s/^.*vv/vv/)
+#	either /vv or ~/vv here, and ~/vv on the host.  We can get away with
+#	using a recursive variable because DOTDOT and HOST are only used with
+#	the rsync* targets.
+DOTDOT	= $(shell echo $(MYDIR) | sed s/^.*vv/vv/)
 
 #	HOST is computed on the assumption that we're deploying to the same host
-#	that we're getting Tools from, which, as they say, works on my machine
-#	but is otherwise a bad assumption.
-HOST	 = $(shell cd $(TOOLDIR); git remote -v|grep origin|head -1 \
+#	that we're getting MakeStuff from, which, as they say, works on my machine
+#	but is otherwise a bad assumption.  We can't just use `git remote` in
+#	this directory because most of the directories we need rsync for aren't
+#	under git control, usually because they contain media files.  You can,
+#	however, override it by defining HOST in the environment or a config file.
+HOST	?= $(shell cd $(TOOLDIR); git remote -v|grep origin|head -1 \
 		  |cut -d ":" -f 1|cut -f 2)
 
 #	Note that we exclude git repositories -- those should be synchronized
 #	using git.  It is possible to use both git and rsync to push a tree
-#	containing large files.
-EXCLUDES := --exclude=Tracks --exclude=Master --exclude=Premaster \
-	    --exclude=\*temp --exclude=.audacity\* --exclude=.git
+#	containing large files.  Tracks, Master, and Premaster are used for
+#	audio recordings; .audacity* is Audacity's temp directory.
+EXCLUDES = $(addprefix --exclude=, Tracks Master Premaster \*temp .audacity\* .git)
 #
 ###
 
 ### Subdirectories:
 #	Note that $(SUBDIRS) only includes real directories with a Makefile
-ALLDIRS  := $(shell ls -F | grep / | grep -v CVS | sed s/\\///)
-SUBDIRS  := $(shell for d in $(ALLDIRS); do \
-	     if [ -e $$d/Makefile -a ! -L $$d ]; then echo $$d; fi; done)
+ALLDIRS  := $(subst /,,$(filter %/,$(shell ls -F)))
+SUBDIRS  := $(shell for d in  $(wildcard */Makefile); do \
+		if [ ! -L $$(dirname $$d) ]; then echo $$(dirname $$d); fi; done)
 
 # real (not linked) subdirs containing git repositories.
 #    Note that we do not require a Makefile, only .git.
 
-GITDIRS := $(shell for d in $(ALLDIRS); do \
-		if [ -d $$d/.git -a ! -L $$d ]; then echo $$d; fi; done)
+GITDIRS := $(shell for d in  $(wildcard */.git); do \
+		if [ ! -L $$(dirname $$d) ]; then echo $$(dirname $$d); fi; done)
 
 ### Different types of subdirectories.
 #   Collection:  capitalized name
 #   Item:	 lowercase name -- not always consistent
-#   Date:	 digit
+#   Date:	 2-4 digits.  Matches months as well as years
 #
-#   Defined using "=" for efficiency -- they are expanded only if used.
+#   Defined using "=" for efficiency -- they are not used very often
 #
 COLLDIRS = $(shell for d in $(ALLDIRS); do echo $$d | grep ^[A-Z]; done) 
 ITEMDIRS = $(shell for d in $(ALLDIRS); do echo $$d | grep ^[a-z]; done)
-DATEDIRS = $(shell for d in $(ALLDIRS); do echo $$d | grep ^[0-9]; done)
+DATEDIRS = $(shell for d in $(ALLDIRS); do echo $$d | grep '^[0-9]{2,4}$$'; done)
 #
 ###
 
 ### Paths for date-based file creation
-#   Defined using "=" for efficiency -- they are expanded only if used.
+#   We start by calling `date` once, and extracting the components
+#   Set `date=<string>` on the command line to pass `-d <string> to `date`
 #
-DAYPATH   = $(shell date "+%Y/%m/%d")
-MONTHPATH = $(shell date "+%Y/%m")
-MMDDPATH  = $(shell date "+%Y/%m%d")
+DATE := $(shell date "+%Y %m %d %H %M %S %A %a %b %e %Z" $(if $(date), -d "$(date)",))
+YYYY := $(word 1,$(DATE))
+MM   := $(word 2,$(DATE))
+DD   := $(word 3,$(DATE))
+H    := $(word 4,$(DATE))
+M    := $(word 5,$(DATE))
+S    := $(word 6,$(DATE))
+DAY  := $(word 7,$(DATE))# full weekday name
+DAY3 := $(word 8,$(DATE))# 3-character abbreviated dayname
+MON3 := $(word 9,$(DATE))# 3-character abbreviated month
+D    := $(word 10,$(DATE))#space-padded day of the month
+TZ   := $(word 11,$(DATE))# alphabetic timezone abbreviation
+
+#   Paths are defined using "=" for efficiency -- they are expanded only if used.
+
+MONTHPATH = $(YYYY)/$(MM)
+DAYPATH   = $(MONTHPATH)/$(DD)
+MMDDPATH  = $(YYYY)/$(MM)$(DD)
+
 #
-# Timestamps
+#   Timestamps
 #
-TIME	  = $(shell date "+%H%M%S")
-HRTIME	  = $(shell date "+%H:%M")
+TIME	  = $(H)$(M)$(S)
+HRTIME	  = $(H):$(M)
+
+#   TIMESTAMP is UTC, so do that separately and only if we need it
 TIMESTAMP = $(shell date -u +%Y%m%dT%H%M%SZ)
+
+#   long date as used in commit messages.  Apparently this, only with 12-hour time,
+#   was the default format used by `date`, but in any case is what we were using.
+LONG_DATE = $(DAY3) $(MON3) $(D) $(YYYY) $(H):$M:$(S) $(TZ)
+
 #
 ###
 
@@ -92,7 +117,7 @@ GIT_REPO := $(shell d=$(MYPATH); 					\
 		  done; [ -d $$d/.git ] && echo $$d/.git)
 
 ifdef GIT_REPO
-  GIT_COMMIT = $(git log --format=format:%H -n1)
+  GIT_COMMIT = $(shell git log --format=format:%H -n1)
 
   # The commit when we started make.  We can use this to see whether we made a
   #     new commit as part of the deployment process.
@@ -109,7 +134,7 @@ ifdef COMMIT_MSG
   commit_msg_overridden = true
 else
   commit_msg_overridden = false
-  COMMIT_MSG := $(shell hostname) $(shell date)
+  COMMIT_MSG := $(shell hostname) $(LONG_DATE)
 endif
 endif
 #
@@ -135,7 +160,8 @@ endif
 #	to be revised.  For the moment, look for Tracks or one or the other of
 #	*.songs or *.tracks (the latter indicating an album's recording directory)
 #
-hasSongs  = $(if $(findstring /Songs,$(MYPATH))$(wildcard *.songs),songs.make)
+# hasSongs  = $(if $(findstring /Songs,$(MYPATH))$(wildcard *.songs),songs.make)
+hasSongs  = $(if $(findstring /Songs,$(MYPATH)),songs.make)
 hasTracks = $(if $(wildcard *songs *.tracks Tracks),tracks.make)
 hasLyrics = $(if $(hasTracks),,$(if $(wildcard *.flk),lyrics.make))
 # Note that MUSIC_D may need to be changed later.
