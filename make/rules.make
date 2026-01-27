@@ -22,11 +22,13 @@ endif
 # 	running latex for a  second time makes sure the most recent 
 #	auxiliary file has been included -- we only need it if the 
 #	.aux file is nontrivial.
+#   The third run fixes page numbers in the table of contents/songs
 
 %.pdf:	%.tex
 	echo q | pdflatex $*
 	if [ -f $*.aux ] && [ `wc -l $*.aux | cut -d " " -f 1` -gt 0 ];\
-		then echo q|pdflatex $*; fi
+		then echo q | pdflatex $*; fi
+	echo q | pdflatex $*
 	-rm -f $*.aux $*.log
 
 %.dvi:	%.tex
