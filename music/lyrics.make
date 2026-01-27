@@ -141,17 +141,17 @@ SONG_PREAMBLE = '\documentclass[$(SIZE)a4paper,enabledeprecatedfontcommands]{scr
 		'\usepackage[utf8]{inputenc}'                                   \
 		'\usepackage{graphicx}'                                         \
 		'\usepackage[protrusion=true,expansion=true,tracking=true,stretch=10,shrink=250]{microtype}'                                   \
-		'\usepackage{song,zingers,zongbook,uniinput}'
+		'\usepackage{song,zingers,zongbook,uniinput,wrapfig}'
 SONG_LOOSELEAF= '\documentclass[$(SIZE)a4paper,enabledeprecatedfontcommands]{scrartcl}'		\
 		'\usepackage[utf8]{inputenc}'                                   \
 		'\usepackage{graphicx}'                                         \
 		'\usepackage[protrusion=true,expansion=true,tracking=true,stretch=10,shrink=250]{microtype}'                                   \
-		'\usepackage{song,zingers,zongbook,uniinput}'
+		'\usepackage{song,zingers,zongbook,uniinput,wrapfig}'
 
 .SUFFIX: flk
 
 %.pdf:	%.flk
-	for step in first-run references; do echo q | $(PDFLATEX) $(TEXOPTS) -jobname $*	\
+	for step in first-run references pagenumbers; do echo q | $(PDFLATEX) $(TEXOPTS) -jobname $*	\
 		$(SONG_LOOSELEAF) '\begin{document}\input{$<}\end{document}'; done
 	rm -f $*.log $*.aux ./stdin.tex ./-.dep 89/* ./snippet-name*--*ly ./snippet-map-*.ly
 
