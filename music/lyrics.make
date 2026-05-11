@@ -139,11 +139,13 @@ export TEXINPUTS
 # long and a short word.
 SONG_PREAMBLE = '\documentclass[$(SIZE)a4paper,enabledeprecatedfontcommands]{scrartcl}'			\
 		'\usepackage[utf8]{inputenc}'                                   \
+		'\usepackage{CJKutf8}'                                          \
 		'\usepackage{graphicx}'                                         \
 		'\usepackage[protrusion=true,expansion=true,tracking=true,stretch=10,shrink=250]{microtype}'                                   \
 		'\usepackage{song,zongbook,zingers,uniinput,wrapfig}'
 SONG_LOOSELEAF= '\documentclass[$(SIZE)a4paper,enabledeprecatedfontcommands]{scrartcl}'		\
 		'\usepackage[utf8]{inputenc}'                                   \
+		'\usepackage{CJKutf8}'                                          \
 		'\usepackage{graphicx}'                                         \
 		'\usepackage[protrusion=true,expansion=true,tracking=true,stretch=10,shrink=250]{microtype}'                                   \
 		'\usepackage{song,zongbook,zingers,uniinput,wrapfig,}'

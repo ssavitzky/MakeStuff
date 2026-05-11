@@ -77,6 +77,7 @@
 
 \usepackage{etoolbox}           % additional programming constructs.
 \usepackage{tipa} % phonetic symbols
+\usepackage{wallpaper} % for \ThisLRCornerWallpaperpage{img} decorations
 \providecommand\phantomsection{}% avoids the need to usepackage{hyperref} here, which could be too early (loading it before imakeindex breaks links in the index)
 \DeclareUnicodeCharacter{1D106}{\textdoublepipe:}
 \DeclareUnicodeCharacter{1D107}{:\textdoublepipe}
@@ -264,7 +265,6 @@ Attribution-Share Alike 4.0 License.}
 
 
 \def\vfiller#1{\vbox to #1\baselineskip{}}
-
 
 %%%
 %%% Replace the old twocolumns environment with multicol
