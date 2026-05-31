@@ -67,7 +67,10 @@ INDEX = index.pl
 .flk.tex:	
 	echo '\documentstyle[fontsize=12pt,a4paper,enabledeprecatedfontcommands,song,twocolumns,zongbook]{scrartcl}' > $@
 	echo '\usepackage[utf8]{inputenc}\usepackage{CJKutf8}' >> $@
-	echo '\usepackage[protrusion=true,expansion=true,tracking=true,stretch=10,shrink=250]{microtype}' >> $@
+    # heavy microtype shrinking, with 200 it can pull in up to two short
+    # words which would hit the next line otherwise. 250 can pull in a
+    # long and a short word.
+	echo '\usepackage[protrusion=true,expansion=true,tracking=true,stretch=10,shrink=350]{microtype}' >> $@
 	echo '\usepackage{song,zingers,zongbook,uniinput}' >> $@
 	echo '\begin{document}'		>> $@
 	echo '\file{'$*.flk'}'		>> $@
