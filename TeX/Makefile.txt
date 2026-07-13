@@ -71,7 +71,7 @@ INDEX = index.pl
     # words which would hit the next line otherwise. 250 can pull in a
     # long and a short word.
 	echo '\usepackage[protrusion=true,expansion=true,tracking=true,stretch=10,shrink=350]{microtype}' >> $@
-	echo '\usepackage{song,zingers,zongbook,uniinput}' >> $@
+	echo '\usepackage{song,zingers,zongbook,uniinput,wrapfig}' >> $@
 	echo '\begin{document}'		>> $@
 	echo '\file{'$*.flk'}'		>> $@
 	echo '\end{document}'		>> $@
