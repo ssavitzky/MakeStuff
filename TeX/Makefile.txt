@@ -55,7 +55,7 @@ INDEX = index.pl
 
 # flk to HTML, Text
 .flk.html:
-	perl flktran.pl $* $*.html
+	perl flktran.pl -t $* $*.html
 
 .flk.txt:
 	perl flktran.pl $* $*.txt

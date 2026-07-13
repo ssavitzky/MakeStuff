@@ -1,7 +1,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% SONG.STY %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%
 %%% Author: Stephen Savitzky
-%%%	    $Id: song.sty,v 1.11 2010-10-14 06:48:15 steve Exp $
 %%%
 %%% Song environment:
 %%%	\begin{song}{title}			% starts on a new page
@@ -332,25 +331,6 @@ Attribution-Share Alike 4.0 License.}
       \end{center}
   \fi
 }
-
-%%%
-%%% Special Pages, Page Headings 
-%%%
-
-%%% Define \outer, \center, \inner for use in fancyheaders:
-\if@twoside
-  \newcommand{\OUT}{EL,OR}
-  \newcommand{\MID}{EC,OC}
-  \newcommand{\INN}{ER,OL}
-  \newcommand{\LFT}{EL,OL}
-  \newcommand{\RHT}{ER,OR}
-\else
-  \newcommand{\OUT}{OR}
-  \newcommand{\MID}{OC}
-  \newcommand{\INN}{OL}
-  \newcommand{\LFT}{OL}
-  \newcommand{\RHT}{OR}
-\fi
   
 %%%
 %%% Table of contents is supposed to look like a song
@@ -364,14 +344,20 @@ Attribution-Share Alike 4.0 License.}
 %%%	We force a pagebreak here to ensure that the previous song
 %%%	doesn't pick up the new filename in its header and footer.
 %%%     Songs now consist only of a song environment, so we don't have to
-%%%	turn off \documentstyle and \begin{document}...\end{document}.
+%%%     turn off \documentstyle and \begin{document}...\end{document}.
+%%%
+%%%     Reset the footnote counter so that footnote numbers in the songbook
+%%%     will match the ones in the looseleaf format.  They're mostly used
+%%%     as links to a CC license; having them increase without limit is
+%%%     silly.
 %%%
 \def\file#1{\newpage\begingroup
   \def\theFile{#1}
   \def\thisPage{\thepage}
-\input{#1}
-\addcontentsline{toc}{Song}{\hbox{\hbox to 2em{\hss\thisPage}%
-    \hbox to 3em{\hss\theTiming}\;\hbox{\theSong\hss}}}
+  \setcounter{footnote}{0}
+  \input{#1}
+  \addcontentsline{toc}{Song}{\hbox{\hbox to 2em{\hss\thisPage}%
+      \hbox to 3em{\hss\theTiming}\;\hbox{\theSong\hss}}}
 \endgroup}
 %
 % \theFile defaults to \jobname, so that it doesn't have to be provided in

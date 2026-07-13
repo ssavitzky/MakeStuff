@@ -16,7 +16,7 @@ usage="$0 [options] [month] print word counts for posts in a given month
 
 ### Default values
 
-m=$(date "+%m"); this_month=$m
+m=$(date "+%_m"); this_month=$m	# has to be space-padded to keep it from looking like octal
 y=$(date "+%Y"); this_year=$y
 allYear=false
 
@@ -98,14 +98,17 @@ count-words () {
     missed=0
     last=0
     for f in $files ; do
-	# pandoc uses dashes as list bullets, so we have to take them out so they
-	# don't get counted.
+	# the initial `sed` removes the email-style header from posts.
+	#   (FIXME: removes thefirst paragraph if there isn't a header)
+	# the final `tr` removes the dashes that pandoc uses as list bullets
 	if [[ ! -z $remove_stats ]] && [[ "$f" != "${f%.html}" ]]; then
 	    # optionally remove stats ("<pre>....stats:" - "</pre>") from html files
-	    wc=$(sed -e '/^<pre>[a-zA-Z]* stats\:$/,/^<\/pre>/d' $f | 
-		 pandoc -f html -t plain | tr -- " -" "  " | wc -w  )
+	    wc=$(sed -e '1,/^ *$/d' $f |
+		     sed -e '/^<pre>[a-zA-Z]* stats\:$/,/^<\/pre>/d' | 
+		     pandoc -f html -t plain | tr -- " -" "  " | wc -w)
 	else
-	    wc=$(pandoc -i $f -t plain | tr -- " -" "  " | wc -w)
+	    wc=$(sed -e '1,/^ *$/ d' $f |
+		     pandoc -f html -t plain | tr -- " -" "  " | wc -w)
 	fi
 	total=$(( $total + $wc))
 	count=$(( $count + 1))
@@ -133,15 +136,17 @@ if $allYear; then
     yearWords=0
     yearCount=0
     for month in `seq 1 12`; do
+	(( $this_month < $month )) && (($this_year == $y)) && break
+	(( $month == 1 )) || [[ -z $verbose ]] || echo # blank line between months
 	mm=$(printf "%02d" $month)
 	count-words $(expand $y$sep$mm$sep)
 	yearWords=$(( $yearWords + $total ))
 	yearCount=$(( $yearCount + $count ))
-	echo -e  "`printf %7d $total`" words in "`printf %2d $count`" posts"\t"  \
+	echo -e  "`printf %7d $total`" words in "`printf %2d $count`" posts  \
 	     in $y/$mm "(average $avg/post)"
     done
     avg=$(($yearWords / $yearCount))
-    echo '----------------------------------'
+    echo '---------------------------------'
     echo -e  "`printf %7d $yearWords`" words in $yearCount posts total \
 	 in $y "(average $avg/post)"
     echo '</pre>'
@@ -162,10 +167,10 @@ count-words $(expand $y$sep$mm$sep) $*
 
 # Add missing days after the last date seen.
 if (( $this_month == $m && $this_year == $y)); then    # We're doing this month
-    end=$(date +%d)
+    end=$(date +%e)
     in="this month"
 else
-    end=$(date -d "$y/$m/1 +1month -1day" +%d)
+    end=$(date -d "$y/$m/1 +1month -1day" +%e)
     in=$(date -d "$y/$m/1" +"in %B")
     if (( $this_year != $y )); then in="$in of $y"; fi
 fi
@@ -174,7 +179,10 @@ missed_days=$(( $missed + $end - $last ))
 echo -e  "`printf %7d $total`" words in $count posts $in "(average $avg/post)"
 
 if (( $m == $this_month && $y == $this_year)); then
-    count-words $(expand `date "+$y$sep$m$sep%d"`)
+    # we've already seen all the posts; clear $verbose so we don't see
+    # today's listed a second time.
+    verbose=
+    count-words $(expand `date "+$y$sep$mm$sep%d"`)
     if [ $count == 1 ]; then s=" "; else s=s; fi
     echo -e  "`printf %7d $total`" words in $count post$s today
 fi

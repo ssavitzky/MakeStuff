@@ -23,7 +23,8 @@ $default_performer   = "Steve Savitzky" unless $default_performer;
 #$publicSongs = "/Steve_Savitzky/Songs/";
 #$publicSite  = "http://theStarport.com";
 $publicSongs = "/Songs/";
-$publicSite  = "http://steve.savitzky.net";
+$publicSite  = $ENV{'publicSite'};
+$publicSite  = "https://steve.savitzky.net" unless $publicSite;
 
 
 ### Look for the songs in the usual places:

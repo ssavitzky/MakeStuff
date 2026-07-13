@@ -1,10 +1,11 @@
-%%% zongbook.sty:	Style sheet for personal songbook.
+%%% zongbook.sty:	Style sheet for a personal songbook.
 %%%			Includes HyperSpace Express & BroadSide logos.
 %%%
-%%%			Pages are in broadside format so that
-%%%			it's easy to add or change pages.
+%%%   Pages default to broadside format so that it's easy to add or change
+%%%   pages.  Books with a large number of 1-page songs will benefit from
+%%%   setting \compacttrue
+%%%   
 %%%
-%%% $Id: zongbook.sty,v 1.2 2007-05-20 17:57:20 steve Exp $
 
 
 \usepackage{fancyhdr}
@@ -23,16 +24,40 @@
 \evensidemargin -.25in
 \textwidth 6.75in
 
-% First cut at formatting with fancyhdr
+%%% Default formatting with fancyhdr
 % should define \inner and \outer for, e.g., ER,OL if twosided, else OL
 
+
+%%%
+%%% Special Pages, Page Headings 
+%%%
+
+%%% Define \OUT, \MID, \INN for use in fancyheaders:
+\if@twoside
+  \newcommand{\OUT}{EL,OR}
+  \newcommand{\MID}{EC,OC}
+  \newcommand{\INN}{ER,OL}
+  \newcommand{\LFT}{EL,OL}
+  \newcommand{\RHT}{ER,OR}
+\else
+  \newcommand{\OUT}{OR}
+  \newcommand{\MID}{OC}
+  \newcommand{\INN}{OL}
+  \newcommand{\LFT}{OL}
+  \newcommand{\RHT}{OR}
+\fi
+
+%%% Note:  page numbers are inconspicuous by design; they're not particularly
+%%% useful in a binder that new songs are frequently added to between
+%%% printings.
+%%%
 \pagestyle{fancy}
-\fancyhead[\OUT]{{\bfseries\large\theSong}}
-\fancyhead[\INN]{\chord{\theKey}\hskip 1em\theTiming}
-\fancyfoot[\RHT]{\LIZlogo}
-% \fancyfoot[\RHT]{\HSXlogo}
-% \fancyfoot[\MID]{\theCrDate}
-\fancyfoot[\LFT]{FiLkTeX songbook}
+\fancyhead[\OUT]{{\bf\large\theSong}}
+\fancyhead[ER]{\chord{\theTiming\hskip 1em\bf\theKey}}
+\fancyhead[OL]{\chord{\bf\theKey}\hskip 1em\theTiming}
+\fancyfoot[\MID]{\thepage}
+\fancyfoot[\INN]{\HSXlogo}
+\fancyfoot[\OUT]{FiLkTeX songbook}
 \renewcommand{\footrulewidth}{0.4pt}
 \renewcommand{\footruleskip}{.01\normalbaselineskip}
 

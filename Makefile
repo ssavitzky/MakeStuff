@@ -6,6 +6,11 @@
 #
 ###
 
+
+### Basic configuration stuff:
+#	since we're requiring GNU make, there's no good reason not to require bash, too.
+SHELL = /bin/bash
+
 ### MakeStuff:  Figure out where we are and where the MakeStuff is: 
 #   BASEDIR is the directory that contains it, possibly as a symlink.
 #   Note that the former name of MakeStuff was Tools, but now that all active instances
@@ -26,8 +31,7 @@ endif
 ### TOOLDIR:  absolute path to MakeStuff.  All scripts, include files, and so on
 #   are located in TOOLDIR or its subdirectories.
 #
-TOOLDIR := $(BASEDIR)/$(shell if [ -d $(BASEDIR)/MakeStuff/make ]; then	\
-				 echo MakeStuff; else echo Tools; fi	)
+TOOLDIR := $(BASEDIR)/MakeStuff
 
 ### From this point we can start including stuff from TOOLDIR/make. 
 
@@ -50,10 +54,9 @@ include $(TOOLDIR)/make/rules.make
 #	 include files as well, so that's no longer a consideration.
 
 ### all -- the default target; must come first or confusion reigns.
-#	(actually, that's not entirely true:  we could set the default
-#	 target explicitly, and then it wouldn't matter.  That, however,
-#	 could confuse things for subdirectories that get this by
-#	 inclusion rather than symlinking. So we don't.)
+#	(Actually, that's not entirely true:  we could set the default
+#	 target explicitly, and then it wouldn't matter.  By leaving
+#	 it unspecified, we allow individual projects to set it.)
 
 .PHONY: all
 all::
@@ -74,20 +77,34 @@ deploy: all pre-deploy deploy-this
 
 ### Include standard targets and local dependencies if present.
 #
-include $(MFDIR)/targets.make
+include $(TOOLDIR)/make/targets.make
 -include .depends.make depends.make
 
-### report-vars - list important make variables
+### make report-vars - list important make variables
 #   Down at the end in case any of the lists needs to get appended to.
 
-.PHONY: report-vars
+.PHONY: report-vars report-set-vars report-raw-vars report-var
 filteredVars = $(foreach v, $(reportVars), $(if $($(v)), $(v)))
 filteredStrs = $(foreach v, $(reportStrs), $(if $($(v)), $(v)))
 
 report-vars::
 	@echo "" $(foreach v,$(varsLine1), $(v)=$($(v)) )
 	@echo "" $(foreach v,$(varsLine2), $(v)=$($(v)) )
-	@echo -ne "" $(foreach v,$(filteredVars),$(v)=$($(v)) "\n")
-	@echo "" $(foreach v,$(filteredStrs),$(v)=\"$($(v))\" "\n")
+	@echo -n -e "" $(foreach v,$(filteredVars),$(v)=$($(v)) "\n")
+	@echo -e "" $(foreach v,$(filteredStrs),$(v)=\""$($(v))"\" "\n")
+
+### make report-set-vars, report-raw-vars, report-var
+#   note the use of @: (where ``: is equivalent to `true`) with `$(info)` to keep make
+#   from saying "nothing to be done for...".  `$(info...)` expands to the empty string,
+#   so if you put it in a recipe on a line by itself make doesn't treat it as a command.
+
+report-set-vars:
+	@: @$(foreach v,$(sort $(.VARIABLES)),$(if $(value $(v)),$(info $(v)="$($(v))")))
+
+report-raw-vars:  		# note that this does not expand recursive variables
+	@: @$(foreach v,$(sort $(.VARIABLES)),$(info $(v)="$(value $(v))"))
+
+report-var::			# report the value of a single variable
+	@: $(info $(var) = $($(var)))
 #
-###### End of Tools/Makefile.  Thanks for playing. ######
+###### End of MakeStuff/Makefile.  Thanks for playing. ######

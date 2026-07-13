@@ -1,0 +1,120 @@
+#!/bin/bash
+#
+# Preview a MakeStuff blog post, an HTML body with an email-like
+# header, by converting it to an HTML page on STDOUT.  The subject
+# becomes the contents of the <title> and <h1> tags.  The rest of the
+# header information is put at the end of the body text.
+
+MARKDOWN='kramdown -i GFM --no-hard-wrap'
+
+usage () {
+    cat <<EOF
+    Usage: $0 [options] file
+    options:
+	-h | --help
+     	-t --headers[=top]
+	-b --headers=bottom
+	-y --headers=yaml   suppresses HTML head and body tags
+EOF
+}
+
+while true; do
+    case "$1" in
+	-h|--help) usage; exit 0 ;;
+
+	-t|--headers|--headers=top) headers=top;    shift ;;
+	-b|--headers=bottom)        headers=bottom; shift ;;
+	-y|--headers=yaml)          headers=yaml;   shift ;;
+
+	*.md) FILTER="$MARKDOWN"; break ;;
+	*.html) FILTER=cat;       break ;;
+
+	-*) echo unrecognized option "$1"
+	    usage
+	    exit 1
+	    ;;
+	*) echo unrecognized file type "$1"
+	   usage
+	   exit 1
+	   ;;
+    esac
+done
+
+shopt -s extglob # Required to trim whitespace; see below
+
+read_headers () {
+    while IFS=':' read key value; do
+	# trim whitespace in "value"
+	value=${value##+([[:space:]])}; value=${value%%+([[:space:]])}
+
+	[ -z "$key" ] && break	# the separator line between headers and body
+
+	case "$key" in
+	    [sS]ubject|[tT]itle) Subject="$value"
+		    ;;
+	    [mM]usic) Music="$value"
+		    ;;
+	    [tT]ags) Tags="${value//[\[\]]/}" # remove brackets from tag list
+		  ;;
+	    [Mm]ood) Mood="$value"
+		  ;;
+	    [Pp]icture) Picture="$value"
+		     ;;
+	    [Ll]ocation) Location="$value"
+		      ;;
+	    [Aa]ccess) Permission="$value"
+		    ;;
+	    [Pp]ermission) Permission="$value"
+		    ;;
+	    [Jj]ournal) Journal="$value" # Journal to post to instead of default
+		    ;;
+	    [Cc]rosspost) Xpost="$value" # Journal to post to *in addition to* default
+		    ;;
+	    ---)
+		[ ! -z $yaml_started ] && break;
+		yaml_started=1
+		;;
+	    "--text follows this line--") break  # Handle emacs's separator
+					;;
+	esac
+    done
+}
+
+print_headers () {
+    echo "<table>"
+    for field in Mood Location Music Permission Picture Subject Tags; do
+	[ -z "${!field}" ] || \
+	    echo -e "    <tr><th>$field:</th><td>${!field}</td><tr>"
+    done
+    echo "</table>"
+    echo
+}
+
+print_yaml_headers () {
+    echo "---"
+    for field in Mood Location Music Permission Picture Subject Tags; do
+	[ -z "${!field}" ] || \
+	    echo -e "$field: ${!field}"
+    done
+    echo "---"
+    echo
+}
+
+{
+    read_headers
+
+    if [ ! "$headers" = yaml ]; then
+	echo "<html><head>"
+	echo "  <title>$Subject</title>"
+	echo "</head><body>"
+	echo "<h1>$Subject</h1>"
+	echo
+    fi
+    [ "$headers" = top ] && print_headers
+    [ "$headers" = yaml ] && print_yaml_headers
+    $FILTER
+    [ "$headers" = bottom ] && print_headers
+
+} < "${1:-/dev/stdin}"
+
+[ "$headers" = yaml ] || echo "</body></html>"

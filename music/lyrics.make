@@ -148,7 +148,7 @@ SONG_LOOSELEAF= '\documentclass[$(SIZE)a4paper,enabledeprecatedfontcommands]{scr
 		'\usepackage{CJKutf8}'                                          \
 		'\usepackage{graphicx}'                                         \
 		'\usepackage[protrusion=true,expansion=true,tracking=true,stretch=10,shrink=350]{microtype}'                                   \
-		'\usepackage{song,zingers,zongbook,uniinput}'
+		'\usepackage{song,zingers,zongbook,uniinput,wrapfig}'
 
 .SUFFIX: flk
 
@@ -165,10 +165,13 @@ SONG_LOOSELEAF= '\documentclass[$(SIZE)a4paper,enabledeprecatedfontcommands]{scr
 %.txt:	%.flk
 	$(FLKTRAN) $< $@
 
-%.chords.txt: %.flk | %
+%.chords.txt: %.flk
 	WEBSITE=$(WEBSITE) WEBDIR=$(MYNAME) $(FLKTRAN) -c $< $@
 
-%.html: %.flk | %
+%.cho: %.flk
+	WEBSITE=$(WEBSITE) WEBDIR=$(MYNAME) $(FLKTRAN) -c $< $@
+
+%.html: %.flk
 	WEBSITE=$(WEBSITE) WEBDIR=$(MYNAME) $(FLKTRAN) -t -b $< $@
 
 # Build into another directory, for constructing websites and songbooks.
@@ -193,6 +196,8 @@ reportVars += TEXDIR ASONGS TRANSPOSED NAMES ALLNAMES ZNAMES REJECT ALLPDF
 all::	$(ALLPDF)
 	@echo building PDF files
 all::	$(PRINT)
+
+zpdf:	$(ZPDF)
 
 # zongbook.pdf depends on all the files it references 
 zongbook.pdf: zongbook.tex $(ZONGS) $(TEXDIR)/song.sty
@@ -272,11 +277,11 @@ list-short:
 
 # print-songbook: print SONGS as individual files
 print-songbook: $(PDF) 
-	$(PRINT_DUPLEX) $(PDF)
+	for f in $(ALLPDF); do $(PRINT_DUPLEX) $$f; done
 
 # print-longbook: print ALLSONGS as individual files
 print-longbook: $(ALLPDF) 
-	$(PRINT_DUPLEX) $(ALLPDF)
+	for f in $(ALLPDF); do $(PRINT_DUPLEX) $$f; done
 
 # Zongbook: print zongbook.pdf, which is a properly-formatted book.
 #
@@ -293,8 +298,8 @@ print-zongbook: zongbook.pdf
 #	zongbook is supposed to contain \file entries for all the songs
 #	that we actually want
 #
-print-zongs: $(ZONGS)
-	$(PRINT_DUPLEX) $(ZONGS)
+print-zongs: $(ZPDF)
+	for f in $(ZPDF); do $(PRINT_DUPLEX) $$f; done
 
 ### Cleanup:
 
