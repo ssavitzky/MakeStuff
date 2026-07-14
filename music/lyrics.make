@@ -5,7 +5,7 @@
 #   (see songs.make)
 
 # 12pt is too big for: crypto.flk stuff.flk
-SIZE = 12pt,
+SIZE = fontsize=12pt,
 #SIZE = 
 
 
@@ -33,7 +33,7 @@ PRINT_DUPLEX = lp -o sides=two-sided-long-edge
 #   This works in lgf and tg because we're not using Steve's
 #   cryptic shortnames.
 #   Note that template files start with a digit, so the wildcard skips them
-ASONGS := $(shell $(SORT_BY_TITLE) $(wildcard [a-z]*.flk) $(wildcard [1-9][0-9]*.flk))
+ASONGS := $(shell $(SORT_BY_TITLE) $(wildcard [A-Za-z]*.flk) $(wildcard [1-9][0-9]*.flk))
 
 # REJECT = work in progress and other songs we don't want in the songbook
 #	Note that we have to guard against the possibility that there are no
@@ -134,24 +134,33 @@ ZPRINT = $(ZPDF)
 #
 TEXINPUTS := .:$(TEXDIR):$(TEXINPUTS)
 export TEXINPUTS
-SONG_PREAMBLE = '\documentclass[$(SIZE)letterpaper]{article}'			\
+# heavy microtype shrinking, with 200 it can pull in up to two short
+# words which would hit the next line otherwise. 250 can pull in a
+# long and a short word.
+SONG_PREAMBLE = '\documentclass[$(SIZE)a4paper,enabledeprecatedfontcommands]{scrartcl}'			\
 		'\usepackage[utf8]{inputenc}'                                   \
-		'\usepackage{song,zongbook,zingers}'
-SONG_LOOSELEAF= '\documentclass[$(SIZE)letterpaper,twoside]{article}'		\
+		'\usepackage{CJKutf8}'                                          \
+		'\usepackage{graphicx}'                                         \
+		'\usepackage[protrusion=true,expansion=true,tracking=true,stretch=10,shrink=350]{microtype}'                                   \
+		'\usepackage{song,zingers,zongbook,uniinput,wrapfig}'
+SONG_LOOSELEAF= '\documentclass[$(SIZE)a4paper,enabledeprecatedfontcommands]{scrartcl}'		\
 		'\usepackage[utf8]{inputenc}'                                   \
-		'\usepackage{song,zongbook,zingers}'
+		'\usepackage{CJKutf8}'                                          \
+		'\usepackage{graphicx}'                                         \
+		'\usepackage[protrusion=true,expansion=true,tracking=true,stretch=10,shrink=350]{microtype}'                                   \
+		'\usepackage{song,zingers,zongbook,uniinput,wrapfig}'
 
 .SUFFIX: flk
 
 %.pdf:	%.flk
-	echo q | $(PDFLATEX) $(TEXOPTS) -jobname $*				\
-		$(SONG_LOOSELEAF) '\begin{document}\input{$<}\end{document}'
-	rm -f $*.log $*.aux
+	for step in first-run references pagenumbers; do echo q | $(PDFLATEX) $(TEXOPTS) -jobname $*	\
+		$(SONG_LOOSELEAF) '\begin{document}\input{$<}\end{document}'; done
+	rm -f $*.log $*.aux ./stdin.tex ./-.dep 89/* ./snippet-name*--*ly ./snippet-map-*.ly
 
 %.dvi:	%.flk
 	echo q | $(LATEX) $(TEXOPTS) -jobname $*				\
 		$(SONG_PREAMBLE) '\begin{document}\input{$<}\end{document}'
-	rm -f $*.log $*.aux
+	rm -f $*.log $*.aux ./-.dep 89/* ./snippet-name*--*ly ./snippet-map-*.ly
 
 %.txt:	%.flk
 	$(FLKTRAN) $< $@
@@ -192,6 +201,8 @@ zpdf:	$(ZPDF)
 
 # zongbook.pdf depends on all the files it references 
 zongbook.pdf: zongbook.tex $(ZONGS) $(TEXDIR)/song.sty
+zongbook-print.pdf: zongbook.pdf
+	gs -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -dCompatibilityLevel=1.2 -dPDFX -dPDFSETTINGS=/prepress -dColorImageResolution=600  -dEmbedAllFonts=true -sOutputFile="$@" "$<"
 
 ###
 ### Lists:

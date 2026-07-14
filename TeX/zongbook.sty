@@ -13,16 +13,16 @@
 %%%
 %%% Page Margins
 %%%
-\headheight 2.1\baselineskip
+\headheight 1.6\baselineskip
 \headsep \baselineskip
-%\footheight 2.1\baselineskip
+\footheight 1.1\baselineskip
 \footskip \baselineskip
 \topmargin -.5in
-\textheight 9in
+\textheight 9.5in
 
-\oddsidemargin 0in
-\evensidemargin 0in
-\textwidth 6.5in
+\oddsidemargin -.25in
+\evensidemargin -.25in
+\textwidth 6.75in
 
 %%% Default formatting with fancyhdr
 % should define \inner and \outer for, e.g., ER,OL if twosided, else OL
@@ -56,11 +56,12 @@
 \fancyhead[ER]{\chord{\theTiming\hskip 1em\bf\theKey}}
 \fancyhead[OL]{\chord{\bf\theKey}\hskip 1em\theTiming}
 \fancyfoot[\MID]{\thepage}
-\fancyfoot[\INN]{\HSXlogo}
+\fancyfoot[\INN]{\LIZlogo}
 \fancyfoot[\OUT]{FiLkTeX songbook}
 \renewcommand{\footrulewidth}{0.4pt}
-\renewcommand{\footruleskip}{.1\normalbaselineskip}
+\renewcommand{\footruleskip}{.01\normalbaselineskip}
 
 \setlength{\headwidth}{\textwidth}
 
+\def\LIZlogo{$\hbox{Lieder im Zeitenwind}$}
 \def\HSXlogo{$\hbox{Hyper}\!\int\!\!\hbox{pace}\ \hbox{Expre}\!\int\!\!\int$}

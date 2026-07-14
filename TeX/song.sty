@@ -67,7 +67,7 @@
 %%%	    \up		prints as double uparrow, e.g. F(D\up3)
 %%%		used to indicate barre chords and the like.
 %%%	    *		indicates chords with B or E string raised
-%%%	    \capo	{\it capo} used in, e.g.  \key{F\; (D\capo3)}
+%%%	    \capo	{\itshape capo} used in, e.g.  \key{F\; (D\capo3)}
 %%%	    \;		em space
 %%%
 %%%
@@ -76,6 +76,11 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \usepackage{etoolbox}           % additional programming constructs.
+\usepackage{tipa} % phonetic symbols
+\usepackage{wallpaper} % for \ThisLRCornerWallpaperpage{img} decorations
+\providecommand\phantomsection{}% avoids the need to usepackage{hyperref} here, which could be too early (loading it before imakeindex breaks links in the index)
+\DeclareUnicodeCharacter{1D106}{\textdoublepipe:}
+\DeclareUnicodeCharacter{1D107}{:\textdoublepipe}
 
 %%%
 %%% Informational Components (notice, etc.)
@@ -90,7 +95,7 @@
 \def\dedication#1{\global\def\theDedication{#1}
   \ifcompact\begin{center}\footnotesize #1\end{center}\fi}
 \def\subtitle#1{\global\def\theSubtitle{#1}
-  \ifcompact\begin{center}\bf #1\end{center}\fi}
+  \ifcompact\begin{center}\bfseries #1\end{center}\fi}
 \def\license#1{\global\def\theLicense{#1}
   \ifcompact\begin{center}\small #1\end{center}\fi}
 
@@ -104,6 +109,8 @@
 \def\SomeRightsReserved{Some Rights Reserved\footnote{\CcByNcSa}}
 \def\CcByNcSa{This work is licensed under a Creative Commons
 Attribution-Noncommercial-Share Alike 4.0 License.}  
+\def\CcBySa{This work is licensed under a Creative Commons
+Attribution-Share Alike 4.0 License.}  
 \def\ttto#1{{\sc ttto:} {\em #1\/}}
 
 \def\link#1#2{#2\footnote{$<$#1$>$}}
@@ -184,6 +191,7 @@ Attribution-Noncommercial-Share Alike 4.0 License.}
   \else
     \clearpage                  % onesided (compact)
   \fi
+  \phantomsection{}% the link will point here
   % tags, creation date, file, etc. want to be put out at the beginning of the lyrics.
   \global\def\theTags{}\global\def\theTiming{}
   \global\def\theCrDate{}\global\def\theKey{}
@@ -246,8 +254,8 @@ Attribution-Noncommercial-Share Alike 4.0 License.}
 %%% Annotations for songs
 %%%
 
-\def\inset#1{{\hskip1em\it #1}}
-\def\inst#1{{\it #1}}
+\def\inset#1{{\hskip1em\itshape #1}}
+\def\inst#1{{\itshape #1}}
 \def\singer#1{{\hskip-.5em\tt #1}} %\hskip-1em seems excessive
 \def\spoken#1{{\sl #1}}
 \def\verse{\par\medskip\par}
@@ -257,7 +265,6 @@ Attribution-Noncommercial-Share Alike 4.0 License.}
 
 
 \def\vfiller#1{\vbox to #1\baselineskip{}}
-
 
 %%%
 %%% Replace the old twocolumns environment with multicol
@@ -299,6 +306,7 @@ Attribution-Noncommercial-Share Alike 4.0 License.}
   \clearpage
   \if@twoside
     \ifodd\c@page
+      \thispagestyle{plain}
       \hbox{}\newpage
       \if@twocolumn
         \hbox{}\newpage
@@ -369,7 +377,7 @@ Attribution-Noncommercial-Share Alike 4.0 License.}
 %%% Chords.
 %%%	Note that chords are set in math mode
 %%%
-\def\chordfont{\sf}
+\def\chordfont{\normalfont}
 \def\chord #1{{\footnotesize\strut$\chordfont #1$}}
 \def\@chord #1{\makebox[0pt][l]{\raisebox{.9em}{\chord{#1}}}}
 
@@ -378,8 +386,8 @@ Attribution-Noncommercial-Share Alike 4.0 License.}
 \def\maj{\mbox{maj}}
 \def\min{\mbox{m}}
 \def\sus{\mbox{sus}}
-\def\capo{\mbox{\ \it capo\ }}
-\def\drop{\mbox{\ \it drop\ }}
+\def\capo{\mbox{\ \itshape capo\ }}
+\def\drop{\mbox{\ \itshape drop\ }}
 \def\up{\Uparrow}
 \def\add{\&}
 %\def\sharp{\#}
